@@ -1,0 +1,67 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) restrict readonly buffer InputBuffer {
+    float data_in[];
+};
+
+layout(set = 0, binding = 1) restrict buffer OutputBuffer {
+    float data_out[];
+};
+
+layout(set = 0, binding = 2) restrict buffer TempBuffer {
+    float temp_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint feature_size;
+    uint pass;
+} pc;
+
+void main() {
+    uint gid = gl_GlobalInvocationID.x;
+    uint total_elements = pc.batch_size * pc.feature_size;
+    
+    if (gid >= total_elements) return;
+    
+    uint batch_id = gid / pc.feature_size;
+    uint feature_id = gid % pc.feature_size;
+    
+    if (pc.pass == 0) {
+        // Pass 0: Find max per batch for numerical stability
+        float max_val = data_in[batch_id * pc.feature_size];
+        for (uint i = 1; i < pc.feature_size; ++i) {
+            max_val = max(max_val, data_in[batch_id * pc.feature_size + i]);
+        }
+        
+        // Store max values
+        if (feature_id == 0) {
+            temp_data[batch_id] = max_val;
+        }
+        
+    } else if (pc.pass == 1) {
+        // Pass 1: Compute exp(x - max) and sum
+        float max_val = temp_data[batch_id];
+        float exp_val = exp(data_in[gid] - max_val);
+        
+        // Store exp values in output buffer
+        data_out[gid] = exp_val;
+        
+        // Compute sum for this batch
+        if (feature_id == 0) {
+            float sum_val = 0.0;
+            for (uint i = 0; i < pc.feature_size; ++i) {
+                sum_val += data_out[batch_id * pc.feature_size + i];
+            }
+            temp_data[batch_id + pc.batch_size] = sum_val;
+        }
+        
+    } else if (pc.pass == 2) {
+        // Pass 2: Normalize by sum
+        float sum_val = temp_data[batch_id + pc.batch_size];
+        float normalized = data_out[gid] / sum_val;
+        data_out[gid] = normalized;
+    }
+}

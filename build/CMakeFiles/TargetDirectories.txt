@@ -1,0 +1,11 @@
+/home/mostafizur/DLVK/build/CMakeFiles/dlvk_demo.dir
+/home/mostafizur/DLVK/build/CMakeFiles/dlvk.dir
+/home/mostafizur/DLVK/build/CMakeFiles/shaders.dir
+/home/mostafizur/DLVK/build/CMakeFiles/test.dir
+/home/mostafizur/DLVK/build/CMakeFiles/edit_cache.dir
+/home/mostafizur/DLVK/build/CMakeFiles/rebuild_cache.dir
+/home/mostafizur/DLVK/build/tests/CMakeFiles/test_tensor.dir
+/home/mostafizur/DLVK/build/tests/CMakeFiles/test_vulkan_device.dir
+/home/mostafizur/DLVK/build/tests/CMakeFiles/test.dir
+/home/mostafizur/DLVK/build/tests/CMakeFiles/edit_cache.dir
+/home/mostafizur/DLVK/build/tests/CMakeFiles/rebuild_cache.dir
