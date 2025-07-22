@@ -189,6 +189,13 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: \
  /usr/include/c++/15.1.1/vector /usr/include/c++/15.1.1/bits/stl_vector.h \
  /usr/include/c++/15.1.1/bits/stl_bvector.h \
  /usr/include/c++/15.1.1/bits/vector.tcc \
+ /usr/include/c++/15.1.1/unordered_map \
+ /usr/include/c++/15.1.1/bits/unordered_map.h \
+ /usr/include/c++/15.1.1/bits/hashtable.h \
+ /usr/include/c++/15.1.1/bits/hashtable_policy.h \
+ /usr/include/c++/15.1.1/bits/enable_special_members.h \
+ /usr/include/c++/15.1.1/bits/node_handle.h \
+ /usr/include/c++/15.1.1/bits/erase_if.h \
  /home/mostafizur/DLVK/include/dlvk/tensor/tensor.h \
  /usr/include/vulkan/vulkan.h /usr/include/vulkan/vk_platform.h \
  /usr/include/vulkan/vulkan_core.h \
@@ -205,4 +212,23 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: \
  /usr/include/vk_video/vulkan_video_codec_av1std_decode.h \
  /usr/include/vk_video/vulkan_video_codec_av1std.h \
  /usr/include/vk_video/vulkan_video_codec_av1std_encode.h \
- /home/mostafizur/DLVK/include/dlvk/layers/layer.h
+ /home/mostafizur/DLVK/include/dlvk/layers/layer.h \
+ /usr/include/c++/15.1.1/cmath /usr/include/math.h \
+ /usr/include/bits/math-vector.h /usr/include/bits/libm-simd-decl-stubs.h \
+ /usr/include/bits/flt-eval-method.h /usr/include/bits/fp-logb.h \
+ /usr/include/bits/fp-fast.h /usr/include/bits/mathcalls-macros.h \
+ /usr/include/bits/mathcalls-helper-functions.h \
+ /usr/include/bits/mathcalls.h /usr/include/bits/mathcalls-narrow.h \
+ /usr/include/bits/iscanonical.h /usr/include/c++/15.1.1/bits/specfun.h \
+ /usr/include/c++/15.1.1/limits /usr/include/c++/15.1.1/tr1/gamma.tcc \
+ /usr/include/c++/15.1.1/tr1/special_function_util.h \
+ /usr/include/c++/15.1.1/tr1/bessel_function.tcc \
+ /usr/include/c++/15.1.1/tr1/beta_function.tcc \
+ /usr/include/c++/15.1.1/tr1/ell_integral.tcc \
+ /usr/include/c++/15.1.1/tr1/exp_integral.tcc \
+ /usr/include/c++/15.1.1/tr1/hypergeometric.tcc \
+ /usr/include/c++/15.1.1/tr1/legendre_function.tcc \
+ /usr/include/c++/15.1.1/tr1/modified_bessel_func.tcc \
+ /usr/include/c++/15.1.1/tr1/poly_hermite.tcc \
+ /usr/include/c++/15.1.1/tr1/poly_laguerre.tcc \
+ /usr/include/c++/15.1.1/tr1/riemann_zeta.tcc

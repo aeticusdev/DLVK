@@ -232,4 +232,7 @@ CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.o: \
  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/opt_random.h \
  /usr/include/c++/15.1.1/bits/random.tcc /usr/include/c++/15.1.1/numeric \
  /usr/include/c++/15.1.1/bits/stl_numeric.h \
- /usr/include/c++/15.1.1/pstl/glue_numeric_defs.h
+ /usr/include/c++/15.1.1/pstl/glue_numeric_defs.h \
+ /usr/include/c++/15.1.1/iostream /usr/include/c++/15.1.1/ostream \
+ /usr/include/c++/15.1.1/bits/ostream.tcc /usr/include/c++/15.1.1/istream \
+ /usr/include/c++/15.1.1/bits/istream.tcc

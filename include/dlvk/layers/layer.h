@@ -37,6 +37,10 @@ private:
     std::shared_ptr<Tensor> m_bias;
     std::shared_ptr<Tensor> m_last_input; // For backward pass
     
+    // Gradients for training
+    std::shared_ptr<Tensor> m_grad_weights;
+    std::shared_ptr<Tensor> m_grad_bias;
+    
     void initialize_weights();
 };
 

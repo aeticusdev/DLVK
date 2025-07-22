@@ -1,0 +1,37 @@
+#version 450
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(binding = 2) buffer GradOutputBuffer {
+    float grad_output_data[];
+};
+
+layout(binding = 3) buffer GradInputBuffer {
+    float grad_input_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+} pc;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= pc.size) {
+        return;
+    }
+    
+    // ReLU backward: gradient is 1 if input > 0, else 0
+    float input_val = input_data[index];
+    float grad_output = grad_output_data[index];
+    
+    grad_input_data[index] = (input_val > 0.0) ? grad_output : 0.0;
+}

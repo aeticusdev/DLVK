@@ -326,6 +326,30 @@ src/core/vulkan_device.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_device.cpp.s
 .PHONY : src/core/vulkan_device.cpp.s
 
+src/layers/conv2d_layer.o: src/layers/conv2d_layer.cpp.o
+.PHONY : src/layers/conv2d_layer.o
+
+# target to build an object file
+src/layers/conv2d_layer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.o
+.PHONY : src/layers/conv2d_layer.cpp.o
+
+src/layers/conv2d_layer.i: src/layers/conv2d_layer.cpp.i
+.PHONY : src/layers/conv2d_layer.i
+
+# target to preprocess a source file
+src/layers/conv2d_layer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.i
+.PHONY : src/layers/conv2d_layer.cpp.i
+
+src/layers/conv2d_layer.s: src/layers/conv2d_layer.cpp.s
+.PHONY : src/layers/conv2d_layer.s
+
+# target to generate assembly for a file
+src/layers/conv2d_layer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.s
+.PHONY : src/layers/conv2d_layer.cpp.s
+
 src/layers/conv_layer.o: src/layers/conv_layer.cpp.o
 .PHONY : src/layers/conv_layer.o
 
@@ -379,6 +403,30 @@ src/layers/dense_layer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/dense_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.s
 .PHONY : src/layers/dense_layer.cpp.s
+
+src/layers/pooling_layers.o: src/layers/pooling_layers.cpp.o
+.PHONY : src/layers/pooling_layers.o
+
+# target to build an object file
+src/layers/pooling_layers.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.o
+.PHONY : src/layers/pooling_layers.cpp.o
+
+src/layers/pooling_layers.i: src/layers/pooling_layers.cpp.i
+.PHONY : src/layers/pooling_layers.i
+
+# target to preprocess a source file
+src/layers/pooling_layers.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.i
+.PHONY : src/layers/pooling_layers.cpp.i
+
+src/layers/pooling_layers.s: src/layers/pooling_layers.cpp.s
+.PHONY : src/layers/pooling_layers.s
+
+# target to generate assembly for a file
+src/layers/pooling_layers.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.s
+.PHONY : src/layers/pooling_layers.cpp.s
 
 src/loss/loss_functions.o: src/loss/loss_functions.cpp.o
 .PHONY : src/loss/loss_functions.o
@@ -595,12 +643,18 @@ help:
 	@echo "... src/core/vulkan_device.o"
 	@echo "... src/core/vulkan_device.i"
 	@echo "... src/core/vulkan_device.s"
+	@echo "... src/layers/conv2d_layer.o"
+	@echo "... src/layers/conv2d_layer.i"
+	@echo "... src/layers/conv2d_layer.s"
 	@echo "... src/layers/conv_layer.o"
 	@echo "... src/layers/conv_layer.i"
 	@echo "... src/layers/conv_layer.s"
 	@echo "... src/layers/dense_layer.o"
 	@echo "... src/layers/dense_layer.i"
 	@echo "... src/layers/dense_layer.s"
+	@echo "... src/layers/pooling_layers.o"
+	@echo "... src/layers/pooling_layers.i"
+	@echo "... src/layers/pooling_layers.s"
 	@echo "... src/loss/loss_functions.o"
 	@echo "... src/loss/loss_functions.i"
 	@echo "... src/loss/loss_functions.s"

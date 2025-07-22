@@ -1,0 +1,33 @@
+#version 450
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(binding = 1) buffer GradOutputBuffer {
+    float grad_output_data[];
+};
+
+layout(binding = 2) buffer GradInputBuffer {
+    float grad_input_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+} pc;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= pc.size) {
+        return;
+    }
+    
+    // Tanh backward: grad_input = grad_output * (1 - tanh(x)^2)
+    float tanh_output = output_data[index];
+    float grad_output = grad_output_data[index];
+    
+    grad_input_data[index] = grad_output * (1.0 - tanh_output * tanh_output);
+}

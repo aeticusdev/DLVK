@@ -1,6 +1,7 @@
 #include "dlvk/layers/layer.h"
 #include "dlvk/core/vulkan_device.h"
 #include <random>
+#include <iostream>
 
 namespace dlvk {
 
@@ -38,21 +39,42 @@ std::shared_ptr<Tensor> DenseLayer::forward(const std::shared_ptr<Tensor>& input
 }
 
 std::shared_ptr<Tensor> DenseLayer::backward(const std::shared_ptr<Tensor>& grad_output) {
+    if (!m_last_input) {
+        throw std::runtime_error("No forward pass recorded for backward pass");
+    }
+    
     // Compute gradients
     // grad_input = grad_output @ weights.T
-    // grad_weights = input.T @ grad_output
+    // grad_weights = input.T @ grad_output  
     // grad_bias = sum(grad_output, axis=0)
     
-    // TODO: Implement proper backward pass with compute shaders
+    // 1. Compute gradient w.r.t input: grad_input = grad_output @ weights.T
+    auto weights_T = m_weights->transpose();
+    auto grad_input = grad_output->matrix_multiply(*weights_T);
     
-    // For now, return a placeholder
-    return std::make_shared<Tensor>(m_last_input->shape(), DataType::FLOAT32, m_device);
+    // 2. Compute gradient w.r.t weights: grad_weights = input.T @ grad_output
+    auto input_T = m_last_input->transpose();
+    m_grad_weights = input_T->matrix_multiply(*grad_output);
+    
+    // 3. Compute gradient w.r.t bias: grad_bias = sum(grad_output, axis=0)
+    m_grad_bias = grad_output->sum(0);  // Sum along batch dimension
+    
+    return grad_input;
 }
 
 void DenseLayer::update_weights(float learning_rate) {
-    // TODO: Implement weight update using computed gradients
-    // weights -= learning_rate * grad_weights
-    // bias -= learning_rate * grad_bias
+    if (!m_grad_weights || !m_grad_bias) {
+        std::cerr << "Warning: No gradients computed for weight update" << std::endl;
+        return;
+    }
+    
+    // Update weights: weights -= learning_rate * grad_weights
+    auto lr_grad_weights = m_grad_weights->multiply_scalar(-learning_rate);
+    m_weights = m_weights->add(*lr_grad_weights);
+    
+    // Update bias: bias -= learning_rate * grad_bias  
+    auto lr_grad_bias = m_grad_bias->multiply_scalar(-learning_rate);
+    m_bias = m_bias->add(*lr_grad_bias);
 }
 
 void DenseLayer::initialize_weights() {

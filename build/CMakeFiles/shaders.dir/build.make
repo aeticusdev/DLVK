@@ -68,10 +68,14 @@ include CMakeFiles/shaders.dir/progress.make
 
 CMakeFiles/shaders: shaders/matrix_multiply.comp.spv
 CMakeFiles/shaders: shaders/reduce_sum.comp.spv
+CMakeFiles/shaders: shaders/reduce_sum_axis0.comp.spv
 CMakeFiles/shaders: shaders/relu.comp.spv
+CMakeFiles/shaders: shaders/relu_backward.comp.spv
 CMakeFiles/shaders: shaders/sigmoid.comp.spv
+CMakeFiles/shaders: shaders/sigmoid_backward.comp.spv
 CMakeFiles/shaders: shaders/softmax.comp.spv
 CMakeFiles/shaders: shaders/tanh.comp.spv
+CMakeFiles/shaders: shaders/tanh_backward.comp.spv
 CMakeFiles/shaders: shaders/tensor_add.comp.spv
 CMakeFiles/shaders: shaders/tensor_divide.comp.spv
 CMakeFiles/shaders: shaders/tensor_multiply.comp.spv
@@ -88,48 +92,68 @@ shaders/reduce_sum.comp.spv: /home/mostafizur/DLVK/shaders/reduce_sum.comp
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/reduce_sum.comp -o /home/mostafizur/DLVK/build/shaders/reduce_sum.comp.spv
 
+shaders/reduce_sum_axis0.comp.spv: /home/mostafizur/DLVK/shaders/reduce_sum_axis0.comp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Generating shaders/reduce_sum_axis0.comp.spv"
+	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
+	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/reduce_sum_axis0.comp -o /home/mostafizur/DLVK/build/shaders/reduce_sum_axis0.comp.spv
+
 shaders/relu.comp.spv: /home/mostafizur/DLVK/shaders/relu.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Generating shaders/relu.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Generating shaders/relu.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/relu.comp -o /home/mostafizur/DLVK/build/shaders/relu.comp.spv
 
+shaders/relu_backward.comp.spv: /home/mostafizur/DLVK/shaders/relu_backward.comp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Generating shaders/relu_backward.comp.spv"
+	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
+	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/relu_backward.comp -o /home/mostafizur/DLVK/build/shaders/relu_backward.comp.spv
+
 shaders/sigmoid.comp.spv: /home/mostafizur/DLVK/shaders/sigmoid.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Generating shaders/sigmoid.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Generating shaders/sigmoid.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/sigmoid.comp -o /home/mostafizur/DLVK/build/shaders/sigmoid.comp.spv
 
+shaders/sigmoid_backward.comp.spv: /home/mostafizur/DLVK/shaders/sigmoid_backward.comp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Generating shaders/sigmoid_backward.comp.spv"
+	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
+	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/sigmoid_backward.comp -o /home/mostafizur/DLVK/build/shaders/sigmoid_backward.comp.spv
+
 shaders/softmax.comp.spv: /home/mostafizur/DLVK/shaders/softmax.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Generating shaders/softmax.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Generating shaders/softmax.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/softmax.comp -o /home/mostafizur/DLVK/build/shaders/softmax.comp.spv
 
 shaders/tanh.comp.spv: /home/mostafizur/DLVK/shaders/tanh.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Generating shaders/tanh.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Generating shaders/tanh.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/tanh.comp -o /home/mostafizur/DLVK/build/shaders/tanh.comp.spv
 
+shaders/tanh_backward.comp.spv: /home/mostafizur/DLVK/shaders/tanh_backward.comp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Generating shaders/tanh_backward.comp.spv"
+	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
+	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/tanh_backward.comp -o /home/mostafizur/DLVK/build/shaders/tanh_backward.comp.spv
+
 shaders/tensor_add.comp.spv: /home/mostafizur/DLVK/shaders/tensor_add.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Generating shaders/tensor_add.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Generating shaders/tensor_add.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/tensor_add.comp -o /home/mostafizur/DLVK/build/shaders/tensor_add.comp.spv
 
 shaders/tensor_divide.comp.spv: /home/mostafizur/DLVK/shaders/tensor_divide.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Generating shaders/tensor_divide.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Generating shaders/tensor_divide.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/tensor_divide.comp -o /home/mostafizur/DLVK/build/shaders/tensor_divide.comp.spv
 
 shaders/tensor_multiply.comp.spv: /home/mostafizur/DLVK/shaders/tensor_multiply.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Generating shaders/tensor_multiply.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Generating shaders/tensor_multiply.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/tensor_multiply.comp -o /home/mostafizur/DLVK/build/shaders/tensor_multiply.comp.spv
 
 shaders/tensor_subtract.comp.spv: /home/mostafizur/DLVK/shaders/tensor_subtract.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Generating shaders/tensor_subtract.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Generating shaders/tensor_subtract.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/tensor_subtract.comp -o /home/mostafizur/DLVK/build/shaders/tensor_subtract.comp.spv
 
 shaders/transpose.comp.spv: /home/mostafizur/DLVK/shaders/transpose.comp
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Generating shaders/transpose.comp.spv"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Generating shaders/transpose.comp.spv"
 	/usr/bin/cmake -E make_directory /home/mostafizur/DLVK/build/shaders/
 	/usr/bin/glslangValidator -V /home/mostafizur/DLVK/shaders/transpose.comp -o /home/mostafizur/DLVK/build/shaders/transpose.comp.spv
 
@@ -139,10 +163,14 @@ CMakeFiles/shaders.dir/codegen:
 shaders: CMakeFiles/shaders
 shaders: shaders/matrix_multiply.comp.spv
 shaders: shaders/reduce_sum.comp.spv
+shaders: shaders/reduce_sum_axis0.comp.spv
 shaders: shaders/relu.comp.spv
+shaders: shaders/relu_backward.comp.spv
 shaders: shaders/sigmoid.comp.spv
+shaders: shaders/sigmoid_backward.comp.spv
 shaders: shaders/softmax.comp.spv
 shaders: shaders/tanh.comp.spv
+shaders: shaders/tanh_backward.comp.spv
 shaders: shaders/tensor_add.comp.spv
 shaders: shaders/tensor_divide.comp.spv
 shaders: shaders/tensor_multiply.comp.spv

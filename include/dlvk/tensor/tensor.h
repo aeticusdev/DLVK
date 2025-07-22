@@ -45,6 +45,7 @@ public:
     std::shared_ptr<Tensor> add_broadcast(const Tensor& other) const; // For bias addition
     std::shared_ptr<Tensor> subtract(const Tensor& other) const;
     std::shared_ptr<Tensor> multiply(const Tensor& other) const;
+    std::shared_ptr<Tensor> multiply_scalar(float scalar) const; // Scalar multiplication
     std::shared_ptr<Tensor> divide(const Tensor& other) const;
     std::shared_ptr<Tensor> matrix_multiply(const Tensor& other) const;
     
@@ -59,6 +60,11 @@ public:
     std::shared_ptr<Tensor> sigmoid() const;
     std::shared_ptr<Tensor> tanh() const;
     std::shared_ptr<Tensor> softmax() const;
+    
+    // Backward pass for activation functions
+    std::shared_ptr<Tensor> relu_backward(const Tensor& grad_output) const; // 'this' is input
+    std::shared_ptr<Tensor> sigmoid_backward(const Tensor& grad_output) const; // 'this' is output
+    std::shared_ptr<Tensor> tanh_backward(const Tensor& grad_output) const; // 'this' is output
 
     // Static tensor operations instance (shared across all tensors)
     static void set_tensor_ops(std::shared_ptr<TensorOps> ops);

@@ -406,8 +406,13 @@ bool TensorOps::transpose(const Tensor& input, Tensor& result) {
 }
 
 bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
+    if (axis == 0 && input.shape().size() == 2) {
+        // Use specialized axis-0 reduction for 2D tensors
+        return sum_axis0(input, result);
+    }
+    
     if (axis != -1) {
-        std::cerr << "Axis-specific reduction not yet implemented" << std::endl;
+        std::cerr << "Only axis=0 and axis=-1 reductions implemented" << std::endl;
         return false;
     }
     
@@ -447,6 +452,54 @@ bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
     uint32_t num_workgroups = (constants.input_size + workgroup_size - 1) / workgroup_size;
     
     m_reduce_sum_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::sum_axis0(const Tensor& input, Tensor& result) {
+    // Sum along axis 0 (batch dimension)
+    // Input: [batch_size, features] -> Output: [features]
+    
+    if (input.shape().size() != 2) {
+        std::cerr << "sum_axis0 requires 2D input tensor" << std::endl;
+        return false;
+    }
+    
+    if (result.shape().size() != 1 || result.shape()[0] != input.shape()[1]) {
+        std::cerr << "Result shape must be [features] for axis-0 reduction" << std::endl;
+        return false;
+    }
+    
+    if (!m_reduce_sum_axis0_pipeline) {
+        std::cerr << "Sum axis-0 pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_reduce_sum_axis0_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_reduce_sum_axis0_pipeline->update_descriptor_set(0, 1, result.buffer());
+    
+    m_reduce_sum_axis0_pipeline->bind(cmd);
+    
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t features;
+        uint32_t total_size;
+    } push_data;
+    
+    push_data.batch_size = static_cast<uint32_t>(input.shape()[0]);
+    push_data.features = static_cast<uint32_t>(input.shape()[1]);
+    push_data.total_size = static_cast<uint32_t>(input.size());
+    
+    m_reduce_sum_axis0_pipeline->push_constants(cmd, &push_data, sizeof(push_data));
+    
+    uint32_t workgroup_size = 64;
+    uint32_t num_workgroups = (push_data.features + workgroup_size - 1) / workgroup_size;
+    
+    m_reduce_sum_axis0_pipeline->dispatch(cmd, num_workgroups);
     
     end_single_time_commands(cmd);
     
@@ -907,6 +960,111 @@ bool TensorOps::create_pipelines() {
         m_softmax_pipeline.reset();
     }
     
+    // Backward pass pipelines
+    
+    // ReLU backward pipeline (4 buffers: input, unused, grad_output, grad_input)
+    std::vector<VkDescriptorSetLayoutBinding> four_buffer_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
+    };
+    
+    m_relu_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_relu_backward_pipeline->create_descriptor_set_layout(four_buffer_bindings)) {
+        PushConstantRange backward_push_range;
+        backward_push_range.offset = 0;
+        backward_push_range.size = sizeof(uint32_t);
+        backward_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_relu_backward_pipeline->set_push_constant_range(backward_push_range);
+        
+        if (m_relu_backward_pipeline->create_from_file("build/shaders/relu_backward.comp.spv")) {
+            if (m_relu_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ ReLU backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_relu_backward_pipeline.reset();
+            }
+        } else {
+            m_relu_backward_pipeline.reset();
+        }
+    } else {
+        m_relu_backward_pipeline.reset();
+    }
+    
+    // Sigmoid backward pipeline (3 buffers: output, grad_output, grad_input)
+    std::vector<VkDescriptorSetLayoutBinding> backward_three_buffer_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}
+    };
+    
+    PushConstantRange backward_push_range;
+    backward_push_range.offset = 0;
+    backward_push_range.size = sizeof(uint32_t);
+    backward_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+    
+    m_sigmoid_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_sigmoid_backward_pipeline->create_descriptor_set_layout(backward_three_buffer_bindings)) {
+        m_sigmoid_backward_pipeline->set_push_constant_range(backward_push_range);
+        
+        if (m_sigmoid_backward_pipeline->create_from_file("build/shaders/sigmoid_backward.comp.spv")) {
+            if (m_sigmoid_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Sigmoid backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_sigmoid_backward_pipeline.reset();
+            }
+        } else {
+            m_sigmoid_backward_pipeline.reset();
+        }
+    } else {
+        m_sigmoid_backward_pipeline.reset();
+    }
+    
+    // Tanh backward pipeline
+    m_tanh_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_tanh_backward_pipeline->create_descriptor_set_layout(backward_three_buffer_bindings)) {
+        m_tanh_backward_pipeline->set_push_constant_range(backward_push_range);
+        
+        if (m_tanh_backward_pipeline->create_from_file("build/shaders/tanh_backward.comp.spv")) {
+            if (m_tanh_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Tanh backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_tanh_backward_pipeline.reset();
+            }
+        } else {
+            m_tanh_backward_pipeline.reset();
+        }
+    } else {
+        m_tanh_backward_pipeline.reset();
+    }
+    
+    // Reduce sum axis-0 pipeline (2 buffers: input, output) 
+    m_reduce_sum_axis0_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_reduce_sum_axis0_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
+        // Push constants for batch_size, features, total_size
+        PushConstantRange axis0_push_range;
+        axis0_push_range.offset = 0;
+        axis0_push_range.size = sizeof(uint32_t) * 3;
+        axis0_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_reduce_sum_axis0_pipeline->set_push_constant_range(axis0_push_range);
+        
+        if (m_reduce_sum_axis0_pipeline->create_from_file("build/shaders/reduce_sum_axis0.comp.spv")) {
+            if (m_reduce_sum_axis0_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Reduce sum axis-0 pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_reduce_sum_axis0_pipeline.reset();
+            }
+        } else {
+            m_reduce_sum_axis0_pipeline.reset();
+        }
+    } else {
+        m_reduce_sum_axis0_pipeline.reset();
+    }
+    
     std::cout << "Pipeline creation summary: " << success_count << " pipelines created" << std::endl;
     
     // Return true if we have at least some working pipelines
@@ -986,6 +1144,101 @@ bool TensorOps::validate_matrix_multiply(const Tensor& a, const Tensor& b, const
         std::cerr << "Result tensor has invalid shape for matrix multiplication" << std::endl;
         return false;
     }
+    
+    return true;
+}
+
+// Backward pass implementations
+bool TensorOps::relu_backward(const Tensor& input, const Tensor& grad_output, Tensor& grad_input) {
+    if (!validate_element_wise_operation(input, grad_output, grad_input)) {
+        return false;
+    }
+    
+    if (!m_relu_backward_pipeline) {
+        std::cerr << "ReLU backward pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_relu_backward_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_relu_backward_pipeline->update_descriptor_set(0, 1, VK_NULL_HANDLE); // Not used in this shader
+    m_relu_backward_pipeline->update_descriptor_set(0, 2, grad_output.buffer());
+    m_relu_backward_pipeline->update_descriptor_set(0, 3, grad_input.buffer());
+    
+    m_relu_backward_pipeline->bind(cmd);
+    
+    uint32_t size = static_cast<uint32_t>(input.size());
+    m_relu_backward_pipeline->push_constants(cmd, &size, sizeof(uint32_t));
+    
+    uint32_t workgroup_size = 64;
+    uint32_t num_workgroups = (size + workgroup_size - 1) / workgroup_size;
+    
+    m_relu_backward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::sigmoid_backward(const Tensor& output, const Tensor& grad_output, Tensor& grad_input) {
+    if (!validate_element_wise_operation(output, grad_output, grad_input)) {
+        return false;
+    }
+    
+    if (!m_sigmoid_backward_pipeline) {
+        std::cerr << "Sigmoid backward pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_sigmoid_backward_pipeline->update_descriptor_set(0, 0, output.buffer());
+    m_sigmoid_backward_pipeline->update_descriptor_set(0, 1, grad_output.buffer());
+    m_sigmoid_backward_pipeline->update_descriptor_set(0, 2, grad_input.buffer());
+    
+    m_sigmoid_backward_pipeline->bind(cmd);
+    
+    uint32_t size = static_cast<uint32_t>(output.size());
+    m_sigmoid_backward_pipeline->push_constants(cmd, &size, sizeof(uint32_t));
+    
+    uint32_t workgroup_size = 64;
+    uint32_t num_workgroups = (size + workgroup_size - 1) / workgroup_size;
+    
+    m_sigmoid_backward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::tanh_backward(const Tensor& output, const Tensor& grad_output, Tensor& grad_input) {
+    if (!validate_element_wise_operation(output, grad_output, grad_input)) {
+        return false;
+    }
+    
+    if (!m_tanh_backward_pipeline) {
+        std::cerr << "Tanh backward pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_tanh_backward_pipeline->update_descriptor_set(0, 0, output.buffer());
+    m_tanh_backward_pipeline->update_descriptor_set(0, 1, grad_output.buffer());
+    m_tanh_backward_pipeline->update_descriptor_set(0, 2, grad_input.buffer());
+    
+    m_tanh_backward_pipeline->bind(cmd);
+    
+    uint32_t size = static_cast<uint32_t>(output.size());
+    m_tanh_backward_pipeline->push_constants(cmd, &size, sizeof(uint32_t));
+    
+    uint32_t workgroup_size = 64;
+    uint32_t num_workgroups = (size + workgroup_size - 1) / workgroup_size;
+    
+    m_tanh_backward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
     
     return true;
 }

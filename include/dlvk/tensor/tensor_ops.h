@@ -33,8 +33,14 @@ public:
     bool tanh_activation(const Tensor& input, Tensor& result);
     bool softmax(const Tensor& input, Tensor& result);
     
+    // Backward pass for activation functions
+    bool relu_backward(const Tensor& input, const Tensor& grad_output, Tensor& grad_input);
+    bool sigmoid_backward(const Tensor& output, const Tensor& grad_output, Tensor& grad_input);
+    bool tanh_backward(const Tensor& output, const Tensor& grad_output, Tensor& grad_input);
+    
     // Reduction operations
     bool sum(const Tensor& input, Tensor& result, int axis = -1);
+    bool sum_axis0(const Tensor& input, Tensor& result); // Sum along batch dimension
     bool mean(const Tensor& input, Tensor& result, int axis = -1);
     bool max(const Tensor& input, Tensor& result, int axis = -1);
     bool min(const Tensor& input, Tensor& result, int axis = -1);
@@ -59,6 +65,14 @@ private:
     std::unique_ptr<ComputePipeline> m_transpose_pipeline;
     std::unique_ptr<ComputePipeline> m_reduce_sum_pipeline;
     std::unique_ptr<ComputePipeline> m_fill_pipeline;
+    
+    // Backward pass pipelines
+    std::unique_ptr<ComputePipeline> m_relu_backward_pipeline;
+    std::unique_ptr<ComputePipeline> m_sigmoid_backward_pipeline;
+    std::unique_ptr<ComputePipeline> m_tanh_backward_pipeline;
+    
+    // Specialized reduction pipelines
+    std::unique_ptr<ComputePipeline> m_reduce_sum_axis0_pipeline;
     
     // Command buffer for operations
     VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;

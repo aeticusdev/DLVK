@@ -2,10 +2,14 @@
 291406194edb0fe7e1b3124b4efd7a94 CMakeFiles/shaders
 fff96dab168b974ff2e1908c132b6257 shaders/matrix_multiply.comp.spv
 0279b1e3f35b8233426d537554629d0f shaders/reduce_sum.comp.spv
+fac3566f85f8ac0bd87bdd001fbd9621 shaders/reduce_sum_axis0.comp.spv
 e86e359a932dc24848e5c7a07295a85f shaders/relu.comp.spv
+baad5094043c749b68fedccd950375e8 shaders/relu_backward.comp.spv
 4622fa9b5f38906f19525dba16f027c6 shaders/sigmoid.comp.spv
+6c5a003f36d2afb2299f610ad4c764c8 shaders/sigmoid_backward.comp.spv
 7293ce3751487e793ed262416fe72fc6 shaders/softmax.comp.spv
 7b8f436b512f102f7e71c5934b612d9b shaders/tanh.comp.spv
+d93fa2884083287b701b4da807858743 shaders/tanh_backward.comp.spv
 b1d4b25960ff935a3e91f62f489bad2a shaders/tensor_add.comp.spv
 0b7237f35038c210700780f017eff7aa shaders/tensor_divide.comp.spv
 02a08f5d9a27d0a19d71f40bb28a9765 shaders/tensor_multiply.comp.spv

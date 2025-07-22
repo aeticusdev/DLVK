@@ -2,17 +2,18 @@
 
 A high-performance, cross-platform machine learning framework built on Vulkan compute shaders for GPU acceleration on any modern GPU (NVIDIA, AMD, Intel).
 
-## 🚀 Major Milestone: Phase 2 Complete!
+## 🚀 Major Milestone: Phase 4 Complete!
 
-**DLVK now has a fully functional GPU compute backend with 15 working tensor operations!**
+**DLVK is now a production-ready deep learning framework with modern CNN capabilities!**
 
-✅ **Element-wise Operations**: Add, Multiply, Subtract, Divide  
-✅ **Matrix Operations**: Matrix Multiply, Transpose  
-✅ **Activation Functions**: ReLU, Sigmoid, Tanh, Softmax  
-✅ **Reduction Operations**: Sum, Mean, Max, Min  
-✅ **GPU Infrastructure**: 11 compute pipelines working with SPIR-V shaders  
+✅ **Phase 1-3 Foundation**: 15 GPU compute pipelines, full neural network training  
+✅ **Convolutional Layers**: Conv2D with configurable kernels, stride, padding  
+✅ **Pooling Operations**: MaxPool2D, AvgPool2D for feature reduction  
+✅ **Advanced Optimizers**: SGD with momentum, Adam, RMSprop  
+✅ **CNN Architectures**: Multi-layer networks for computer vision tasks  
+✅ **Memory Management**: Smart pointers, GPU resource optimization  
 
-**Ready for Phase 3**: Neural network layer development on solid GPU foundation.
+**Ready for Production**: Image classification, computer vision, transfer learning!
 
 ## Overview
 
@@ -24,9 +25,11 @@ DLVK (Deep Learning Vulkan) provides GPU acceleration for machine learning workl
 - **✅ Modern C++20** codebase with RAII resource management  
 - **✅ Complete tensor operations** with GPU memory backing
 - **✅ High-performance compute pipelines** with SPIR-V shaders
-- **🚧 Neural network layers** (Dense, Convolutional, etc.) - Phase 3
-- **📋 Optimization algorithms** (SGD, Adam) - Phase 4
-- **✅ Memory efficient** buffer management
+- **✅ Neural network layers** (Dense, Convolutional) with backpropagation
+- **✅ Advanced optimizers** (SGD with momentum, Adam, RMSprop)
+- **✅ CNN architecture support** for computer vision tasks
+- **✅ Memory efficient** buffer management with smart pointers
+- **✅ Production-ready framework** for real-world applications
 - **✅ Extensible architecture** for custom operations
 
 ## Project Structure
@@ -47,8 +50,9 @@ DLVK/
 └── CMakeLists.txt      # Build configuration
 ```
 
-## Quick Example
+## Quick Examples
 
+### Basic Tensor Operations
 ```cpp
 #include "dlvk/tensor/tensor.h"
 #include "dlvk/core/vulkan_device.h"
@@ -58,8 +62,8 @@ auto device = std::make_shared<dlvk::VulkanDevice>();
 device->initialize();
 
 // Create tensors
-auto a = std::make_shared<dlvk::Tensor>(std::vector<size_t>{4}, dlvk::DataType::FLOAT32, device);
-auto b = std::make_shared<dlvk::Tensor>(std::vector<size_t>{4}, dlvk::DataType::FLOAT32, device);
+auto a = std::make_shared<dlvk::Tensor>(device, std::vector<size_t>{4});
+auto b = std::make_shared<dlvk::Tensor>(device, std::vector<size_t>{4});
 
 // Upload data
 std::vector<float> data_a = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -74,6 +78,36 @@ auto result_relu = a->relu();        // ReLU activation
 auto result_sum = a->sum();          // 10.0
 
 // All operations run on GPU with Vulkan compute shaders!
+```
+
+### CNN Architecture (New in Phase 4!)
+```cpp
+#include "dlvk/layers/conv2d_layer.h"
+#include "dlvk/layers/pooling_layers.h"
+#include "dlvk/optimizers/optimizers.h"
+
+// Input: 28×28 grayscale images (MNIST-style)
+auto input = std::make_shared<Tensor>(device, std::vector<size_t>{1, 1, 28, 28});
+
+// Convolutional layers
+Conv2DLayer conv1(device, 1, 8, 3, 3, 1, 1, 1, 1);  // 1→8 channels, 3×3 kernel
+auto conv1_out = conv1.forward(input);
+auto relu1_out = relu_activation(conv1_out);
+
+MaxPool2DLayer pool1(device, 2, 2, 2, 2, 0, 0);     // 2×2 pooling
+auto pool1_out = pool1.forward(relu1_out);           // 28×28 → 14×14
+
+// Second convolutional block
+Conv2DLayer conv2(device, 8, 16, 3, 3, 1, 1, 1, 1); // 8→16 channels
+auto conv2_out = conv2.forward(pool1_out);
+auto relu2_out = relu_activation(conv2_out);
+
+MaxPool2DLayer pool2(device, 2, 2, 2, 2, 0, 0);     
+auto final_out = pool2.forward(relu2_out);          // 14×14 → 7×7
+
+// Advanced optimizers
+AdamOptimizer adam(0.001f, 0.9f, 0.999f, 1e-8f);
+// Ready for image classification training!
 ```
 
 ## Dependencies

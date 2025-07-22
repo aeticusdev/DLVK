@@ -39,6 +39,8 @@ add_library(dlvk STATIC
     src/compute/compute_pipeline.cpp
     src/layers/dense_layer.cpp
     src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
     src/optimizers/sgd.cpp
     src/optimizers/adam.cpp
     src/loss/loss_functions.cpp

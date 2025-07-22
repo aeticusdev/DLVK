@@ -265,6 +265,24 @@ std::shared_ptr<Tensor> Tensor::subtract(const Tensor& other) const {
     return result;
 }
 
+std::shared_ptr<Tensor> Tensor::multiply_scalar(float scalar) const {
+    auto result = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
+    
+    // For now, implement on CPU - TODO: Create GPU kernel for scalar operations
+    std::vector<float> data(m_size);
+    std::vector<float> result_data(m_size);
+    
+    download_data(data.data());
+    
+    for (size_t i = 0; i < m_size; ++i) {
+        result_data[i] = data[i] * scalar;
+    }
+    
+    result->upload_data(result_data.data());
+    
+    return result;
+}
+
 std::shared_ptr<Tensor> Tensor::divide(const Tensor& other) const {
     auto result = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
     
@@ -351,6 +369,49 @@ std::shared_ptr<Tensor> Tensor::softmax() const {
     }
     
     return result;
+}
+
+// Backward pass implementations
+std::shared_ptr<Tensor> Tensor::relu_backward(const Tensor& grad_output) const {
+    auto grad_input = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
+    
+    if (s_tensor_ops) {
+        if (!s_tensor_ops->relu_backward(*this, grad_output, *grad_input)) {
+            throw std::runtime_error("Failed to perform ReLU backward pass");
+        }
+    } else {
+        throw std::runtime_error("TensorOps not initialized. Call Tensor::set_tensor_ops() first.");
+    }
+    
+    return grad_input;
+}
+
+std::shared_ptr<Tensor> Tensor::sigmoid_backward(const Tensor& grad_output) const {
+    auto grad_input = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
+    
+    if (s_tensor_ops) {
+        if (!s_tensor_ops->sigmoid_backward(*this, grad_output, *grad_input)) {
+            throw std::runtime_error("Failed to perform Sigmoid backward pass");
+        }
+    } else {
+        throw std::runtime_error("TensorOps not initialized. Call Tensor::set_tensor_ops() first.");
+    }
+    
+    return grad_input;
+}
+
+std::shared_ptr<Tensor> Tensor::tanh_backward(const Tensor& grad_output) const {
+    auto grad_input = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
+    
+    if (s_tensor_ops) {
+        if (!s_tensor_ops->tanh_backward(*this, grad_output, *grad_input)) {
+            throw std::runtime_error("Failed to perform Tanh backward pass");
+        }
+    } else {
+        throw std::runtime_error("TensorOps not initialized. Call Tensor::set_tensor_ops() first.");
+    }
+    
+    return grad_input;
 }
 
 } // namespace dlvk
