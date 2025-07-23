@@ -43,6 +43,15 @@ public:
                           VkDeviceMemory& buffer_memory) const;
     
     void destroy_buffer(VkBuffer buffer, VkDeviceMemory buffer_memory) const;
+    
+    // Device information
+    std::string get_device_name() const;
+    std::string get_device_type_string() const;
+    std::string get_vulkan_version_string() const;
+    uint32_t get_max_workgroup_size() const;
+    VkDeviceSize get_max_memory_allocation() const;
+    uint32_t get_memory_heap_count() const;
+    VkDeviceSize get_total_device_memory() const;
 
 private:
     VkInstance m_instance = VK_NULL_HANDLE;

@@ -233,4 +233,68 @@ void VulkanDevice::destroy_buffer(VkBuffer buffer, VkDeviceMemory buffer_memory)
     vkFreeMemory(m_device, buffer_memory, nullptr);
 }
 
+std::string VulkanDevice::get_device_name() const {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(m_physical_device, &properties);
+    return std::string(properties.deviceName);
+}
+
+std::string VulkanDevice::get_device_type_string() const {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(m_physical_device, &properties);
+    
+    switch (properties.deviceType) {
+        case VK_PHYSICAL_DEVICE_TYPE_OTHER: return "Other";
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: return "Integrated GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU: return "Discrete GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: return "Virtual GPU";
+        case VK_PHYSICAL_DEVICE_TYPE_CPU: return "CPU";
+        default: return "Unknown";
+    }
+}
+
+std::string VulkanDevice::get_vulkan_version_string() const {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(m_physical_device, &properties);
+    
+    uint32_t major = VK_VERSION_MAJOR(properties.apiVersion);
+    uint32_t minor = VK_VERSION_MINOR(properties.apiVersion);
+    uint32_t patch = VK_VERSION_PATCH(properties.apiVersion);
+    
+    return std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(patch);
+}
+
+uint32_t VulkanDevice::get_max_workgroup_size() const {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(m_physical_device, &properties);
+    
+    // Return the maximum workgroup size across all dimensions
+    return properties.limits.maxComputeWorkGroupSize[0];
+}
+
+VkDeviceSize VulkanDevice::get_max_memory_allocation() const {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(m_physical_device, &properties);
+    return properties.limits.maxMemoryAllocationCount;
+}
+
+uint32_t VulkanDevice::get_memory_heap_count() const {
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(m_physical_device, &memory_properties);
+    return memory_properties.memoryHeapCount;
+}
+
+VkDeviceSize VulkanDevice::get_total_device_memory() const {
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(m_physical_device, &memory_properties);
+    
+    VkDeviceSize total_memory = 0;
+    for (uint32_t i = 0; i < memory_properties.memoryHeapCount; i++) {
+        if (memory_properties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT) {
+            total_memory += memory_properties.memoryHeaps[i].size;
+        }
+    }
+    return total_memory;
+}
+
 } // namespace dlvk

@@ -730,7 +730,7 @@ bool TensorOps::create_pipelines() {
     m_add_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_add_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_add_pipeline->set_push_constant_range(push_range);
-        if (m_add_pipeline->create_from_file("build/shaders/tensor_add.comp.spv")) {
+        if (m_add_pipeline->create_from_file("shaders/tensor_add.comp.spv")) {
             if (m_add_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Add pipeline created successfully" << std::endl;
                 success_count++;
@@ -751,7 +751,7 @@ bool TensorOps::create_pipelines() {
     m_multiply_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_multiply_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_multiply_pipeline->set_push_constant_range(push_range);
-        if (m_multiply_pipeline->create_from_file("build/shaders/tensor_multiply.comp.spv")) {
+        if (m_multiply_pipeline->create_from_file("shaders/tensor_multiply.comp.spv")) {
             if (m_multiply_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Multiply pipeline created successfully" << std::endl;
                 success_count++;
@@ -774,7 +774,7 @@ bool TensorOps::create_pipelines() {
         matmul_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_matmul_pipeline->set_push_constant_range(matmul_push_range);
         
-        if (m_matmul_pipeline->create_from_file("build/shaders/matrix_multiply.comp.spv")) {
+        if (m_matmul_pipeline->create_from_file("shaders/matrix_multiply.comp.spv")) {
             if (m_matmul_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Matrix multiply pipeline created successfully" << std::endl;
                 success_count++;
@@ -797,7 +797,7 @@ bool TensorOps::create_pipelines() {
         activation_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_relu_pipeline->set_push_constant_range(activation_push_range);
         
-        if (m_relu_pipeline->create_from_file("build/shaders/relu.comp.spv")) {
+        if (m_relu_pipeline->create_from_file("shaders/relu.comp.spv")) {
             if (m_relu_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ ReLU pipeline created successfully" << std::endl;
                 success_count++;
@@ -815,7 +815,7 @@ bool TensorOps::create_pipelines() {
     m_subtract_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_subtract_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_subtract_pipeline->set_push_constant_range(push_range);
-        if (m_subtract_pipeline->create_from_file("build/shaders/tensor_subtract.comp.spv")) {
+        if (m_subtract_pipeline->create_from_file("shaders/tensor_subtract.comp.spv")) {
             if (m_subtract_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Subtract pipeline created successfully" << std::endl;
                 success_count++;
@@ -833,7 +833,7 @@ bool TensorOps::create_pipelines() {
     m_divide_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_divide_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_divide_pipeline->set_push_constant_range(push_range);
-        if (m_divide_pipeline->create_from_file("build/shaders/tensor_divide.comp.spv")) {
+        if (m_divide_pipeline->create_from_file("shaders/tensor_divide.comp.spv")) {
             if (m_divide_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Divide pipeline created successfully" << std::endl;
                 success_count++;
@@ -851,7 +851,7 @@ bool TensorOps::create_pipelines() {
     m_sigmoid_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_sigmoid_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         m_sigmoid_pipeline->set_push_constant_range(push_range);
-        if (m_sigmoid_pipeline->create_from_file("build/shaders/sigmoid.comp.spv")) {
+        if (m_sigmoid_pipeline->create_from_file("shaders/sigmoid.comp.spv")) {
             if (m_sigmoid_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Sigmoid pipeline created successfully" << std::endl;
                 success_count++;
@@ -875,7 +875,7 @@ bool TensorOps::create_pipelines() {
         reduce_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_reduce_sum_pipeline->set_push_constant_range(reduce_push_range);
         
-        if (m_reduce_sum_pipeline->create_from_file("build/shaders/reduce_sum.comp.spv")) {
+        if (m_reduce_sum_pipeline->create_from_file("shaders/reduce_sum.comp.spv")) {
             if (m_reduce_sum_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Reduce Sum pipeline created successfully" << std::endl;
                 success_count++;
@@ -898,7 +898,7 @@ bool TensorOps::create_pipelines() {
         activation_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_tanh_pipeline->set_push_constant_range(activation_push_range);
         
-        if (m_tanh_pipeline->create_from_file("build/shaders/tanh.comp.spv")) {
+        if (m_tanh_pipeline->create_from_file("shaders/tanh.comp.spv")) {
             if (m_tanh_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Tanh pipeline created successfully" << std::endl;
                 success_count++;
@@ -922,7 +922,7 @@ bool TensorOps::create_pipelines() {
         transpose_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_transpose_pipeline->set_push_constant_range(transpose_push_range);
         
-        if (m_transpose_pipeline->create_from_file("build/shaders/transpose.comp.spv")) {
+        if (m_transpose_pipeline->create_from_file("shaders/transpose.comp.spv")) {
             if (m_transpose_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Transpose pipeline created successfully" << std::endl;
                 success_count++;
@@ -946,7 +946,7 @@ bool TensorOps::create_pipelines() {
         softmax_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_softmax_pipeline->set_push_constant_range(softmax_push_range);
         
-        if (m_softmax_pipeline->create_from_file("build/shaders/softmax.comp.spv")) {
+        if (m_softmax_pipeline->create_from_file("shaders/softmax.comp.spv")) {
             if (m_softmax_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Softmax pipeline created successfully" << std::endl;
                 success_count++;
@@ -978,7 +978,7 @@ bool TensorOps::create_pipelines() {
         backward_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_relu_backward_pipeline->set_push_constant_range(backward_push_range);
         
-        if (m_relu_backward_pipeline->create_from_file("build/shaders/relu_backward.comp.spv")) {
+        if (m_relu_backward_pipeline->create_from_file("shaders/relu_backward.comp.spv")) {
             if (m_relu_backward_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ ReLU backward pipeline created successfully" << std::endl;
                 success_count++;
@@ -1008,7 +1008,7 @@ bool TensorOps::create_pipelines() {
     if (m_sigmoid_backward_pipeline->create_descriptor_set_layout(backward_three_buffer_bindings)) {
         m_sigmoid_backward_pipeline->set_push_constant_range(backward_push_range);
         
-        if (m_sigmoid_backward_pipeline->create_from_file("build/shaders/sigmoid_backward.comp.spv")) {
+        if (m_sigmoid_backward_pipeline->create_from_file("shaders/sigmoid_backward.comp.spv")) {
             if (m_sigmoid_backward_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Sigmoid backward pipeline created successfully" << std::endl;
                 success_count++;
@@ -1027,7 +1027,7 @@ bool TensorOps::create_pipelines() {
     if (m_tanh_backward_pipeline->create_descriptor_set_layout(backward_three_buffer_bindings)) {
         m_tanh_backward_pipeline->set_push_constant_range(backward_push_range);
         
-        if (m_tanh_backward_pipeline->create_from_file("build/shaders/tanh_backward.comp.spv")) {
+        if (m_tanh_backward_pipeline->create_from_file("shaders/tanh_backward.comp.spv")) {
             if (m_tanh_backward_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Tanh backward pipeline created successfully" << std::endl;
                 success_count++;
@@ -1051,7 +1051,7 @@ bool TensorOps::create_pipelines() {
         axis0_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
         m_reduce_sum_axis0_pipeline->set_push_constant_range(axis0_push_range);
         
-        if (m_reduce_sum_axis0_pipeline->create_from_file("build/shaders/reduce_sum_axis0.comp.spv")) {
+        if (m_reduce_sum_axis0_pipeline->create_from_file("shaders/reduce_sum_axis0.comp.spv")) {
             if (m_reduce_sum_axis0_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Reduce sum axis-0 pipeline created successfully" << std::endl;
                 success_count++;
@@ -1077,7 +1077,7 @@ bool TensorOps::create_pipelines() {
     m_conv2d_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_conv2d_pipeline->create_descriptor_set_layout(conv2d_bindings)) {
         m_conv2d_pipeline->set_push_constant_range(conv2d_push_range);
-        if (m_conv2d_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/conv2d.comp.spv")) {
+        if (m_conv2d_pipeline->create_from_file("shaders/conv2d.comp.spv")) {
             if (m_conv2d_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Conv2D pipeline created successfully" << std::endl;
                 success_count++;
@@ -1102,7 +1102,7 @@ bool TensorOps::create_pipelines() {
     m_maxpool2d_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_maxpool2d_pipeline->create_descriptor_set_layout(maxpool_bindings)) {
         m_maxpool2d_pipeline->set_push_constant_range(maxpool_push_range);
-        if (m_maxpool2d_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/maxpool2d.comp.spv")) {
+        if (m_maxpool2d_pipeline->create_from_file("shaders/maxpool2d.comp.spv")) {
             if (m_maxpool2d_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ MaxPool2D pipeline created successfully" << std::endl;
                 success_count++;
@@ -1132,7 +1132,7 @@ bool TensorOps::create_pipelines() {
     m_batch_norm_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_batch_norm_pipeline->create_descriptor_set_layout(batchnorm_bindings)) {
         m_batch_norm_pipeline->set_push_constant_range(batchnorm_push_range);
-        if (m_batch_norm_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/batch_norm.comp.spv")) {
+        if (m_batch_norm_pipeline->create_from_file("shaders/batch_norm.comp.spv")) {
             if (m_batch_norm_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ BatchNorm pipeline created successfully" << std::endl;
                 success_count++;
@@ -1157,7 +1157,7 @@ bool TensorOps::create_pipelines() {
     m_dropout_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_dropout_pipeline->create_descriptor_set_layout(dropout_bindings)) {
         m_dropout_pipeline->set_push_constant_range(dropout_push_range);
-        if (m_dropout_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/dropout.comp.spv")) {
+        if (m_dropout_pipeline->create_from_file("shaders/dropout.comp.spv")) {
             if (m_dropout_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Dropout pipeline created successfully" << std::endl;
                 success_count++;
@@ -1181,7 +1181,7 @@ bool TensorOps::create_pipelines() {
     m_avgpool2d_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_avgpool2d_pipeline->create_descriptor_set_layout(std::vector<VkDescriptorSetLayoutBinding>(avgpool_bindings, avgpool_bindings + 2))) {
         m_avgpool2d_pipeline->set_push_constant_range(avgpool_push_range);
-        if (m_avgpool2d_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/avgpool2d.comp.spv")) {
+        if (m_avgpool2d_pipeline->create_from_file("shaders/avgpool2d.comp.spv")) {
             if (m_avgpool2d_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ AvgPool2D pipeline created successfully" << std::endl;
                 success_count++;
@@ -1211,7 +1211,7 @@ bool TensorOps::create_pipelines() {
     m_batch_norm_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_batch_norm_backward_pipeline->create_descriptor_set_layout(std::vector<VkDescriptorSetLayoutBinding>(batchnorm_backward_bindings, batchnorm_backward_bindings + 8))) {
         m_batch_norm_backward_pipeline->set_push_constant_range(batchnorm_backward_push_range);
-        if (m_batch_norm_backward_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/batch_norm_backward.comp.spv")) {
+        if (m_batch_norm_backward_pipeline->create_from_file("shaders/batch_norm_backward.comp.spv")) {
             if (m_batch_norm_backward_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ BatchNorm backward pipeline created successfully" << std::endl;
                 success_count++;
@@ -1236,7 +1236,7 @@ bool TensorOps::create_pipelines() {
     m_dropout_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_dropout_backward_pipeline->create_descriptor_set_layout(std::vector<VkDescriptorSetLayoutBinding>(dropout_backward_bindings, dropout_backward_bindings + 3))) {
         m_dropout_backward_pipeline->set_push_constant_range(dropout_backward_push_range);
-        if (m_dropout_backward_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/dropout_backward.comp.spv")) {
+        if (m_dropout_backward_pipeline->create_from_file("shaders/dropout_backward.comp.spv")) {
             if (m_dropout_backward_pipeline->allocate_descriptor_sets(1)) {
                 std::cout << "✓ Dropout backward pipeline created successfully" << std::endl;
                 success_count++;

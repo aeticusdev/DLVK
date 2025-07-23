@@ -30,11 +30,34 @@ void demonstrate_gpu_pipeline_creation() {
     auto device = std::make_shared<VulkanDevice>();
     device->initialize();
     
+    // Get and display GPU device information
+    std::cout << "🖥️  GPU Device Information:" << std::endl;
+    std::cout << "   Device Name: " << device->get_device_name() << std::endl;
+    std::cout << "   Device Type: " << device->get_device_type_string() << std::endl;
+    std::cout << "   Vulkan API Version: " << device->get_vulkan_version_string() << std::endl;
+    std::cout << "   Max Compute Workgroup Size: " << device->get_max_workgroup_size() << std::endl;
+    
+    VkDeviceSize total_memory = device->get_total_device_memory();
+    double memory_gb = static_cast<double>(total_memory) / (1024.0 * 1024.0 * 1024.0);
+    std::cout << "   Total GPU Memory: " << std::fixed << std::setprecision(2) 
+              << memory_gb << " GB" << std::endl;
+    std::cout << "   Memory Heaps: " << device->get_memory_heap_count() << std::endl;
+    
+    // Verify GPU acceleration
+    if (device->get_device_type_string().find("GPU") == std::string::npos) {
+        std::cout << "   ⚠️  WARNING: Using CPU device instead of GPU!" << std::endl;
+        std::cout << "   💡 GPU acceleration NOT active" << std::endl;
+    } else {
+        std::cout << "   ✅ GPU acceleration CONFIRMED!" << std::endl;
+        std::cout << "   🚀 Using hardware GPU for compute operations" << std::endl;
+    }
+    std::cout << std::endl;
+    
     auto tensor_ops = std::make_shared<TensorOps>(device);
     tensor_ops->initialize();
     Tensor::set_tensor_ops(tensor_ops);
     
-    std::cout << "✓ Vulkan GPU backend initialized" << std::endl;
+    std::cout << "✓ Vulkan GPU backend initialized on: " << device->get_device_name() << std::endl;
     std::cout << "✓ Core compute pipelines: 15 (Phases 1-4.2)" << std::endl;
     std::cout << "✓ CNN compute pipelines: 7 (Phase 4.3)" << std::endl;
     std::cout << "✓ Total GPU pipelines operational: 22" << std::endl;
@@ -79,10 +102,10 @@ void demonstrate_conv2d_gpu_acceleration() {
     
     std::cout << "✓ Created input tensor: [2, 3, 32, 32] (batch=2, RGB images)" << std::endl;
     
-    // Create Conv2D layer (3 → 16 channels, 3x3 kernel)
-    auto conv_layer = std::make_shared<Conv2DLayer>(*device, 3, 16, 3, 3);
+    // Create Conv2D layer (3 → 16 channels, 3x3 kernel, padding=1 to maintain spatial dims)
+    auto conv_layer = std::make_shared<Conv2DLayer>(*device, 3, 16, 3, 3, 1, 1, 1, 1);
     
-    std::cout << "✓ Created Conv2D layer: 3→16 channels, 3x3 kernel" << std::endl;
+    std::cout << "✓ Created Conv2D layer: 3→16 channels, 3x3 kernel, padding=1" << std::endl;
     
     // Time the GPU convolution
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -136,8 +159,8 @@ void demonstrate_pooling_gpu_acceleration() {
     
     std::cout << "✓ Created feature maps: [2, 16, 32, 32]" << std::endl;
     
-    // Test MaxPool2D GPU acceleration
-    auto maxpool_layer = std::make_shared<MaxPool2DLayer>(*device, 2, 2); // 2x2 pooling
+    // Test MaxPool2D GPU acceleration (2x2 pooling with stride=2 for 2x reduction)
+    auto maxpool_layer = std::make_shared<MaxPool2DLayer>(*device, 2, 2, 2, 2); // 2x2 pool, stride=2
     
     auto start_time = std::chrono::high_resolution_clock::now();
     auto maxpool_output = maxpool_layer->forward(input);
@@ -149,8 +172,8 @@ void demonstrate_pooling_gpu_acceleration() {
     std::cout << "✓ MaxPool2D output: [" << maxpool_shape[0] << ", " << maxpool_shape[1] 
               << ", " << maxpool_shape[2] << ", " << maxpool_shape[3] << "] (16x16 expected)" << std::endl;
     
-    // Test AvgPool2D GPU acceleration
-    auto avgpool_layer = std::make_shared<AvgPool2DLayer>(*device, 2, 2);
+    // Test AvgPool2D GPU acceleration (2x2 pooling with stride=2 for 2x reduction)
+    auto avgpool_layer = std::make_shared<AvgPool2DLayer>(*device, 2, 2, 2, 2);
     
     start_time = std::chrono::high_resolution_clock::now();
     auto avgpool_output = avgpool_layer->forward(input);
@@ -266,19 +289,20 @@ void demonstrate_complete_cnn_pipeline() {
     std::cout << "✓ Input: [2, 3, 32, 32] (2 RGB images, 32x32)" << std::endl;
     
     // Build CNN architecture with GPU acceleration
-    auto conv1 = std::make_shared<Conv2DLayer>(*device, 3, 16, 3, 3);    // 3→16 channels
+    auto conv1 = std::make_shared<Conv2DLayer>(*device, 3, 16, 3, 3, 1, 1, 1, 1);    // 3→16 channels, padding=1
     auto bn1 = std::make_shared<BatchNorm2DLayer>(*device, 16);       // BatchNorm
-    auto maxpool1 = std::make_shared<MaxPool2DLayer>(*device, 2, 2);  // 2x2 pooling
+    auto maxpool1 = std::make_shared<MaxPool2DLayer>(*device, 2, 2, 2, 2);  // 2x2 pooling, stride=2
     auto dropout1 = std::make_shared<DropoutLayer>(*device, 0.1f);    // 10% dropout
     
-    auto conv2 = std::make_shared<Conv2DLayer>(*device, 16, 32, 3, 3);   // 16→32 channels
+    auto conv2 = std::make_shared<Conv2DLayer>(*device, 16, 32, 3, 3, 1, 1, 1, 1);   // 16→32 channels, padding=1
     auto bn2 = std::make_shared<BatchNorm2DLayer>(*device, 32);       // BatchNorm
-    auto avgpool1 = std::make_shared<AvgPool2DLayer>(*device, 2, 2);  // 2x2 avg pooling
+    auto avgpool1 = std::make_shared<AvgPool2DLayer>(*device, 2, 2, 2, 2);  // 2x2 avg pooling, stride=2
     auto dropout2 = std::make_shared<DropoutLayer>(*device, 0.2f);    // 20% dropout
     
     std::cout << "✓ CNN Architecture:" << std::endl;
-    std::cout << "  Conv2D(3→16) → BatchNorm2D → MaxPool2D → Dropout(0.1)" << std::endl;
-    std::cout << "  Conv2D(16→32) → BatchNorm2D → AvgPool2D → Dropout(0.2)" << std::endl;
+    std::cout << "  Conv2D(3→16, pad=1) → BatchNorm2D → MaxPool2D(2x2, s=2) → Dropout(0.1)" << std::endl;
+    std::cout << "  Conv2D(16→32, pad=1) → BatchNorm2D → AvgPool2D(2x2, s=2) → Dropout(0.2)" << std::endl;
+    std::cout << "  Expected shape progression: [32,32] → [32,32] → [16,16] → [16,16] → [8,8]" << std::endl;
     
     // Set training mode
     bn1->set_training(true);
