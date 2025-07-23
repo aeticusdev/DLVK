@@ -27,9 +27,10 @@ public:
     }
     
     Tensor forward(const Tensor& input) override {
-        auto input_ptr = std::make_shared<Tensor>(input);
+        // Convert Tensor to shared_ptr for legacy API
+        auto input_ptr = std::make_shared<Tensor>(input);  // This will use our copy constructor
         auto output_ptr = m_layer->forward(input_ptr);
-        return *output_ptr;
+        return *output_ptr;  // This will also use copy constructor  
     }
     
     Tensor backward(const Tensor& grad_output) override {

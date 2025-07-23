@@ -1,5 +1,6 @@
 #include "dlvk/layers/dropout_layer.h"
 #include <algorithm>
+#include <stdexcept>
 
 namespace dlvk {
 

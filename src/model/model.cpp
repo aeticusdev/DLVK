@@ -17,7 +17,7 @@
 namespace dlvk {
 
 // Sequential Model Implementation
-Sequential::Sequential(VulkanDevice& device) : m_is_training(true), m_device(&device) {}
+Sequential::Sequential(std::shared_ptr<VulkanDevice> device) : m_is_training(true), m_device(device) {}
 
 void Sequential::add(std::unique_ptr<ModernLayer> layer) {
     m_layers.push_back(std::move(layer));
@@ -63,22 +63,22 @@ void Sequential::add_dropout(float dropout_rate) {
 }
 
 void Sequential::add_relu() {
-    auto layer = std::make_unique<ActivationLayer>(*m_device, ActivationType::ReLU);
+    auto layer = std::make_unique<ActivationLayer>(m_device, ActivationType::ReLU);
     add(std::move(layer));
 }
 
 void Sequential::add_sigmoid() {
-    auto layer = std::make_unique<ActivationLayer>(*m_device, ActivationType::Sigmoid);
+    auto layer = std::make_unique<ActivationLayer>(m_device, ActivationType::Sigmoid);
     add(std::move(layer));
 }
 
 void Sequential::add_tanh() {
-    auto layer = std::make_unique<ActivationLayer>(*m_device, ActivationType::Tanh);
+    auto layer = std::make_unique<ActivationLayer>(m_device, ActivationType::Tanh);
     add(std::move(layer));
 }
 
 void Sequential::add_softmax() {
-    auto layer = std::make_unique<ActivationLayer>(*m_device, ActivationType::Softmax);
+    auto layer = std::make_unique<ActivationLayer>(m_device, ActivationType::Softmax);
     add(std::move(layer));
 }
 

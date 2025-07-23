@@ -8,7 +8,9 @@ namespace dlvk {
 DenseLayer::DenseLayer(VulkanDevice& device, size_t input_size, size_t output_size)
     : device_(device), input_size_(input_size), output_size_(output_size) {
     
-    auto device_ptr = std::make_shared<VulkanDevice>(device);
+    // IMPORTANT: Don't copy the VulkanDevice! Get a shared_ptr to the existing instance
+    // We need to use a custom deleter that does nothing to avoid double-deletion
+    auto device_ptr = std::shared_ptr<VulkanDevice>(&device, [](VulkanDevice*){});
     
     // Initialize weight and bias tensors
     weights_ = std::make_shared<Tensor>(

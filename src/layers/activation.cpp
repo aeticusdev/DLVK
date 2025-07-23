@@ -7,14 +7,12 @@
 
 namespace dlvk {
 
-ActivationLayer::ActivationLayer(VulkanDevice& device, ActivationType activation_type) 
-    : m_device(&device), m_activation_type(activation_type), m_is_training(true) {}
+ActivationLayer::ActivationLayer(std::shared_ptr<VulkanDevice> device, ActivationType activation_type) 
+    : m_device(device), m_activation_type(activation_type), m_is_training(true) {}
 
 Tensor ActivationLayer::forward(const Tensor& input) {
     // Create output tensor with same shape and properties as input
-    // Get shared_ptr from the device
-    auto device_ptr = std::shared_ptr<VulkanDevice>(m_device, [](VulkanDevice*){});
-    Tensor output(input.shape(), input.dtype(), device_ptr);
+    Tensor output(input.shape(), input.dtype(), m_device);
     
     switch (m_activation_type) {
         case ActivationType::ReLU:
@@ -41,33 +39,32 @@ Tensor ActivationLayer::forward(const Tensor& input) {
             throw std::runtime_error("Unknown activation type");
     }
     
-    return output;
+    return std::move(output);
 }
 
 Tensor ActivationLayer::backward(const Tensor& grad_output) {
     // Create gradient input tensor with same shape as grad_output
-    auto device_ptr = std::shared_ptr<VulkanDevice>(m_device, [](VulkanDevice*){});
-    Tensor grad_input(grad_output.shape(), grad_output.dtype(), device_ptr);
+    Tensor grad_input(grad_output.shape(), grad_output.dtype(), m_device);
     
     bool success = false;
     switch (m_activation_type) {
         case ActivationType::ReLU: {
             // For ReLU backward, we need the input (which we don't store)
             // This is a simplified version - in practice, you'd store the forward input
-            Tensor dummy_input(grad_output.shape(), grad_output.dtype(), device_ptr);
+            Tensor dummy_input(grad_output.shape(), grad_output.dtype(), m_device);
             success = TensorOpsStatic::relu_backward(dummy_input, grad_output, grad_input);
             break;
         }
         case ActivationType::Sigmoid: {
             // For sigmoid backward, we need the forward result
             // This is a simplified version - in practice, you'd store the forward result
-            Tensor sigmoid_output(grad_output.shape(), grad_output.dtype(), device_ptr);
+            Tensor sigmoid_output(grad_output.shape(), grad_output.dtype(), m_device);
             success = TensorOpsStatic::sigmoid_backward(sigmoid_output, grad_output, grad_input);
             break;
         }
         case ActivationType::Tanh: {
             // For tanh backward, we need the forward result
-            Tensor tanh_output(grad_output.shape(), grad_output.dtype(), device_ptr);
+            Tensor tanh_output(grad_output.shape(), grad_output.dtype(), m_device);
             success = TensorOpsStatic::tanh_backward(tanh_output, grad_output, grad_input);
             break;
         }

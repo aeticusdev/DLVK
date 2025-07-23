@@ -32,7 +32,7 @@ int main() {
         std::cout << "Created test tensor with shape [2, 3]" << std::endl;
         
         // Test ReLU activation
-        ActivationLayer relu_layer(*device, ActivationType::ReLU);
+        ActivationLayer relu_layer(device, ActivationType::ReLU);
         std::cout << "Created ReLU activation layer" << std::endl;
         
         // Get layer info
@@ -50,13 +50,13 @@ int main() {
         }
         
         // Test other activation types
-        ActivationLayer sigmoid_layer(*device, ActivationType::Sigmoid);
+        ActivationLayer sigmoid_layer(device, ActivationType::Sigmoid);
         std::cout << "Created Sigmoid layer: " << sigmoid_layer.get_layer_info().type << std::endl;
         
-        ActivationLayer tanh_layer(*device, ActivationType::Tanh);
+        ActivationLayer tanh_layer(device, ActivationType::Tanh);
         std::cout << "Created Tanh layer: " << tanh_layer.get_layer_info().type << std::endl;
         
-        ActivationLayer softmax_layer(*device, ActivationType::Softmax);
+        ActivationLayer softmax_layer(device, ActivationType::Softmax);
         std::cout << "Created Softmax layer: " << softmax_layer.get_layer_info().type << std::endl;
         
         std::cout << "All activation layers created successfully!" << std::endl;

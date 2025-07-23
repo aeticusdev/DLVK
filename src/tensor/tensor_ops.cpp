@@ -671,9 +671,30 @@ bool TensorOps::softmax(const Tensor& input, Tensor& result) {
 }
 
 bool TensorOps::fill(Tensor& tensor, float value) {
-    // TODO: Implement fill operation
-    std::cerr << "Fill operation not yet implemented" << std::endl;
-    return false;
+    if (!tensor.buffer()) {
+        std::cerr << "Tensor buffer is null" << std::endl;
+        return false;
+    }
+
+    // Map buffer memory and fill with value
+    VkDevice device = m_device->get_device();
+    void* mapped_data;
+    VkResult result = vkMapMemory(device, tensor.memory(), 0, VK_WHOLE_SIZE, 0, &mapped_data);
+    
+    if (result != VK_SUCCESS) {
+        std::cerr << "Failed to map tensor memory for fill operation" << std::endl;
+        return false;
+    }
+
+    size_t element_count = tensor.size();
+    float* float_data = static_cast<float*>(mapped_data);
+    
+    for (size_t i = 0; i < element_count; ++i) {
+        float_data[i] = value;
+    }
+
+    vkUnmapMemory(device, tensor.memory());
+    return true;
 }
 
 bool TensorOps::copy(const Tensor& source, Tensor& destination) {
@@ -1268,6 +1289,9 @@ bool TensorOps::allocate_command_buffer() {
 }
 
 VkCommandBuffer TensorOps::begin_single_time_commands() {
+    // Reset the command buffer before beginning recording
+    vkResetCommandBuffer(m_command_buffer, 0);
+    
     VkCommandBufferBeginInfo begin_info{};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -1289,8 +1313,31 @@ void TensorOps::end_single_time_commands(VkCommandBuffer cmd_buffer) {
     vkResetFences(m_device->get_device(), 1, &m_fence);
     
     // Submit and wait
-    vkQueueSubmit(m_device->get_compute_queue(), 1, &submit_info, m_fence);
-    vkWaitForFences(m_device->get_device(), 1, &m_fence, VK_TRUE, UINT64_MAX);
+    VkResult submit_result = vkQueueSubmit(m_device->get_compute_queue(), 1, &submit_info, m_fence);
+    if (submit_result != VK_SUCCESS) {
+        std::cerr << "Failed to submit command buffer: " << submit_result << std::endl;
+        return;
+    }
+    
+    VkResult fence_result = vkWaitForFences(m_device->get_device(), 1, &m_fence, VK_TRUE, UINT64_MAX);
+    if (fence_result != VK_SUCCESS) {
+        std::cerr << "Failed to wait for fence: " << fence_result << std::endl;
+        return;
+    }
+    
+    // Additional synchronization: wait for queue to be idle before reusing command buffer  
+    VkResult queue_result = vkQueueWaitIdle(m_device->get_compute_queue());
+    if (queue_result != VK_SUCCESS) {
+        std::cerr << "Failed to wait for queue idle: " << queue_result << std::endl;
+        return;
+    }
+    
+    // Add a device-wide wait to ensure all operations complete
+    VkResult device_result = vkDeviceWaitIdle(m_device->get_device());
+    if (device_result != VK_SUCCESS) {
+        std::cerr << "Failed to wait for device idle: " << device_result << std::endl;
+        return;
+    }
 }
 
 bool TensorOps::validate_element_wise_operation(const Tensor& a, const Tensor& b, const Tensor& result) {

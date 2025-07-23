@@ -21,7 +21,7 @@ enum class ActivationType {
 class ActivationLayer : public ModernLayer {
 private:
     ActivationType m_activation_type;
-    VulkanDevice* m_device;
+    std::shared_ptr<VulkanDevice> m_device;
     bool m_is_training;
     
 public:
@@ -30,7 +30,7 @@ public:
      * @param device Vulkan device for tensor operations
      * @param activation_type Type of activation function
      */
-    ActivationLayer(VulkanDevice& device, ActivationType activation_type);
+    ActivationLayer(std::shared_ptr<VulkanDevice> device, ActivationType activation_type);
     
     /**
      * @brief Destructor
