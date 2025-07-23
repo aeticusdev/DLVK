@@ -1733,4 +1733,28 @@ bool TensorOps::tanh_backward(const Tensor& output, const Tensor& grad_output, T
     return true;
 }
 
+// Static instance implementation
+TensorOps* TensorOps::s_instance = nullptr;
+
+bool TensorOps::initialize(VulkanDevice* device) {
+    if (s_instance) {
+        std::cerr << "TensorOps already initialized" << std::endl;
+        return false;
+    }
+    
+    std::shared_ptr<VulkanDevice> shared_device(device, [](VulkanDevice*) {
+        // Custom deleter that does nothing since we don't own the device
+    });
+    
+    s_instance = new TensorOps(shared_device);
+    return s_instance->initialize();
+}
+
+void TensorOps::shutdown() {
+    if (s_instance) {
+        delete s_instance;
+        s_instance = nullptr;
+    }
+}
+
 } // namespace dlvk

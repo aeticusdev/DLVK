@@ -1,5 +1,4 @@
 #include "dlvk/optimizers/optimizers.h"
-#include "dlvk/layers/layer.h"
 #include <cmath>
 
 namespace dlvk {
@@ -9,9 +8,9 @@ SGD::SGD(float learning_rate, float momentum)
     : m_learning_rate(learning_rate), m_momentum(momentum), 
       m_use_momentum(momentum > 0.0f) {}
 
-void SGD::update(Layer* layer) {
+void SGD::update(ModernLayer* layer) {
     if (layer) {
-        layer->update_weights(m_learning_rate);
+        layer->update_parameters(*this);
     }
 }
 
@@ -82,9 +81,9 @@ Adam::Adam(float learning_rate, float beta1, float beta2, float epsilon)
     : m_learning_rate(learning_rate), m_beta1(beta1), m_beta2(beta2), 
       m_epsilon(epsilon), m_step_count(0) {}
 
-void Adam::update(Layer* layer) {
+void Adam::update(ModernLayer* layer) {
     if (layer) {
-        layer->update_weights(m_learning_rate);
+        layer->update_parameters(*this);
     }
 }
 
@@ -179,9 +178,9 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
 RMSprop::RMSprop(float learning_rate, float alpha, float epsilon)
     : m_learning_rate(learning_rate), m_alpha(alpha), m_epsilon(epsilon) {}
 
-void RMSprop::update(Layer* layer) {
+void RMSprop::update(ModernLayer* layer) {
     if (layer) {
-        layer->update_weights(m_learning_rate);
+        layer->update_parameters(*this);
     }
 }
 

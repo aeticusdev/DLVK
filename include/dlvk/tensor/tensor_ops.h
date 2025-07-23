@@ -49,6 +49,11 @@ public:
     bool fill(Tensor& tensor, float value);
     bool copy(const Tensor& source, Tensor& destination);
     
+    // Static interface for global instance
+    static bool initialize(VulkanDevice* device);
+    static void shutdown();
+    static TensorOps* instance() { return s_instance; }
+    
     // CNN operations
     bool conv2d(const Tensor& input, const Tensor& weights, const Tensor& bias, Tensor& output,
                 size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w);
@@ -88,6 +93,9 @@ public:
 
 private:
     std::shared_ptr<VulkanDevice> m_device;
+    
+    // Static instance for global access
+    static TensorOps* s_instance;
     
     // Compute pipelines for different operations
     std::unique_ptr<ComputePipeline> m_add_pipeline;

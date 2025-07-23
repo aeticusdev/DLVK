@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/test_vulkan_device.dir/link.d CMakeFiles/test_vulkan_device.dir/test_vulkan_device.cpp.o -o test_vulkan_device  ../libdlvk.a /lib/libvulkan.so /usr/lib/libglfw.so.3.4 /usr/lib/libglm.a
+/usr/bin/c++ -g -Wl,--dependency-file=CMakeFiles/test_vulkan_device.dir/link.d CMakeFiles/test_vulkan_device.dir/test_vulkan_device.cpp.o -o test_vulkan_device  ../libdlvk.a /lib/libvulkan.so /usr/lib/libglfw.so.3.4 /usr/lib/libglm.a

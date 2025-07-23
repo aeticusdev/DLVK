@@ -4,17 +4,17 @@
 #include <vector>
 #include <unordered_map>
 #include "dlvk/tensor/tensor.h"
+#include "dlvk/layers/modern_layer.h"
 
 namespace dlvk {
-
-class Layer;
 
 class Optimizer {
 public:
     virtual ~Optimizer() = default;
     
-    virtual void update(Layer* layer) = 0;
+    virtual void update(ModernLayer* layer) = 0;
     virtual void set_learning_rate(float lr) = 0;
+    virtual float get_learning_rate() const = 0;
     
     // New parameter-based update methods for advanced optimizers
     virtual void update_parameter(std::shared_ptr<Tensor>& parameter, 
@@ -27,7 +27,7 @@ class SGD : public Optimizer {
 public:
     SGD(float learning_rate = 0.01f, float momentum = 0.0f);
     
-    void update(Layer* layer) override;
+    void update(ModernLayer* layer) override;
     void set_learning_rate(float lr) override { m_learning_rate = lr; }
     
     void update_parameter(std::shared_ptr<Tensor>& parameter, 
@@ -64,7 +64,7 @@ public:
          float beta2 = 0.999f, 
          float epsilon = 1e-8f);
     
-    void update(Layer* layer) override;
+    void update(ModernLayer* layer) override;
     void set_learning_rate(float lr) override { m_learning_rate = lr; }
     
     void update_parameter(std::shared_ptr<Tensor>& parameter, 
@@ -106,7 +106,7 @@ public:
             float alpha = 0.99f, 
             float epsilon = 1e-8f);
     
-    void update(Layer* layer) override;
+    void update(ModernLayer* layer) override;
     void set_learning_rate(float lr) override { m_learning_rate = lr; }
     
     void update_parameter(std::shared_ptr<Tensor>& parameter, 

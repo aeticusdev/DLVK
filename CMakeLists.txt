@@ -66,10 +66,136 @@ add_executable(test_gradient_clipping
     src/layers/pooling_layers.cpp
     src/layers/batch_norm_layers.cpp
     src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
     src/optimizers/sgd.cpp
     src/optimizers/adam.cpp
     src/loss/loss_functions.cpp
     src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+)
+
+# Phase 5 Model APIs Demo (Simple)
+add_executable(demo_phase5_simple
+    demo_phase5_simple.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+)
+
+# Phase 5 Model APIs Demo
+add_executable(demo_phase5_model_apis
+    demo_phase5_model_apis.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+)
+
+# Phase 5 Foundation Demo
+add_executable(demo_phase5_foundation
+    demo_phase5_foundation.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+)
+
+# Simple ActivationLayer Test
+add_executable(test_activation_only
+    test_activation_only.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/activation.cpp
+)
+
+# Sequential Model Test
+add_executable(test_sequential_model
+    test_sequential_model.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/loss/loss_functions.cpp
+)
+
+add_executable(test_tensor_ops_static
+    test_tensor_ops_static.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/activation.cpp
 )
 
 # Add library target
@@ -114,6 +240,41 @@ target_include_directories(test_gradient_clipping PRIVATE
     ${Vulkan_INCLUDE_DIRS}
 )
 
+target_include_directories(demo_phase5_simple PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(demo_phase5_model_apis PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(demo_phase5_foundation PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(test_activation_only PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(test_sequential_model PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(test_activation_only PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(test_tensor_ops_static PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
 # Link libraries
 target_link_libraries(dlvk PUBLIC
     ${Vulkan_LIBRARIES}
@@ -137,6 +298,33 @@ target_link_libraries(demo_phase4_3_cnn_gpu PRIVATE
 
 target_link_libraries(test_gradient_clipping PRIVATE
     dlvk
+)
+
+target_link_libraries(demo_phase5_simple PRIVATE
+    dlvk
+)
+
+target_link_libraries(demo_phase5_model_apis PRIVATE
+    dlvk
+)
+
+target_link_libraries(demo_phase5_foundation PRIVATE
+    dlvk
+)
+
+target_link_libraries(test_activation_only PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(test_sequential_model PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(test_tensor_ops_static PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
 )
 
 # Compiler-specific options
@@ -188,6 +376,9 @@ add_dependencies(dlvk shaders)
 add_dependencies(dlvk_demo shaders)
 add_dependencies(demo_phase4_3_cnn_gpu shaders)
 add_dependencies(test_gradient_clipping shaders)
+add_dependencies(test_activation_only shaders)
+add_dependencies(test_sequential_model shaders)
+add_dependencies(test_tensor_ops_static shaders)
 
 # Testing
 enable_testing()

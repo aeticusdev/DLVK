@@ -2369,7 +2369,7 @@ CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o: /home/mostafizur/DLVK/src/optimiz
   /usr/include/stdc-predef.h
 
 CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/optimizers/optimizers.cpp \
-  /home/mostafizur/DLVK/include/dlvk/layers/layer.h \
+  /home/mostafizur/DLVK/include/dlvk/layers/modern_layer.h \
   /home/mostafizur/DLVK/include/dlvk/optimizers/optimizers.h \
   /home/mostafizur/DLVK/include/dlvk/tensor/tensor.h \
   /usr/include/alloca.h \
@@ -2485,6 +2485,7 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/o
   /usr/include/c++/15.1.1/bits/basic_string.tcc \
   /usr/include/c++/15.1.1/bits/char_traits.h \
   /usr/include/c++/15.1.1/bits/charconv.h \
+  /usr/include/c++/15.1.1/bits/codecvt.h \
   /usr/include/c++/15.1.1/bits/concept_check.h \
   /usr/include/c++/15.1.1/bits/cpp_type_traits.h \
   /usr/include/c++/15.1.1/bits/cxxabi_forced.h \
@@ -2494,6 +2495,7 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/o
   /usr/include/c++/15.1.1/bits/exception.h \
   /usr/include/c++/15.1.1/bits/exception_defines.h \
   /usr/include/c++/15.1.1/bits/exception_ptr.h \
+  /usr/include/c++/15.1.1/bits/fstream.tcc \
   /usr/include/c++/15.1.1/bits/functexcept.h \
   /usr/include/c++/15.1.1/bits/functional_hash.h \
   /usr/include/c++/15.1.1/bits/hash_bytes.h \
@@ -2501,6 +2503,7 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/o
   /usr/include/c++/15.1.1/bits/hashtable_policy.h \
   /usr/include/c++/15.1.1/bits/invoke.h \
   /usr/include/c++/15.1.1/bits/ios_base.h \
+  /usr/include/c++/15.1.1/bits/istream.tcc \
   /usr/include/c++/15.1.1/bits/iterator_concepts.h \
   /usr/include/c++/15.1.1/bits/locale_classes.h \
   /usr/include/c++/15.1.1/bits/locale_classes.tcc \
@@ -2515,6 +2518,7 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/o
   /usr/include/c++/15.1.1/bits/new_allocator.h \
   /usr/include/c++/15.1.1/bits/node_handle.h \
   /usr/include/c++/15.1.1/bits/ostream.h \
+  /usr/include/c++/15.1.1/bits/ostream.tcc \
   /usr/include/c++/15.1.1/bits/ostream_insert.h \
   /usr/include/c++/15.1.1/bits/postypes.h \
   /usr/include/c++/15.1.1/bits/predefined_ops.h \
@@ -2579,13 +2583,16 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/o
   /usr/include/c++/15.1.1/ext/numeric_traits.h \
   /usr/include/c++/15.1.1/ext/string_conversions.h \
   /usr/include/c++/15.1.1/ext/type_traits.h \
+  /usr/include/c++/15.1.1/fstream \
   /usr/include/c++/15.1.1/initializer_list \
   /usr/include/c++/15.1.1/ios \
   /usr/include/c++/15.1.1/iosfwd \
+  /usr/include/c++/15.1.1/istream \
   /usr/include/c++/15.1.1/limits \
   /usr/include/c++/15.1.1/memory \
   /usr/include/c++/15.1.1/new \
   /usr/include/c++/15.1.1/numbers \
+  /usr/include/c++/15.1.1/ostream \
   /usr/include/c++/15.1.1/pstl/execution_defs.h \
   /usr/include/c++/15.1.1/pstl/glue_memory_defs.h \
   /usr/include/c++/15.1.1/pstl/pstl_config.h \
@@ -2612,8 +2619,10 @@ CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/o
   /usr/include/c++/15.1.1/unordered_map \
   /usr/include/c++/15.1.1/vector \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/atomic_word.h \
+  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/basic_file.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++allocator.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++config.h \
+  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++io.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++locale.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/cpu_defines.h \
   /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/ctype_base.h \
@@ -3262,6 +3271,8 @@ CMakeFiles/dlvk.dir/src/tensor/tensor_ops.cpp.o: /home/mostafizur/DLVK/src/tenso
 /home/mostafizur/DLVK/src/optimizers/adam.cpp:
 
 /home/mostafizur/DLVK/include/dlvk/layers/pooling_layers.h:
+
+/home/mostafizur/DLVK/include/dlvk/layers/modern_layer.h:
 
 /home/mostafizur/DLVK/src/layers/pooling_layers.cpp:
 

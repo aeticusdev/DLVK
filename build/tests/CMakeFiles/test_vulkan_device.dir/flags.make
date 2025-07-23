@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/mostafizur/DLVK/tests/../include -I/home/mostafizur/DLVK/include
 
-CXX_FLAGS = -std=gnu++20
+CXX_FLAGS = -g -std=gnu++20
 
