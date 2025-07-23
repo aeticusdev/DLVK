@@ -78,10 +78,10 @@ private:
     std::vector<std::unique_ptr<ModernLayer>> m_layers;
     std::vector<Tensor> m_layer_outputs;
     bool m_is_training;
-    VulkanDevice* m_device;
+    std::shared_ptr<VulkanDevice> m_device;
     
 public:
-    Sequential(VulkanDevice& device);
+    Sequential(std::shared_ptr<VulkanDevice> device);
     ~Sequential() override = default;
     
     /**

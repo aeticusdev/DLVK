@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/mostafizur/DLVK/build/cmake_install.cmake",
-		"/home/mostafizur/DLVK/build/tests/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

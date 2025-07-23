@@ -1,6 +1,7 @@
 #include "dlvk/layers/pooling_layers.h"
 #include <limits>
 #include <algorithm>
+#include <stdexcept>
 
 namespace dlvk {
 

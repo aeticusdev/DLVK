@@ -2,6 +2,7 @@
 #include "dlvk/tensor/tensor_ops.h"
 #include <cmath>
 #include <algorithm>
+#include <stdexcept>
 
 namespace dlvk {
 

@@ -20,6 +20,15 @@ class Tensor {
 public:
     Tensor(const std::vector<size_t>& shape, DataType dtype, std::shared_ptr<VulkanDevice> device);
     ~Tensor();
+    
+    // Copy constructor and copy assignment - temporarily re-enabled for debugging
+    // TODO: Remove these and implement proper move-only semantics
+    Tensor(const Tensor& other);
+    Tensor& operator=(const Tensor& other);
+    
+    // Move constructor and move assignment
+    Tensor(Tensor&& other) noexcept;
+    Tensor& operator=(Tensor&& other) noexcept;
 
     // Shape and properties
     const std::vector<size_t>& shape() const { return m_shape; }

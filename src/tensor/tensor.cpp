@@ -21,6 +21,111 @@ Tensor::~Tensor() {
     deallocate_memory();
 }
 
+// Copy constructor - creates deep copy of tensor data
+Tensor::Tensor(const Tensor& other)
+    : m_shape(other.m_shape)
+    , m_dtype(other.m_dtype) 
+    , m_device(other.m_device)
+    , m_size(other.m_size)
+    , m_buffer(VK_NULL_HANDLE)
+    , m_memory(VK_NULL_HANDLE) {
+    // Allocate new buffer
+    allocate_memory();
+    
+    // Copy data from other tensor
+    if (other.m_buffer != VK_NULL_HANDLE && m_buffer != VK_NULL_HANDLE) {
+        // TODO: Implement proper buffer copying via Vulkan commands or memory mapping
+        // For now, use memory mapping to copy data
+        void* src_data;
+        void* dst_data;
+        VkDevice device = m_device->get_device();
+        
+        // Map source memory
+        VkResult src_result = vkMapMemory(device, other.m_memory, 0, VK_WHOLE_SIZE, 0, &src_data);
+        if (src_result == VK_SUCCESS) {
+            // Map destination memory  
+            VkResult dst_result = vkMapMemory(device, m_memory, 0, VK_WHOLE_SIZE, 0, &dst_data);
+            if (dst_result == VK_SUCCESS) {
+                // Copy data
+                std::memcpy(dst_data, src_data, m_size * element_size());
+                vkUnmapMemory(device, m_memory);
+            }
+            vkUnmapMemory(device, other.m_memory);
+        }
+    }
+}
+
+// Copy assignment operator  
+Tensor& Tensor::operator=(const Tensor& other) {
+    if (this != &other) {
+        // Deallocate current resources
+        deallocate_memory();
+        
+        // Copy properties
+        m_shape = other.m_shape;
+        m_dtype = other.m_dtype;
+        m_device = other.m_device;
+        m_size = other.m_size;
+        m_buffer = VK_NULL_HANDLE;
+        m_memory = VK_NULL_HANDLE;
+        
+        // Allocate new buffer and copy data (same as copy constructor)
+        allocate_memory();
+        if (other.m_buffer != VK_NULL_HANDLE && m_buffer != VK_NULL_HANDLE) {
+            void* src_data;
+            void* dst_data;
+            VkDevice device = m_device->get_device();
+            
+            VkResult src_result = vkMapMemory(device, other.m_memory, 0, VK_WHOLE_SIZE, 0, &src_data);
+            if (src_result == VK_SUCCESS) {
+                VkResult dst_result = vkMapMemory(device, m_memory, 0, VK_WHOLE_SIZE, 0, &dst_data);
+                if (dst_result == VK_SUCCESS) {
+                    std::memcpy(dst_data, src_data, m_size * element_size());
+                    vkUnmapMemory(device, m_memory);
+                }
+                vkUnmapMemory(device, other.m_memory);
+            }
+        }
+    }
+    return *this;
+}
+
+// Move constructor
+Tensor::Tensor(Tensor&& other) noexcept
+    : m_shape(std::move(other.m_shape))
+    , m_dtype(other.m_dtype)
+    , m_device(std::move(other.m_device))
+    , m_size(other.m_size)
+    , m_buffer(other.m_buffer)
+    , m_memory(other.m_memory) {
+    // Clear the moved-from object
+    other.m_buffer = VK_NULL_HANDLE;
+    other.m_memory = VK_NULL_HANDLE;
+    other.m_size = 0;
+}
+
+// Move assignment operator
+Tensor& Tensor::operator=(Tensor&& other) noexcept {
+    if (this != &other) {
+        // Deallocate current resources
+        deallocate_memory();
+        
+        // Move from other
+        m_shape = std::move(other.m_shape);
+        m_dtype = other.m_dtype;
+        m_device = std::move(other.m_device);
+        m_size = other.m_size;
+        m_buffer = other.m_buffer;
+        m_memory = other.m_memory;
+        
+        // Clear the moved-from object
+        other.m_buffer = VK_NULL_HANDLE;
+        other.m_memory = VK_NULL_HANDLE;
+        other.m_size = 0;
+    }
+    return *this;
+}
+
 size_t Tensor::element_size() const {
     switch (m_dtype) {
         case DataType::FLOAT32: return sizeof(float);
