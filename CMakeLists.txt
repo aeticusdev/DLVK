@@ -149,6 +149,64 @@ add_executable(demo_phase5_foundation
     src/optimizers/optimizers.cpp
 )
 
+# Complete Pipeline Demo - Data to Model Integration
+add_executable(complete_pipeline_demo
+    examples/complete_pipeline_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+    src/data/dataset.cpp
+    src/data/mnist.cpp
+    src/data/dataloader.cpp
+)
+
+# Phase 6.1 Data Infrastructure Demo
+add_executable(data_pipeline_demo
+    examples/data_pipeline_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+    src/data/dataset.cpp
+    src/data/mnist.cpp
+    src/data/dataloader.cpp
+)
+
 # Simple ActivationLayer Test
 add_executable(test_activation_only
     test_activation_only.cpp
@@ -255,6 +313,16 @@ target_include_directories(demo_phase5_foundation PRIVATE
     ${Vulkan_INCLUDE_DIRS}
 )
 
+target_include_directories(data_pipeline_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(complete_pipeline_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
 target_include_directories(test_activation_only PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${Vulkan_INCLUDE_DIRS}
@@ -323,6 +391,16 @@ target_link_libraries(test_sequential_model PRIVATE
 )
 
 target_link_libraries(test_tensor_ops_static PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(data_pipeline_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(complete_pipeline_demo PRIVATE
     dlvk
     ${Vulkan_LIBRARIES}
 )
