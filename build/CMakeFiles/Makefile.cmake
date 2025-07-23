@@ -67,6 +67,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/dlvk_demo.dir/DependInfo.cmake"
   "CMakeFiles/demo_phase4_3_cnn_gpu.dir/DependInfo.cmake"
+  "CMakeFiles/test_gradient_clipping.dir/DependInfo.cmake"
   "CMakeFiles/dlvk.dir/DependInfo.cmake"
   "CMakeFiles/shaders.dir/DependInfo.cmake"
   "tests/CMakeFiles/test_tensor.dir/DependInfo.cmake"

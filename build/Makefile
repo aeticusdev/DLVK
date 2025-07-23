@@ -153,6 +153,19 @@ demo_phase4_3_cnn_gpu/fast:
 .PHONY : demo_phase4_3_cnn_gpu/fast
 
 #=============================================================================
+# Target rules for targets named test_gradient_clipping
+
+# Build rule for target.
+test_gradient_clipping: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_gradient_clipping
+.PHONY : test_gradient_clipping
+
+# fast build rule for target.
+test_gradient_clipping/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/build
+.PHONY : test_gradient_clipping/fast
+
+#=============================================================================
 # Target rules for targets named dlvk
 
 # Build rule for target.
@@ -235,6 +248,7 @@ src/compute/compute_pipeline.o: src/compute/compute_pipeline.cpp.o
 src/compute/compute_pipeline.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/compute/compute_pipeline.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/compute/compute_pipeline.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/compute/compute_pipeline.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/compute/compute_pipeline.cpp.o
 .PHONY : src/compute/compute_pipeline.cpp.o
 
@@ -245,6 +259,7 @@ src/compute/compute_pipeline.i: src/compute/compute_pipeline.cpp.i
 src/compute/compute_pipeline.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/compute/compute_pipeline.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/compute/compute_pipeline.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/compute/compute_pipeline.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/compute/compute_pipeline.cpp.i
 .PHONY : src/compute/compute_pipeline.cpp.i
 
@@ -255,6 +270,7 @@ src/compute/compute_pipeline.s: src/compute/compute_pipeline.cpp.s
 src/compute/compute_pipeline.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/compute/compute_pipeline.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/compute/compute_pipeline.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/compute/compute_pipeline.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/compute/compute_pipeline.cpp.s
 .PHONY : src/compute/compute_pipeline.cpp.s
 
@@ -265,6 +281,7 @@ src/core/buffer_manager.o: src/core/buffer_manager.cpp.o
 src/core/buffer_manager.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/buffer_manager.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/buffer_manager.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/buffer_manager.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/buffer_manager.cpp.o
 .PHONY : src/core/buffer_manager.cpp.o
 
@@ -275,6 +292,7 @@ src/core/buffer_manager.i: src/core/buffer_manager.cpp.i
 src/core/buffer_manager.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/buffer_manager.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/buffer_manager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/buffer_manager.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/buffer_manager.cpp.i
 .PHONY : src/core/buffer_manager.cpp.i
 
@@ -285,6 +303,7 @@ src/core/buffer_manager.s: src/core/buffer_manager.cpp.s
 src/core/buffer_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/buffer_manager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/buffer_manager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/buffer_manager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/buffer_manager.cpp.s
 .PHONY : src/core/buffer_manager.cpp.s
 
@@ -295,6 +314,7 @@ src/core/pipeline_manager.o: src/core/pipeline_manager.cpp.o
 src/core/pipeline_manager.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/pipeline_manager.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/pipeline_manager.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/pipeline_manager.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/pipeline_manager.cpp.o
 .PHONY : src/core/pipeline_manager.cpp.o
 
@@ -305,6 +325,7 @@ src/core/pipeline_manager.i: src/core/pipeline_manager.cpp.i
 src/core/pipeline_manager.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/pipeline_manager.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/pipeline_manager.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/pipeline_manager.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/pipeline_manager.cpp.i
 .PHONY : src/core/pipeline_manager.cpp.i
 
@@ -315,6 +336,7 @@ src/core/pipeline_manager.s: src/core/pipeline_manager.cpp.s
 src/core/pipeline_manager.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/pipeline_manager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/pipeline_manager.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/pipeline_manager.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/pipeline_manager.cpp.s
 .PHONY : src/core/pipeline_manager.cpp.s
 
@@ -325,6 +347,7 @@ src/core/vulkan_context.o: src/core/vulkan_context.cpp.o
 src/core/vulkan_context.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/vulkan_context.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/vulkan_context.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/vulkan_context.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_context.cpp.o
 .PHONY : src/core/vulkan_context.cpp.o
 
@@ -335,6 +358,7 @@ src/core/vulkan_context.i: src/core/vulkan_context.cpp.i
 src/core/vulkan_context.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/vulkan_context.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/vulkan_context.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/vulkan_context.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_context.cpp.i
 .PHONY : src/core/vulkan_context.cpp.i
 
@@ -345,6 +369,7 @@ src/core/vulkan_context.s: src/core/vulkan_context.cpp.s
 src/core/vulkan_context.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/vulkan_context.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/vulkan_context.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/vulkan_context.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_context.cpp.s
 .PHONY : src/core/vulkan_context.cpp.s
 
@@ -355,6 +380,7 @@ src/core/vulkan_device.o: src/core/vulkan_device.cpp.o
 src/core/vulkan_device.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/vulkan_device.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/vulkan_device.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/vulkan_device.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_device.cpp.o
 .PHONY : src/core/vulkan_device.cpp.o
 
@@ -365,6 +391,7 @@ src/core/vulkan_device.i: src/core/vulkan_device.cpp.i
 src/core/vulkan_device.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/vulkan_device.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/vulkan_device.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/vulkan_device.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_device.cpp.i
 .PHONY : src/core/vulkan_device.cpp.i
 
@@ -375,6 +402,7 @@ src/core/vulkan_device.s: src/core/vulkan_device.cpp.s
 src/core/vulkan_device.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/core/vulkan_device.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/core/vulkan_device.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/core/vulkan_device.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/core/vulkan_device.cpp.s
 .PHONY : src/core/vulkan_device.cpp.s
 
@@ -384,6 +412,7 @@ src/layers/batch_norm_layers.o: src/layers/batch_norm_layers.cpp.o
 # target to build an object file
 src/layers/batch_norm_layers.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/batch_norm_layers.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/batch_norm_layers.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o
 .PHONY : src/layers/batch_norm_layers.cpp.o
 
@@ -393,6 +422,7 @@ src/layers/batch_norm_layers.i: src/layers/batch_norm_layers.cpp.i
 # target to preprocess a source file
 src/layers/batch_norm_layers.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/batch_norm_layers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/batch_norm_layers.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.i
 .PHONY : src/layers/batch_norm_layers.cpp.i
 
@@ -402,6 +432,7 @@ src/layers/batch_norm_layers.s: src/layers/batch_norm_layers.cpp.s
 # target to generate assembly for a file
 src/layers/batch_norm_layers.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/batch_norm_layers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/batch_norm_layers.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.s
 .PHONY : src/layers/batch_norm_layers.cpp.s
 
@@ -411,6 +442,7 @@ src/layers/conv2d_layer.o: src/layers/conv2d_layer.cpp.o
 # target to build an object file
 src/layers/conv2d_layer.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/conv2d_layer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/conv2d_layer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.o
 .PHONY : src/layers/conv2d_layer.cpp.o
 
@@ -420,6 +452,7 @@ src/layers/conv2d_layer.i: src/layers/conv2d_layer.cpp.i
 # target to preprocess a source file
 src/layers/conv2d_layer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/conv2d_layer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/conv2d_layer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.i
 .PHONY : src/layers/conv2d_layer.cpp.i
 
@@ -429,6 +462,7 @@ src/layers/conv2d_layer.s: src/layers/conv2d_layer.cpp.s
 # target to generate assembly for a file
 src/layers/conv2d_layer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/conv2d_layer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/conv2d_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.s
 .PHONY : src/layers/conv2d_layer.cpp.s
 
@@ -439,6 +473,7 @@ src/layers/conv_layer.o: src/layers/conv_layer.cpp.o
 src/layers/conv_layer.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/conv_layer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/conv_layer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/conv_layer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv_layer.cpp.o
 .PHONY : src/layers/conv_layer.cpp.o
 
@@ -449,6 +484,7 @@ src/layers/conv_layer.i: src/layers/conv_layer.cpp.i
 src/layers/conv_layer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/conv_layer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/conv_layer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/conv_layer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv_layer.cpp.i
 .PHONY : src/layers/conv_layer.cpp.i
 
@@ -459,6 +495,7 @@ src/layers/conv_layer.s: src/layers/conv_layer.cpp.s
 src/layers/conv_layer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/conv_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/conv_layer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/conv_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/conv_layer.cpp.s
 .PHONY : src/layers/conv_layer.cpp.s
 
@@ -469,6 +506,7 @@ src/layers/dense_layer.o: src/layers/dense_layer.cpp.o
 src/layers/dense_layer.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/dense_layer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/dense_layer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/dense_layer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.o
 .PHONY : src/layers/dense_layer.cpp.o
 
@@ -479,6 +517,7 @@ src/layers/dense_layer.i: src/layers/dense_layer.cpp.i
 src/layers/dense_layer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/dense_layer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/dense_layer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/dense_layer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.i
 .PHONY : src/layers/dense_layer.cpp.i
 
@@ -489,6 +528,7 @@ src/layers/dense_layer.s: src/layers/dense_layer.cpp.s
 src/layers/dense_layer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/layers/dense_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/dense_layer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/dense_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.s
 .PHONY : src/layers/dense_layer.cpp.s
 
@@ -498,6 +538,7 @@ src/layers/dropout_layer.o: src/layers/dropout_layer.cpp.o
 # target to build an object file
 src/layers/dropout_layer.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/dropout_layer.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/dropout_layer.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o
 .PHONY : src/layers/dropout_layer.cpp.o
 
@@ -507,6 +548,7 @@ src/layers/dropout_layer.i: src/layers/dropout_layer.cpp.i
 # target to preprocess a source file
 src/layers/dropout_layer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/dropout_layer.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/dropout_layer.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.i
 .PHONY : src/layers/dropout_layer.cpp.i
 
@@ -516,6 +558,7 @@ src/layers/dropout_layer.s: src/layers/dropout_layer.cpp.s
 # target to generate assembly for a file
 src/layers/dropout_layer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/dropout_layer.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/dropout_layer.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.s
 .PHONY : src/layers/dropout_layer.cpp.s
 
@@ -525,6 +568,7 @@ src/layers/pooling_layers.o: src/layers/pooling_layers.cpp.o
 # target to build an object file
 src/layers/pooling_layers.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/pooling_layers.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/pooling_layers.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.o
 .PHONY : src/layers/pooling_layers.cpp.o
 
@@ -534,6 +578,7 @@ src/layers/pooling_layers.i: src/layers/pooling_layers.cpp.i
 # target to preprocess a source file
 src/layers/pooling_layers.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/pooling_layers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/pooling_layers.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.i
 .PHONY : src/layers/pooling_layers.cpp.i
 
@@ -543,6 +588,7 @@ src/layers/pooling_layers.s: src/layers/pooling_layers.cpp.s
 # target to generate assembly for a file
 src/layers/pooling_layers.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/layers/pooling_layers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/layers/pooling_layers.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.s
 .PHONY : src/layers/pooling_layers.cpp.s
 
@@ -553,6 +599,7 @@ src/loss/loss_functions.o: src/loss/loss_functions.cpp.o
 src/loss/loss_functions.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/loss/loss_functions.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/loss/loss_functions.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/loss/loss_functions.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o
 .PHONY : src/loss/loss_functions.cpp.o
 
@@ -563,6 +610,7 @@ src/loss/loss_functions.i: src/loss/loss_functions.cpp.i
 src/loss/loss_functions.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/loss/loss_functions.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/loss/loss_functions.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/loss/loss_functions.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.i
 .PHONY : src/loss/loss_functions.cpp.i
 
@@ -573,6 +621,7 @@ src/loss/loss_functions.s: src/loss/loss_functions.cpp.s
 src/loss/loss_functions.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/loss/loss_functions.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/loss/loss_functions.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/loss/loss_functions.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.s
 .PHONY : src/loss/loss_functions.cpp.s
 
@@ -607,6 +656,7 @@ src/optimizers/adam.o: src/optimizers/adam.cpp.o
 src/optimizers/adam.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/adam.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/adam.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/adam.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o
 .PHONY : src/optimizers/adam.cpp.o
 
@@ -617,6 +667,7 @@ src/optimizers/adam.i: src/optimizers/adam.cpp.i
 src/optimizers/adam.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/adam.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/adam.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/adam.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.i
 .PHONY : src/optimizers/adam.cpp.i
 
@@ -627,6 +678,7 @@ src/optimizers/adam.s: src/optimizers/adam.cpp.s
 src/optimizers/adam.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/adam.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/adam.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/adam.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.s
 .PHONY : src/optimizers/adam.cpp.s
 
@@ -637,6 +689,7 @@ src/optimizers/optimizers.o: src/optimizers/optimizers.cpp.o
 src/optimizers/optimizers.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/optimizers.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/optimizers.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/optimizers.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o
 .PHONY : src/optimizers/optimizers.cpp.o
 
@@ -647,6 +700,7 @@ src/optimizers/optimizers.i: src/optimizers/optimizers.cpp.i
 src/optimizers/optimizers.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/optimizers.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/optimizers.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/optimizers.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.i
 .PHONY : src/optimizers/optimizers.cpp.i
 
@@ -657,6 +711,7 @@ src/optimizers/optimizers.s: src/optimizers/optimizers.cpp.s
 src/optimizers/optimizers.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/optimizers.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/optimizers.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/optimizers.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.s
 .PHONY : src/optimizers/optimizers.cpp.s
 
@@ -667,6 +722,7 @@ src/optimizers/sgd.o: src/optimizers/sgd.cpp.o
 src/optimizers/sgd.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/sgd.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/sgd.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/sgd.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o
 .PHONY : src/optimizers/sgd.cpp.o
 
@@ -677,6 +733,7 @@ src/optimizers/sgd.i: src/optimizers/sgd.cpp.i
 src/optimizers/sgd.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/sgd.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/sgd.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/sgd.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.i
 .PHONY : src/optimizers/sgd.cpp.i
 
@@ -687,6 +744,7 @@ src/optimizers/sgd.s: src/optimizers/sgd.cpp.s
 src/optimizers/sgd.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/optimizers/sgd.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/optimizers/sgd.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/optimizers/sgd.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.s
 .PHONY : src/optimizers/sgd.cpp.s
 
@@ -697,6 +755,7 @@ src/tensor/tensor.o: src/tensor/tensor.cpp.o
 src/tensor/tensor.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/tensor/tensor.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/tensor/tensor.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/tensor/tensor.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/tensor/tensor.cpp.o
 .PHONY : src/tensor/tensor.cpp.o
 
@@ -707,6 +766,7 @@ src/tensor/tensor.i: src/tensor/tensor.cpp.i
 src/tensor/tensor.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/tensor/tensor.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/tensor/tensor.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/tensor/tensor.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/tensor/tensor.cpp.i
 .PHONY : src/tensor/tensor.cpp.i
 
@@ -717,6 +777,7 @@ src/tensor/tensor.s: src/tensor/tensor.cpp.s
 src/tensor/tensor.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/tensor/tensor.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/tensor/tensor.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/tensor/tensor.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/tensor/tensor.cpp.s
 .PHONY : src/tensor/tensor.cpp.s
 
@@ -727,6 +788,7 @@ src/tensor/tensor_ops.o: src/tensor/tensor_ops.cpp.o
 src/tensor/tensor_ops.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/tensor/tensor_ops.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/tensor/tensor_ops.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/tensor/tensor_ops.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/tensor/tensor_ops.cpp.o
 .PHONY : src/tensor/tensor_ops.cpp.o
 
@@ -737,6 +799,7 @@ src/tensor/tensor_ops.i: src/tensor/tensor_ops.cpp.i
 src/tensor/tensor_ops.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/tensor/tensor_ops.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/tensor/tensor_ops.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/tensor/tensor_ops.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/tensor/tensor_ops.cpp.i
 .PHONY : src/tensor/tensor_ops.cpp.i
 
@@ -747,8 +810,33 @@ src/tensor/tensor_ops.s: src/tensor/tensor_ops.cpp.s
 src/tensor/tensor_ops.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/src/tensor/tensor_ops.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/src/tensor/tensor_ops.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/src/tensor/tensor_ops.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/src/tensor/tensor_ops.cpp.s
 .PHONY : src/tensor/tensor_ops.cpp.s
+
+test_gradient_clipping.o: test_gradient_clipping.cpp.o
+.PHONY : test_gradient_clipping.o
+
+# target to build an object file
+test_gradient_clipping.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/test_gradient_clipping.cpp.o
+.PHONY : test_gradient_clipping.cpp.o
+
+test_gradient_clipping.i: test_gradient_clipping.cpp.i
+.PHONY : test_gradient_clipping.i
+
+# target to preprocess a source file
+test_gradient_clipping.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/test_gradient_clipping.cpp.i
+.PHONY : test_gradient_clipping.cpp.i
+
+test_gradient_clipping.s: test_gradient_clipping.cpp.s
+.PHONY : test_gradient_clipping.s
+
+# target to generate assembly for a file
+test_gradient_clipping.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_gradient_clipping.dir/build.make CMakeFiles/test_gradient_clipping.dir/test_gradient_clipping.cpp.s
+.PHONY : test_gradient_clipping.cpp.s
 
 # Help Target
 help:
@@ -763,6 +851,7 @@ help:
 	@echo "... demo_phase4_3_cnn_gpu"
 	@echo "... dlvk"
 	@echo "... dlvk_demo"
+	@echo "... test_gradient_clipping"
 	@echo "... test_tensor"
 	@echo "... test_vulkan_device"
 	@echo "... demo_phase4_3_cnn_gpu.o"
@@ -822,6 +911,9 @@ help:
 	@echo "... src/tensor/tensor_ops.o"
 	@echo "... src/tensor/tensor_ops.i"
 	@echo "... src/tensor/tensor_ops.s"
+	@echo "... test_gradient_clipping.o"
+	@echo "... test_gradient_clipping.i"
+	@echo "... test_gradient_clipping.s"
 .PHONY : help
 
 

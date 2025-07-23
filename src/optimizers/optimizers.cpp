@@ -17,6 +17,21 @@ void SGD::update(Layer* layer) {
 
 void SGD::update_parameter(std::shared_ptr<Tensor>& parameter, 
                           const std::shared_ptr<Tensor>& gradient) {
+    // Apply gradient clipping if enabled
+    auto clipped_gradient = gradient;
+    if (m_use_grad_clip_norm || m_use_grad_clip_value) {
+        std::vector<std::shared_ptr<Tensor>> grad_vec = {gradient};
+        
+        if (m_use_grad_clip_norm) {
+            GradientClipping::clip_grad_norm(grad_vec, m_grad_clip_norm);
+        }
+        if (m_use_grad_clip_value) {
+            GradientClipping::clip_grad_value(grad_vec, m_grad_clip_min, m_grad_clip_max);
+        }
+        
+        clipped_gradient = grad_vec[0];
+    }
+    
     if (m_use_momentum) {
         // v = momentum * v + gradient
         // parameter = parameter - learning_rate * v
@@ -33,9 +48,9 @@ void SGD::update_parameter(std::shared_ptr<Tensor>& parameter,
         
         auto velocity = m_velocity_cache[parameter.get()];
         
-        // Update velocity: v = momentum * v + gradient
+        // Update velocity: v = momentum * v + clipped_gradient
         auto momentum_v = velocity->multiply_scalar(m_momentum);
-        auto new_velocity = momentum_v->add(*gradient);
+        auto new_velocity = momentum_v->add(*clipped_gradient);
         
         // Copy back to velocity cache
         std::vector<float> velocity_data(new_velocity->size());
@@ -52,8 +67,8 @@ void SGD::update_parameter(std::shared_ptr<Tensor>& parameter,
         parameter->upload_data(param_data.data());
         
     } else {
-        // Simple SGD: parameter = parameter - learning_rate * gradient
-        auto update = gradient->multiply_scalar(m_learning_rate);
+        // Simple SGD: parameter = parameter - learning_rate * clipped_gradient
+        auto update = clipped_gradient->multiply_scalar(m_learning_rate);
         auto new_param = parameter->subtract(*update);
         
         std::vector<float> param_data(new_param->size());
@@ -75,6 +90,21 @@ void Adam::update(Layer* layer) {
 
 void Adam::update_parameter(std::shared_ptr<Tensor>& parameter, 
                            const std::shared_ptr<Tensor>& gradient) {
+    // Apply gradient clipping if enabled
+    auto clipped_gradient = gradient;
+    if (m_use_grad_clip_norm || m_use_grad_clip_value) {
+        std::vector<std::shared_ptr<Tensor>> grad_vec = {gradient};
+        
+        if (m_use_grad_clip_norm) {
+            GradientClipping::clip_grad_norm(grad_vec, m_grad_clip_norm);
+        }
+        if (m_use_grad_clip_value) {
+            GradientClipping::clip_grad_value(grad_vec, m_grad_clip_min, m_grad_clip_max);
+        }
+        
+        clipped_gradient = grad_vec[0];
+    }
+    
     // Initialize momentum and velocity if needed
     auto param_ptr = parameter.get();
     
@@ -95,13 +125,13 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
     auto momentum = m_momentum_cache[param_ptr];
     auto velocity = m_velocity_cache[param_ptr];
     
-    // m = beta1 * m + (1 - beta1) * gradient
+    // m = beta1 * m + (1 - beta1) * clipped_gradient
     auto beta1_m = momentum->multiply_scalar(m_beta1);
-    auto grad_term = gradient->multiply_scalar(1.0f - m_beta1);
+    auto grad_term = clipped_gradient->multiply_scalar(1.0f - m_beta1);
     auto new_momentum = beta1_m->add(*grad_term);
     
-    // v = beta2 * v + (1 - beta2) * gradient^2
-    auto grad_squared = gradient->multiply(*gradient);
+    // v = beta2 * v + (1 - beta2) * clipped_gradient^2
+    auto grad_squared = clipped_gradient->multiply(*clipped_gradient);
     auto beta2_v = velocity->multiply_scalar(m_beta2);
     auto grad_sq_term = grad_squared->multiply_scalar(1.0f - m_beta2);
     auto new_velocity = beta2_v->add(*grad_sq_term);
@@ -157,6 +187,21 @@ void RMSprop::update(Layer* layer) {
 
 void RMSprop::update_parameter(std::shared_ptr<Tensor>& parameter, 
                               const std::shared_ptr<Tensor>& gradient) {
+    // Apply gradient clipping if enabled
+    auto clipped_gradient = gradient;
+    if (m_use_grad_clip_norm || m_use_grad_clip_value) {
+        std::vector<std::shared_ptr<Tensor>> grad_vec = {gradient};
+        
+        if (m_use_grad_clip_norm) {
+            GradientClipping::clip_grad_norm(grad_vec, m_grad_clip_norm);
+        }
+        if (m_use_grad_clip_value) {
+            GradientClipping::clip_grad_value(grad_vec, m_grad_clip_min, m_grad_clip_max);
+        }
+        
+        clipped_gradient = grad_vec[0];
+    }
+    
     auto param_ptr = parameter.get();
     
     // Initialize square average if needed
@@ -169,8 +214,8 @@ void RMSprop::update_parameter(std::shared_ptr<Tensor>& parameter,
     
     auto square_avg = m_square_avg_cache[param_ptr];
     
-    // square_avg = alpha * square_avg + (1 - alpha) * gradient^2
-    auto grad_squared = gradient->multiply(*gradient);
+    // square_avg = alpha * square_avg + (1 - alpha) * clipped_gradient^2
+    auto grad_squared = clipped_gradient->multiply(*clipped_gradient);
     auto alpha_avg = square_avg->multiply_scalar(m_alpha);
     auto grad_term = grad_squared->multiply_scalar(1.0f - m_alpha);
     auto new_square_avg = alpha_avg->add(*grad_term);
@@ -188,8 +233,8 @@ void RMSprop::update_parameter(std::shared_ptr<Tensor>& parameter,
         parameter->shape(), DataType::FLOAT32, parameter->device());
     denominator->upload_data(denominator_data.data());
     
-    // Update: param = param - lr * gradient / denominator
-    auto update_numerator = gradient->multiply_scalar(m_learning_rate);
+    // Update: param = param - lr * clipped_gradient / denominator
+    auto update_numerator = clipped_gradient->multiply_scalar(m_learning_rate);
     auto update = update_numerator->divide(*denominator);
     auto new_param = parameter->subtract(*update);
     
@@ -203,5 +248,67 @@ void RMSprop::update_parameter(std::shared_ptr<Tensor>& parameter,
     square_avg->upload_data(avg_data.data());
     parameter->upload_data(param_data.data());
 }
+
+// Gradient clipping implementations
+namespace GradientClipping {
+
+float compute_grad_norm(const std::vector<std::shared_ptr<Tensor>>& gradients) {
+    float total_norm_squared = 0.0f;
+    
+    for (const auto& grad : gradients) {
+        if (!grad) continue;
+        
+        std::vector<float> grad_data(grad->size());
+        grad->download_data(grad_data.data());
+        
+        for (float val : grad_data) {
+            total_norm_squared += val * val;
+        }
+    }
+    
+    return std::sqrt(total_norm_squared);
+}
+
+void clip_grad_norm(std::vector<std::shared_ptr<Tensor>>& gradients, float max_norm) {
+    if (gradients.empty()) return;
+    
+    float current_norm = compute_grad_norm(gradients);
+    
+    if (current_norm <= max_norm) {
+        return; // No clipping needed
+    }
+    
+    float clip_factor = max_norm / current_norm;
+    
+    // Scale all gradients by the clip factor
+    for (auto& grad : gradients) {
+        if (!grad) continue;
+        
+        auto clipped_grad = grad->multiply_scalar(clip_factor);
+        
+        std::vector<float> clipped_data(clipped_grad->size());
+        clipped_grad->download_data(clipped_data.data());
+        grad->upload_data(clipped_data.data());
+    }
+}
+
+void clip_grad_value(std::vector<std::shared_ptr<Tensor>>& gradients, 
+                     float min_value, float max_value) {
+    for (auto& grad : gradients) {
+        if (!grad) continue;
+        
+        std::vector<float> grad_data(grad->size());
+        grad->download_data(grad_data.data());
+        
+        // Clip each gradient value
+        for (float& val : grad_data) {
+            val = std::max(min_value, std::min(max_value, val));
+        }
+        
+        grad->upload_data(grad_data.data());
+    }
+}
+
+} // namespace GradientClipping
 
 } // namespace dlvk

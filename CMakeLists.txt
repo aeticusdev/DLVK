@@ -50,6 +50,28 @@ add_executable(demo_phase4_3_cnn_gpu
     src/optimizers/optimizers.cpp
 )
 
+# Gradient Clipping Test
+add_executable(test_gradient_clipping
+    test_gradient_clipping.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+)
+
 # Add library target
 add_library(dlvk STATIC
     src/core/vulkan_device.cpp
@@ -82,6 +104,16 @@ target_include_directories(dlvk_demo PRIVATE
     ${Vulkan_INCLUDE_DIRS}
 )
 
+target_include_directories(demo_phase4_3_cnn_gpu PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(test_gradient_clipping PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
 # Link libraries
 target_link_libraries(dlvk PUBLIC
     ${Vulkan_LIBRARIES}
@@ -100,6 +132,10 @@ target_link_libraries(dlvk_demo PRIVATE
 )
 
 target_link_libraries(demo_phase4_3_cnn_gpu PRIVATE
+    dlvk
+)
+
+target_link_libraries(test_gradient_clipping PRIVATE
     dlvk
 )
 
@@ -151,6 +187,7 @@ add_custom_target(
 add_dependencies(dlvk shaders)
 add_dependencies(dlvk_demo shaders)
 add_dependencies(demo_phase4_3_cnn_gpu shaders)
+add_dependencies(test_gradient_clipping shaders)
 
 # Testing
 enable_testing()
