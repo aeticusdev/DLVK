@@ -1065,6 +1065,191 @@ bool TensorOps::create_pipelines() {
         m_reduce_sum_axis0_pipeline.reset();
     }
     
+    // Create Conv2D pipeline
+    std::vector<VkDescriptorSetLayoutBinding> conv2d_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // weights
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // bias
+        {3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // output
+    };
+    dlvk::PushConstantRange conv2d_push_range = {0, sizeof(uint32_t) * 13, VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_conv2d_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_conv2d_pipeline->create_descriptor_set_layout(conv2d_bindings)) {
+        m_conv2d_pipeline->set_push_constant_range(conv2d_push_range);
+        if (m_conv2d_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/conv2d.comp.spv")) {
+            if (m_conv2d_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Conv2D pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_conv2d_pipeline.reset();
+            }
+        } else {
+            m_conv2d_pipeline.reset();
+        }
+    } else {
+        m_conv2d_pipeline.reset();
+    }
+    
+    // Create MaxPool2D pipeline
+    std::vector<VkDescriptorSetLayoutBinding> maxpool_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // indices
+    };
+    dlvk::PushConstantRange maxpool_push_range = {0, sizeof(uint32_t) * 12, VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_maxpool2d_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_maxpool2d_pipeline->create_descriptor_set_layout(maxpool_bindings)) {
+        m_maxpool2d_pipeline->set_push_constant_range(maxpool_push_range);
+        if (m_maxpool2d_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/maxpool2d.comp.spv")) {
+            if (m_maxpool2d_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ MaxPool2D pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_maxpool2d_pipeline.reset();
+            }
+        } else {
+            m_maxpool2d_pipeline.reset();
+        }
+    } else {
+        m_maxpool2d_pipeline.reset();
+    }
+    
+    // Create BatchNorm pipeline
+    std::vector<VkDescriptorSetLayoutBinding> batchnorm_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // gamma
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // beta
+        {3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // running_mean
+        {4, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // running_var
+        {5, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
+        {6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // saved_mean
+        {7, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // saved_var
+    };
+    dlvk::PushConstantRange batchnorm_push_range = {0, sizeof(uint32_t) * 4 + sizeof(float) * 2, VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_batch_norm_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_batch_norm_pipeline->create_descriptor_set_layout(batchnorm_bindings)) {
+        m_batch_norm_pipeline->set_push_constant_range(batchnorm_push_range);
+        if (m_batch_norm_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/batch_norm.comp.spv")) {
+            if (m_batch_norm_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ BatchNorm pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_batch_norm_pipeline.reset();
+            }
+        } else {
+            m_batch_norm_pipeline.reset();
+        }
+    } else {
+        m_batch_norm_pipeline.reset();
+    }
+    
+    // Create Dropout pipeline
+    std::vector<VkDescriptorSetLayoutBinding> dropout_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // mask
+    };
+    dlvk::PushConstantRange dropout_push_range = {0, sizeof(uint32_t) * 3 + sizeof(float) * 2, VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_dropout_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_dropout_pipeline->create_descriptor_set_layout(dropout_bindings)) {
+        m_dropout_pipeline->set_push_constant_range(dropout_push_range);
+        if (m_dropout_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/dropout.comp.spv")) {
+            if (m_dropout_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Dropout pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_dropout_pipeline.reset();
+            }
+        } else {
+            m_dropout_pipeline.reset();
+        }
+    } else {
+        m_dropout_pipeline.reset();
+    }
+
+    // Create avgpool2d pipeline
+    VkDescriptorSetLayoutBinding avgpool_bindings[3] = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
+    };
+    dlvk::PushConstantRange avgpool_push_range = {0, sizeof(uint32_t) * 12, VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_avgpool2d_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_avgpool2d_pipeline->create_descriptor_set_layout(std::vector<VkDescriptorSetLayoutBinding>(avgpool_bindings, avgpool_bindings + 2))) {
+        m_avgpool2d_pipeline->set_push_constant_range(avgpool_push_range);
+        if (m_avgpool2d_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/avgpool2d.comp.spv")) {
+            if (m_avgpool2d_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ AvgPool2D pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_avgpool2d_pipeline.reset();
+            }
+        } else {
+            m_avgpool2d_pipeline.reset();
+        }
+    } else {
+        m_avgpool2d_pipeline.reset();
+    }
+
+    // Create batch_norm_backward pipeline
+    VkDescriptorSetLayoutBinding batchnorm_backward_bindings[8] = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // grad_output
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // gamma
+        {3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // saved_mean
+        {4, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // saved_var
+        {5, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // grad_input
+        {6, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // grad_gamma
+        {7, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // grad_beta
+    };
+    dlvk::PushConstantRange batchnorm_backward_push_range = {0, sizeof(uint32_t) * 3 + sizeof(float), VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_batch_norm_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_batch_norm_backward_pipeline->create_descriptor_set_layout(std::vector<VkDescriptorSetLayoutBinding>(batchnorm_backward_bindings, batchnorm_backward_bindings + 8))) {
+        m_batch_norm_backward_pipeline->set_push_constant_range(batchnorm_backward_push_range);
+        if (m_batch_norm_backward_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/batch_norm_backward.comp.spv")) {
+            if (m_batch_norm_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ BatchNorm backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_batch_norm_backward_pipeline.reset();
+            }
+        } else {
+            m_batch_norm_backward_pipeline.reset();
+        }
+    } else {
+        m_batch_norm_backward_pipeline.reset();
+    }
+
+    // Create dropout_backward pipeline
+    VkDescriptorSetLayoutBinding dropout_backward_bindings[3] = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // grad_output
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // mask
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // grad_input
+    };
+    dlvk::PushConstantRange dropout_backward_push_range = {0, sizeof(uint32_t) + sizeof(float), VK_SHADER_STAGE_COMPUTE_BIT};
+    
+    m_dropout_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_dropout_backward_pipeline->create_descriptor_set_layout(std::vector<VkDescriptorSetLayoutBinding>(dropout_backward_bindings, dropout_backward_bindings + 3))) {
+        m_dropout_backward_pipeline->set_push_constant_range(dropout_backward_push_range);
+        if (m_dropout_backward_pipeline->create_from_file("/home/mostafizur/DLVK/build/shaders/dropout_backward.comp.spv")) {
+            if (m_dropout_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Dropout backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_dropout_backward_pipeline.reset();
+            }
+        } else {
+            m_dropout_backward_pipeline.reset();
+        }
+    } else {
+        m_dropout_backward_pipeline.reset();
+    }
+
     std::cout << "Pipeline creation summary: " << success_count << " pipelines created" << std::endl;
     
     // Return true if we have at least some working pipelines
@@ -1125,6 +1310,311 @@ bool TensorOps::validate_element_wise_operation(const Tensor& a, const Tensor& b
     }
     
     return true;
+}
+
+// CNN Operations Implementation
+
+bool TensorOps::conv2d(const Tensor& input, const Tensor& weights, const Tensor& bias, Tensor& output,
+                       size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w) {
+    if (!m_conv2d_pipeline) {
+        std::cerr << "Conv2D pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    // Validate shapes
+    const auto& input_shape = input.shape();
+    const auto& weight_shape = weights.shape();
+    const auto& output_shape = output.shape();
+    
+    if (input_shape.size() != 4 || weight_shape.size() != 4 || output_shape.size() != 4) {
+        std::cerr << "Conv2D requires 4D tensors [batch, channels, height, width]" << std::endl;
+        return false;
+    }
+    
+    // Extract dimensions
+    uint32_t batch_size = static_cast<uint32_t>(input_shape[0]);
+    uint32_t in_channels = static_cast<uint32_t>(input_shape[1]);
+    uint32_t input_height = static_cast<uint32_t>(input_shape[2]);
+    uint32_t input_width = static_cast<uint32_t>(input_shape[3]);
+    
+    uint32_t out_channels = static_cast<uint32_t>(weight_shape[0]);
+    uint32_t kernel_height = static_cast<uint32_t>(weight_shape[2]);
+    uint32_t kernel_width = static_cast<uint32_t>(weight_shape[3]);
+    
+    uint32_t output_height = static_cast<uint32_t>(output_shape[2]);
+    uint32_t output_width = static_cast<uint32_t>(output_shape[3]);
+    
+    // Setup push constants
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t in_channels;
+        uint32_t out_channels;
+        uint32_t input_height;
+        uint32_t input_width;
+        uint32_t output_height;
+        uint32_t output_width;
+        uint32_t kernel_height;
+        uint32_t kernel_width;
+        uint32_t stride_h;
+        uint32_t stride_w;
+        uint32_t padding_h;
+        uint32_t padding_w;
+    } push_constants;
+    
+    push_constants.batch_size = batch_size;
+    push_constants.in_channels = in_channels;
+    push_constants.out_channels = out_channels;
+    push_constants.input_height = input_height;
+    push_constants.input_width = input_width;
+    push_constants.output_height = output_height;
+    push_constants.output_width = output_width;
+    push_constants.kernel_height = kernel_height;
+    push_constants.kernel_width = kernel_width;
+    push_constants.stride_h = static_cast<uint32_t>(stride_h);
+    push_constants.stride_w = static_cast<uint32_t>(stride_w);
+    push_constants.padding_h = static_cast<uint32_t>(padding_h);
+    push_constants.padding_w = static_cast<uint32_t>(padding_w);
+    
+    // Update descriptor sets
+    m_conv2d_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_conv2d_pipeline->update_descriptor_set(0, 1, weights.buffer());
+    m_conv2d_pipeline->update_descriptor_set(0, 2, bias.buffer());
+    m_conv2d_pipeline->update_descriptor_set(0, 3, output.buffer());
+    
+    // Dispatch compute
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_conv2d_pipeline->bind(cmd);
+    m_conv2d_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    uint32_t group_count_x = (output_width + 7) / 8;
+    uint32_t group_count_y = (output_height + 7) / 8;
+    uint32_t group_count_z = batch_size;
+    
+    m_conv2d_pipeline->dispatch(cmd, group_count_x, group_count_y, group_count_z);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::maxpool2d(const Tensor& input, Tensor& output, Tensor& indices,
+                          size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
+                          size_t padding_h, size_t padding_w) {
+    if (!m_maxpool2d_pipeline) {
+        std::cerr << "MaxPool2D pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    const auto& input_shape = input.shape();
+    const auto& output_shape = output.shape();
+    
+    if (input_shape.size() != 4 || output_shape.size() != 4) {
+        std::cerr << "MaxPool2D requires 4D tensors [batch, channels, height, width]" << std::endl;
+        return false;
+    }
+    
+    uint32_t batch_size = static_cast<uint32_t>(input_shape[0]);
+    uint32_t channels = static_cast<uint32_t>(input_shape[1]);
+    uint32_t input_height = static_cast<uint32_t>(input_shape[2]);
+    uint32_t input_width = static_cast<uint32_t>(input_shape[3]);
+    uint32_t output_height = static_cast<uint32_t>(output_shape[2]);
+    uint32_t output_width = static_cast<uint32_t>(output_shape[3]);
+    
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t channels;
+        uint32_t input_height;
+        uint32_t input_width;
+        uint32_t output_height;
+        uint32_t output_width;
+        uint32_t pool_height;
+        uint32_t pool_width;
+        uint32_t stride_h;
+        uint32_t stride_w;
+        uint32_t padding_h;
+        uint32_t padding_w;
+    } push_constants;
+    
+    push_constants.batch_size = batch_size;
+    push_constants.channels = channels;
+    push_constants.input_height = input_height;
+    push_constants.input_width = input_width;
+    push_constants.output_height = output_height;
+    push_constants.output_width = output_width;
+    push_constants.pool_height = static_cast<uint32_t>(pool_h);
+    push_constants.pool_width = static_cast<uint32_t>(pool_w);
+    push_constants.stride_h = static_cast<uint32_t>(stride_h);
+    push_constants.stride_w = static_cast<uint32_t>(stride_w);
+    push_constants.padding_h = static_cast<uint32_t>(padding_h);
+    push_constants.padding_w = static_cast<uint32_t>(padding_w);
+    
+    // Update descriptor sets
+    m_maxpool2d_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_maxpool2d_pipeline->update_descriptor_set(0, 1, output.buffer());
+    m_maxpool2d_pipeline->update_descriptor_set(0, 2, indices.buffer());
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_maxpool2d_pipeline->bind(cmd);
+    m_maxpool2d_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    uint32_t group_count_x = (output_width + 7) / 8;
+    uint32_t group_count_y = (output_height + 7) / 8;
+    uint32_t group_count_z = batch_size * channels;
+    
+    m_maxpool2d_pipeline->dispatch(cmd, group_count_x, group_count_y, group_count_z);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::batch_norm(const Tensor& input, const Tensor& gamma, const Tensor& beta,
+                           Tensor& running_mean, Tensor& running_var,
+                           Tensor& output, Tensor& saved_mean, Tensor& saved_var,
+                           float momentum, float epsilon, bool training) {
+    if (!m_batch_norm_pipeline) {
+        std::cerr << "BatchNorm pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    uint32_t batch_size = static_cast<uint32_t>(input.shape()[0]);
+    uint32_t num_features = static_cast<uint32_t>(gamma.size());
+    uint32_t total_elements = static_cast<uint32_t>(input.size());
+    
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t num_features;
+        uint32_t total_elements;
+        float momentum;
+        float epsilon;
+        uint32_t training;
+    } push_constants;
+    
+    push_constants.batch_size = batch_size;
+    push_constants.num_features = num_features;
+    push_constants.total_elements = total_elements;
+    push_constants.momentum = momentum;
+    push_constants.epsilon = epsilon;
+    push_constants.training = training ? 1 : 0;
+    
+    // Update descriptor sets
+    m_batch_norm_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 1, gamma.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 2, beta.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 3, running_mean.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 4, running_var.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 5, output.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 6, saved_mean.buffer());
+    m_batch_norm_pipeline->update_descriptor_set(0, 7, saved_var.buffer());
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_batch_norm_pipeline->bind(cmd);
+    m_batch_norm_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    m_batch_norm_pipeline->dispatch(cmd, num_features, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::dropout(const Tensor& input, Tensor& output, Tensor& mask,
+                        float dropout_rate, bool training, uint32_t seed) {
+    if (!m_dropout_pipeline) {
+        std::cerr << "Dropout pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    uint32_t total_elements = static_cast<uint32_t>(input.size());
+    float scale_factor = training ? (1.0f / (1.0f - dropout_rate)) : 1.0f;
+    
+    struct PushConstants {
+        uint32_t total_elements;
+        float dropout_rate;
+        float scale_factor;
+        uint32_t training;
+        uint32_t seed;
+    } push_constants;
+    
+    push_constants.total_elements = total_elements;
+    push_constants.dropout_rate = dropout_rate;
+    push_constants.scale_factor = scale_factor;
+    push_constants.training = training ? 1 : 0;
+    push_constants.seed = seed;
+    
+    // Update descriptor sets
+    m_dropout_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_dropout_pipeline->update_descriptor_set(0, 1, output.buffer());
+    m_dropout_pipeline->update_descriptor_set(0, 2, mask.buffer());
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_dropout_pipeline->bind(cmd);
+    m_dropout_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    uint32_t group_count = (total_elements + 255) / 256;
+    m_dropout_pipeline->dispatch(cmd, group_count, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+// Placeholder implementations for other operations
+bool TensorOps::conv2d_backward_input(const Tensor& grad_output, const Tensor& weights, Tensor& grad_input,
+                                      size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w) {
+    // TODO: Implement conv2d backward input pass
+    std::cerr << "Conv2D backward input not yet implemented" << std::endl;
+    return false;
+}
+
+bool TensorOps::conv2d_backward_weight(const Tensor& input, const Tensor& grad_output, 
+                                       Tensor& grad_weights, Tensor& grad_bias,
+                                       size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w) {
+    // TODO: Implement conv2d backward weight pass
+    std::cerr << "Conv2D backward weight not yet implemented" << std::endl;
+    return false;
+}
+
+bool TensorOps::maxpool2d_backward(const Tensor& grad_output, const Tensor& indices, Tensor& grad_input) {
+    // TODO: Implement maxpool2d backward pass
+    std::cerr << "MaxPool2D backward not yet implemented" << std::endl;
+    return false;
+}
+
+bool TensorOps::avgpool2d(const Tensor& input, Tensor& output,
+                          size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
+                          size_t padding_h, size_t padding_w) {
+    // TODO: Implement avgpool2d
+    std::cerr << "AvgPool2D not yet implemented" << std::endl;
+    return false;
+}
+
+bool TensorOps::avgpool2d_backward(const Tensor& grad_output, Tensor& grad_input,
+                                   size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
+                                   size_t padding_h, size_t padding_w) {
+    // TODO: Implement avgpool2d backward pass
+    std::cerr << "AvgPool2D backward not yet implemented" << std::endl;
+    return false;
+}
+
+bool TensorOps::batch_norm_backward(const Tensor& grad_output, const Tensor& input,
+                                    const Tensor& gamma, const Tensor& saved_mean, const Tensor& saved_var,
+                                    Tensor& grad_input, Tensor& grad_gamma, Tensor& grad_beta,
+                                    float epsilon) {
+    // TODO: Implement batch norm backward pass
+    std::cerr << "BatchNorm backward not yet implemented" << std::endl;
+    return false;
+}
+
+bool TensorOps::dropout_backward(const Tensor& grad_output, const Tensor& mask, Tensor& grad_input,
+                                 float dropout_rate) {
+    // TODO: Implement dropout backward pass
+    std::cerr << "Dropout backward not yet implemented" << std::endl;
+    return false;
 }
 
 bool TensorOps::validate_matrix_multiply(const Tensor& a, const Tensor& b, const Tensor& result) {

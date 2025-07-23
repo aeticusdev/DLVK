@@ -48,6 +48,43 @@ public:
     // Utility operations
     bool fill(Tensor& tensor, float value);
     bool copy(const Tensor& source, Tensor& destination);
+    
+    // CNN operations
+    bool conv2d(const Tensor& input, const Tensor& weights, const Tensor& bias, Tensor& output,
+                size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w);
+    bool conv2d_backward_input(const Tensor& grad_output, const Tensor& weights, Tensor& grad_input,
+                               size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w);
+    bool conv2d_backward_weight(const Tensor& input, const Tensor& grad_output, 
+                                Tensor& grad_weights, Tensor& grad_bias,
+                                size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w);
+    
+    // Pooling operations
+    bool maxpool2d(const Tensor& input, Tensor& output, Tensor& indices,
+                   size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
+                   size_t padding_h, size_t padding_w);
+    bool maxpool2d_backward(const Tensor& grad_output, const Tensor& indices, Tensor& grad_input);
+    bool avgpool2d(const Tensor& input, Tensor& output,
+                   size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
+                   size_t padding_h, size_t padding_w);
+    bool avgpool2d_backward(const Tensor& grad_output, Tensor& grad_input,
+                            size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
+                            size_t padding_h, size_t padding_w);
+    
+    // Batch normalization operations
+    bool batch_norm(const Tensor& input, const Tensor& gamma, const Tensor& beta,
+                    Tensor& running_mean, Tensor& running_var,
+                    Tensor& output, Tensor& saved_mean, Tensor& saved_var,
+                    float momentum, float epsilon, bool training);
+    bool batch_norm_backward(const Tensor& grad_output, const Tensor& input,
+                             const Tensor& gamma, const Tensor& saved_mean, const Tensor& saved_var,
+                             Tensor& grad_input, Tensor& grad_gamma, Tensor& grad_beta,
+                             float epsilon);
+    
+    // Dropout operations
+    bool dropout(const Tensor& input, Tensor& output, Tensor& mask,
+                 float dropout_rate, bool training, uint32_t seed);
+    bool dropout_backward(const Tensor& grad_output, const Tensor& mask, Tensor& grad_input,
+                          float dropout_rate);
 
 private:
     std::shared_ptr<VulkanDevice> m_device;
@@ -73,6 +110,25 @@ private:
     
     // Specialized reduction pipelines
     std::unique_ptr<ComputePipeline> m_reduce_sum_axis0_pipeline;
+    
+    // CNN pipelines
+    std::unique_ptr<ComputePipeline> m_conv2d_pipeline;
+    std::unique_ptr<ComputePipeline> m_conv2d_backward_input_pipeline;
+    std::unique_ptr<ComputePipeline> m_conv2d_backward_weight_pipeline;
+    
+    // Pooling pipelines
+    std::unique_ptr<ComputePipeline> m_maxpool2d_pipeline;
+    std::unique_ptr<ComputePipeline> m_maxpool2d_backward_pipeline;
+    std::unique_ptr<ComputePipeline> m_avgpool2d_pipeline;
+    std::unique_ptr<ComputePipeline> m_avgpool2d_backward_pipeline;
+    
+    // Batch normalization pipelines
+    std::unique_ptr<ComputePipeline> m_batch_norm_pipeline;
+    std::unique_ptr<ComputePipeline> m_batch_norm_backward_pipeline;
+    
+    // Dropout pipelines
+    std::unique_ptr<ComputePipeline> m_dropout_pipeline;
+    std::unique_ptr<ComputePipeline> m_dropout_backward_pipeline;
     
     // Command buffer for operations
     VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;

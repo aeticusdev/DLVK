@@ -226,10 +226,38 @@ CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mostafizur/DLVK/src/layers/pooling_layers.cpp -o CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.s
 
+CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o: CMakeFiles/dlvk.dir/flags.make
+CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o: /home/mostafizur/DLVK/src/layers/batch_norm_layers.cpp
+CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o: CMakeFiles/dlvk.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o -MF CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o.d -o CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o -c /home/mostafizur/DLVK/src/layers/batch_norm_layers.cpp
+
+CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mostafizur/DLVK/src/layers/batch_norm_layers.cpp > CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.i
+
+CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mostafizur/DLVK/src/layers/batch_norm_layers.cpp -o CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.s
+
+CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o: CMakeFiles/dlvk.dir/flags.make
+CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o: /home/mostafizur/DLVK/src/layers/dropout_layer.cpp
+CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o: CMakeFiles/dlvk.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o -MF CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o.d -o CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o -c /home/mostafizur/DLVK/src/layers/dropout_layer.cpp
+
+CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/mostafizur/DLVK/src/layers/dropout_layer.cpp > CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.i
+
+CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/mostafizur/DLVK/src/layers/dropout_layer.cpp -o CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.s
+
 CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o: CMakeFiles/dlvk.dir/flags.make
 CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o: /home/mostafizur/DLVK/src/optimizers/sgd.cpp
 CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o: CMakeFiles/dlvk.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o -MF CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o.d -o CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o -c /home/mostafizur/DLVK/src/optimizers/sgd.cpp
 
 CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.i: cmake_force
@@ -243,7 +271,7 @@ CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.s: cmake_force
 CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o: CMakeFiles/dlvk.dir/flags.make
 CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o: /home/mostafizur/DLVK/src/optimizers/adam.cpp
 CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o: CMakeFiles/dlvk.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o -MF CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o.d -o CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o -c /home/mostafizur/DLVK/src/optimizers/adam.cpp
 
 CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.i: cmake_force
@@ -257,7 +285,7 @@ CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.s: cmake_force
 CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o: CMakeFiles/dlvk.dir/flags.make
 CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o: /home/mostafizur/DLVK/src/loss/loss_functions.cpp
 CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o: CMakeFiles/dlvk.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o -MF CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o.d -o CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o -c /home/mostafizur/DLVK/src/loss/loss_functions.cpp
 
 CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.i: cmake_force
@@ -271,7 +299,7 @@ CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.s: cmake_force
 CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: CMakeFiles/dlvk.dir/flags.make
 CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: /home/mostafizur/DLVK/src/optimizers/optimizers.cpp
 CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o: CMakeFiles/dlvk.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Building CXX object CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o -MF CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o.d -o CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o -c /home/mostafizur/DLVK/src/optimizers/optimizers.cpp
 
 CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.i: cmake_force
@@ -295,6 +323,8 @@ dlvk_OBJECTS = \
 "CMakeFiles/dlvk.dir/src/layers/conv_layer.cpp.o" \
 "CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.o" \
 "CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.o" \
+"CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o" \
+"CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o" \
 "CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o" \
 "CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o" \
 "CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o" \
@@ -314,13 +344,15 @@ libdlvk.a: CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/layers/conv_layer.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/layers/conv2d_layer.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/layers/pooling_layers.cpp.o
+libdlvk.a: CMakeFiles/dlvk.dir/src/layers/batch_norm_layers.cpp.o
+libdlvk.a: CMakeFiles/dlvk.dir/src/layers/dropout_layer.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/optimizers/sgd.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/optimizers/adam.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/loss/loss_functions.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/src/optimizers/optimizers.cpp.o
 libdlvk.a: CMakeFiles/dlvk.dir/build.make
 libdlvk.a: CMakeFiles/dlvk.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Linking CXX static library libdlvk.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_18) "Linking CXX static library libdlvk.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/dlvk.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/dlvk.dir/link.txt --verbose=$(VERBOSE)
 

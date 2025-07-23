@@ -36,4 +36,18 @@ public:
                                     const std::shared_ptr<Tensor>& targets) override;
 };
 
+class BinaryCrossEntropyLoss : public LossFunction {
+private:
+    float epsilon_;  // For numerical stability
+
+public:
+    BinaryCrossEntropyLoss(float epsilon = 1e-7f) : epsilon_(epsilon) {}
+    
+    std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& predictions, 
+                                   const std::shared_ptr<Tensor>& targets) override;
+    
+    std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& predictions,
+                                    const std::shared_ptr<Tensor>& targets) override;
+};
+
 } // namespace dlvk

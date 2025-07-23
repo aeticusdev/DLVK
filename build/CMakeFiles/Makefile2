@@ -64,12 +64,14 @@ CMAKE_BINARY_DIR = /home/mostafizur/DLVK/build
 
 # The main recursive "all" target.
 all: CMakeFiles/dlvk_demo.dir/all
+all: CMakeFiles/demo_phase4_3_cnn_gpu.dir/all
 all: CMakeFiles/dlvk.dir/all
 all: tests/all
 .PHONY : all
 
 # The main recursive "codegen" target.
 codegen: CMakeFiles/dlvk_demo.dir/codegen
+codegen: CMakeFiles/demo_phase4_3_cnn_gpu.dir/codegen
 codegen: CMakeFiles/dlvk.dir/codegen
 codegen: tests/codegen
 .PHONY : codegen
@@ -80,6 +82,7 @@ preinstall: tests/preinstall
 
 # The main recursive "clean" target.
 clean: CMakeFiles/dlvk_demo.dir/clean
+clean: CMakeFiles/demo_phase4_3_cnn_gpu.dir/clean
 clean: CMakeFiles/dlvk.dir/clean
 clean: CMakeFiles/shaders.dir/clean
 clean: tests/clean
@@ -115,12 +118,12 @@ CMakeFiles/dlvk_demo.dir/all: CMakeFiles/dlvk.dir/all
 CMakeFiles/dlvk_demo.dir/all: CMakeFiles/shaders.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 "Built target dlvk_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=38,39,40,41,42,43,44,45,46,47,48,49,50,51,52 "Built target dlvk_demo"
 .PHONY : CMakeFiles/dlvk_demo.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/dlvk_demo.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 46
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 59
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/dlvk_demo.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 0
 .PHONY : CMakeFiles/dlvk_demo.dir/rule
@@ -132,7 +135,7 @@ dlvk_demo: CMakeFiles/dlvk_demo.dir/rule
 # codegen rule for target.
 CMakeFiles/dlvk_demo.dir/codegen: CMakeFiles/shaders.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk_demo.dir/build.make CMakeFiles/dlvk_demo.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 "Finished codegen for target dlvk_demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=38,39,40,41,42,43,44,45,46,47,48,49,50,51,52 "Finished codegen for target dlvk_demo"
 .PHONY : CMakeFiles/dlvk_demo.dir/codegen
 
 # clean rule for target.
@@ -141,18 +144,51 @@ CMakeFiles/dlvk_demo.dir/clean:
 .PHONY : CMakeFiles/dlvk_demo.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/demo_phase4_3_cnn_gpu.dir
+
+# All Build rule for target.
+CMakeFiles/demo_phase4_3_cnn_gpu.dir/all: CMakeFiles/dlvk.dir/all
+CMakeFiles/demo_phase4_3_cnn_gpu.dir/all: CMakeFiles/shaders.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 "Built target demo_phase4_3_cnn_gpu"
+.PHONY : CMakeFiles/demo_phase4_3_cnn_gpu.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/demo_phase4_3_cnn_gpu.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 63
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/demo_phase4_3_cnn_gpu.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 0
+.PHONY : CMakeFiles/demo_phase4_3_cnn_gpu.dir/rule
+
+# Convenience name for target.
+demo_phase4_3_cnn_gpu: CMakeFiles/demo_phase4_3_cnn_gpu.dir/rule
+.PHONY : demo_phase4_3_cnn_gpu
+
+# codegen rule for target.
+CMakeFiles/demo_phase4_3_cnn_gpu.dir/codegen: CMakeFiles/shaders.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 "Finished codegen for target demo_phase4_3_cnn_gpu"
+.PHONY : CMakeFiles/demo_phase4_3_cnn_gpu.dir/codegen
+
+# clean rule for target.
+CMakeFiles/demo_phase4_3_cnn_gpu.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo_phase4_3_cnn_gpu.dir/build.make CMakeFiles/demo_phase4_3_cnn_gpu.dir/clean
+.PHONY : CMakeFiles/demo_phase4_3_cnn_gpu.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/dlvk.dir
 
 # All Build rule for target.
 CMakeFiles/dlvk.dir/all: CMakeFiles/shaders.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 "Built target dlvk"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37 "Built target dlvk"
 .PHONY : CMakeFiles/dlvk.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/dlvk.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 31
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 44
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/dlvk.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 0
 .PHONY : CMakeFiles/dlvk.dir/rule
@@ -164,7 +200,7 @@ dlvk: CMakeFiles/dlvk.dir/rule
 # codegen rule for target.
 CMakeFiles/dlvk.dir/codegen: CMakeFiles/shaders.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dlvk.dir/build.make CMakeFiles/dlvk.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 "Finished codegen for target dlvk"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37 "Finished codegen for target dlvk"
 .PHONY : CMakeFiles/dlvk.dir/codegen
 
 # clean rule for target.
@@ -179,12 +215,12 @@ CMakeFiles/dlvk.dir/clean:
 CMakeFiles/shaders.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shaders.dir/build.make CMakeFiles/shaders.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shaders.dir/build.make CMakeFiles/shaders.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=32,33,34,35,36,37,38,39,40,41,42,43,44,45,46 "Built target shaders"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 "Built target shaders"
 .PHONY : CMakeFiles/shaders.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/shaders.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 15
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 26
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/shaders.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 0
 .PHONY : CMakeFiles/shaders.dir/rule
@@ -196,7 +232,7 @@ shaders: CMakeFiles/shaders.dir/rule
 # codegen rule for target.
 CMakeFiles/shaders.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/shaders.dir/build.make CMakeFiles/shaders.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=32,33,34,35,36,37,38,39,40,41,42,43,44,45,46 "Finished codegen for target shaders"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78 "Finished codegen for target shaders"
 .PHONY : CMakeFiles/shaders.dir/codegen
 
 # clean rule for target.
@@ -211,12 +247,12 @@ CMakeFiles/shaders.dir/clean:
 tests/CMakeFiles/test_tensor.dir/all: CMakeFiles/dlvk.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tensor.dir/build.make tests/CMakeFiles/test_tensor.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tensor.dir/build.make tests/CMakeFiles/test_tensor.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=47,48 "Built target test_tensor"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=79,80 "Built target test_tensor"
 .PHONY : tests/CMakeFiles/test_tensor.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test_tensor.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 33
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 46
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_tensor.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test_tensor.dir/rule
@@ -228,7 +264,7 @@ test_tensor: tests/CMakeFiles/test_tensor.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test_tensor.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_tensor.dir/build.make tests/CMakeFiles/test_tensor.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=47,48 "Finished codegen for target test_tensor"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=79,80 "Finished codegen for target test_tensor"
 .PHONY : tests/CMakeFiles/test_tensor.dir/codegen
 
 # clean rule for target.
@@ -243,12 +279,12 @@ tests/CMakeFiles/test_tensor.dir/clean:
 tests/CMakeFiles/test_vulkan_device.dir/all: CMakeFiles/dlvk.dir/all
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_vulkan_device.dir/build.make tests/CMakeFiles/test_vulkan_device.dir/depend
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_vulkan_device.dir/build.make tests/CMakeFiles/test_vulkan_device.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=49,50 "Built target test_vulkan_device"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=81,82 "Built target test_vulkan_device"
 .PHONY : tests/CMakeFiles/test_vulkan_device.dir/all
 
 # Build rule for subdir invocation for target.
 tests/CMakeFiles/test_vulkan_device.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 33
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 46
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tests/CMakeFiles/test_vulkan_device.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/mostafizur/DLVK/build/CMakeFiles 0
 .PHONY : tests/CMakeFiles/test_vulkan_device.dir/rule
@@ -260,7 +296,7 @@ test_vulkan_device: tests/CMakeFiles/test_vulkan_device.dir/rule
 # codegen rule for target.
 tests/CMakeFiles/test_vulkan_device.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f tests/CMakeFiles/test_vulkan_device.dir/build.make tests/CMakeFiles/test_vulkan_device.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=49,50 "Finished codegen for target test_vulkan_device"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/mostafizur/DLVK/build/CMakeFiles --progress-num=81,82 "Finished codegen for target test_vulkan_device"
 .PHONY : tests/CMakeFiles/test_vulkan_device.dir/codegen
 
 # clean rule for target.

@@ -107,4 +107,67 @@ std::shared_ptr<Tensor> CrossEntropyLoss::backward(const std::shared_ptr<Tensor>
     return grad_normalized;
 }
 
+// Binary Cross-Entropy Loss Implementation
+std::shared_ptr<Tensor> BinaryCrossEntropyLoss::forward(const std::shared_ptr<Tensor>& predictions,
+                                                        const std::shared_ptr<Tensor>& targets) {
+    if (predictions->shape() != targets->shape()) {
+        throw std::runtime_error("Predictions and targets must have the same shape");
+    }
+    
+    // Download data
+    std::vector<float> pred_data(predictions->size());
+    std::vector<float> target_data(targets->size());
+    predictions->download_data(pred_data.data());
+    targets->download_data(target_data.data());
+    
+    // Compute binary cross-entropy: -[y*log(p) + (1-y)*log(1-p)]
+    float total_loss = 0.0f;
+    
+    for (size_t i = 0; i < pred_data.size(); ++i) {
+        // Clamp predictions to avoid log(0)
+        float p = std::max(epsilon_, std::min(1.0f - epsilon_, pred_data[i]));
+        float y = target_data[i];
+        
+        total_loss -= y * std::log(p) + (1.0f - y) * std::log(1.0f - p);
+    }
+    
+    // Average loss
+    total_loss /= static_cast<float>(predictions->shape()[0]); // Batch size
+    
+    auto result = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, predictions->device());
+    result->upload_data(&total_loss);
+    
+    return result;
+}
+
+std::shared_ptr<Tensor> BinaryCrossEntropyLoss::backward(const std::shared_ptr<Tensor>& predictions,
+                                                         const std::shared_ptr<Tensor>& targets) {
+    if (predictions->shape() != targets->shape()) {
+        throw std::runtime_error("Predictions and targets must have the same shape");
+    }
+    
+    // Download data
+    std::vector<float> pred_data(predictions->size());
+    std::vector<float> target_data(targets->size());
+    predictions->download_data(pred_data.data());
+    targets->download_data(target_data.data());
+    
+    // Compute gradient: (p - y) / (p * (1 - p)) / batch_size
+    std::vector<float> grad_data(predictions->size());
+    float batch_size = static_cast<float>(predictions->shape()[0]);
+    
+    for (size_t i = 0; i < pred_data.size(); ++i) {
+        // Clamp predictions for numerical stability
+        float p = std::max(epsilon_, std::min(1.0f - epsilon_, pred_data[i]));
+        float y = target_data[i];
+        
+        grad_data[i] = (p - y) / (p * (1.0f - p)) / batch_size;
+    }
+    
+    auto grad = std::make_shared<Tensor>(predictions->shape(), DataType::FLOAT32, predictions->device());
+    grad->upload_data(grad_data.data());
+    
+    return grad;
+}
+
 } // namespace dlvk

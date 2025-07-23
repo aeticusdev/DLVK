@@ -1,6 +1,17 @@
 # Hashes of file build rules.
 291406194edb0fe7e1b3124b4efd7a94 CMakeFiles/shaders
+35565004d57779fb4d76d3af5921245b shaders/avgpool2d.comp.spv
+3a608d38fd217db7282d2e54cc399993 shaders/avgpool2d_backward.comp.spv
+abcb1105ba18711436ba3b15f05d8ab9 shaders/batch_norm.comp.spv
+a3b7ffc8df1167032d6977c132a3b09a shaders/batch_norm_backward.comp.spv
+4e2535a468e5624174be7d178f44f6f3 shaders/conv2d.comp.spv
+6a45d2cc334bae409cad2557a717e2c0 shaders/conv2d_backward_input.comp.spv
+c7bef6a786e1651f61a37b46bf17aa11 shaders/conv2d_backward_weight.comp.spv
+3f5038dfaded46a8c7c1d85c124c6041 shaders/dropout.comp.spv
+50dfcd4f52b16c091419d3556535e5b7 shaders/dropout_backward.comp.spv
 fff96dab168b974ff2e1908c132b6257 shaders/matrix_multiply.comp.spv
+1843061891ff1cf6edb26967481dd802 shaders/maxpool2d.comp.spv
+8398f91ebb142e4642ea0946c4a0845e shaders/maxpool2d_backward.comp.spv
 0279b1e3f35b8233426d537554629d0f shaders/reduce_sum.comp.spv
 fac3566f85f8ac0bd87bdd001fbd9621 shaders/reduce_sum_axis0.comp.spv
 e86e359a932dc24848e5c7a07295a85f shaders/relu.comp.spv

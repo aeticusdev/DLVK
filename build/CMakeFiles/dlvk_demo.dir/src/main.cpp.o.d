@@ -207,6 +207,7 @@ CMakeFiles/dlvk_demo.dir/src/main.cpp.o: \
  /usr/include/c++/15.1.1/pstl/execution_defs.h \
  /home/mostafizur/DLVK/include/dlvk/tensor/tensor_ops.h \
  /home/mostafizur/DLVK/include/dlvk/layers/layer.h \
+ /home/mostafizur/DLVK/include/dlvk/layers/dense_layer.h \
  /usr/include/c++/15.1.1/iostream /usr/include/c++/15.1.1/ostream \
  /usr/include/c++/15.1.1/bits/ostream.tcc /usr/include/c++/15.1.1/istream \
  /usr/include/c++/15.1.1/bits/istream.tcc

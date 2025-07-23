@@ -1,6 +1,7 @@
 CMakeFiles/dlvk.dir/src/layers/dense_layer.cpp.o: \
  /home/mostafizur/DLVK/src/layers/dense_layer.cpp \
  /usr/include/stdc-predef.h \
+ /home/mostafizur/DLVK/include/dlvk/layers/dense_layer.h \
  /home/mostafizur/DLVK/include/dlvk/layers/layer.h \
  /usr/include/c++/15.1.1/memory /usr/include/c++/15.1.1/bits/memoryfwd.h \
  /usr/include/c++/15.1.1/x86_64-pc-linux-gnu/bits/c++config.h \

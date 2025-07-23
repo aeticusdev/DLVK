@@ -1,0 +1,78 @@
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(binding = 2) writeonly buffer IndexBuffer {
+    uint max_indices[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint channels;
+    uint input_height;
+    uint input_width;
+    uint output_height;
+    uint output_width;
+    uint pool_height;
+    uint pool_width;
+    uint stride_h;
+    uint stride_w;
+    uint padding_h;
+    uint padding_w;
+} pc;
+
+void main() {
+    uint output_x = gl_GlobalInvocationID.x;
+    uint output_y = gl_GlobalInvocationID.y;
+    uint batch_ch = gl_GlobalInvocationID.z;
+    
+    if (output_x >= pc.output_width || output_y >= pc.output_height || 
+        batch_ch >= pc.batch_size * pc.channels) {
+        return;
+    }
+    
+    uint batch_idx = batch_ch / pc.channels;
+    uint ch_idx = batch_ch % pc.channels;
+    
+    float max_val = -3.40282347e+38; // -FLT_MAX
+    uint max_idx = 0;
+    
+    // Pool operation
+    for (uint py = 0; py < pc.pool_height; py++) {
+        for (uint px = 0; px < pc.pool_width; px++) {
+            int input_y = int(output_y * pc.stride_h + py) - int(pc.padding_h);
+            int input_x = int(output_x * pc.stride_w + px) - int(pc.padding_w);
+            
+            // Check bounds
+            if (input_y >= 0 && input_y < int(pc.input_height) && 
+                input_x >= 0 && input_x < int(pc.input_width)) {
+                
+                uint input_idx = batch_idx * (pc.channels * pc.input_height * pc.input_width) +
+                                ch_idx * (pc.input_height * pc.input_width) +
+                                uint(input_y) * pc.input_width + uint(input_x);
+                
+                float val = input_data[input_idx];
+                if (val > max_val) {
+                    max_val = val;
+                    max_idx = input_idx;
+                }
+            }
+        }
+    }
+    
+    // Store results
+    uint output_idx = batch_idx * (pc.channels * pc.output_height * pc.output_width) +
+                     ch_idx * (pc.output_height * pc.output_width) +
+                     output_y * pc.output_width + output_x;
+    
+    output_data[output_idx] = max_val;
+    max_indices[output_idx] = max_idx;
+}

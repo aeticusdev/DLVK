@@ -1,0 +1,70 @@
+# Build directories
+build/
+cmake-build-*/
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+dlvk_demo
+test_tensor
+test_vulkan_device
+test_phase4_2_features
+examples/phase4_2_training_demo
+
+# Object files
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Vulkan validation layers debug files
+validation_*.txt
+
+# Temporary files
+.tmp/
+*.tmp
+
+# Shader compiled binaries (keep source .glsl, ignore compiled .spv)
+*.spv
+
+# Package files
+*.tar.gz
+*.zip
+
+# Core dumps
+core
+core.*
+
+# Profiling files
+*.prof
+gmon.out
+
+# Backup files
+*.bak
+*.backup
+*~

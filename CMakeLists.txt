@@ -10,7 +10,7 @@ find_package(Vulkan REQUIRED)
 find_package(glfw3 3.3 QUIET)
 find_package(glm QUIET)
 
-# Add executable target
+# Add executable targets
 add_executable(dlvk_demo
     src/main.cpp
     src/core/vulkan_device.cpp
@@ -22,6 +22,28 @@ add_executable(dlvk_demo
     src/compute/compute_pipeline.cpp
     src/layers/dense_layer.cpp
     src/layers/conv_layer.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+)
+
+# Phase 4.3 CNN GPU Acceleration Demo
+add_executable(demo_phase4_3_cnn_gpu
+    demo_phase4_3_cnn_gpu.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
     src/optimizers/sgd.cpp
     src/optimizers/adam.cpp
     src/loss/loss_functions.cpp
@@ -41,6 +63,8 @@ add_library(dlvk STATIC
     src/layers/conv_layer.cpp
     src/layers/conv2d_layer.cpp
     src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
     src/optimizers/sgd.cpp
     src/optimizers/adam.cpp
     src/loss/loss_functions.cpp
@@ -75,13 +99,19 @@ target_link_libraries(dlvk_demo PRIVATE
     dlvk
 )
 
+target_link_libraries(demo_phase4_3_cnn_gpu PRIVATE
+    dlvk
+)
+
 # Compiler-specific options
 if(MSVC)
     target_compile_options(dlvk PRIVATE /W4)
     target_compile_options(dlvk_demo PRIVATE /W4)
+    target_compile_options(demo_phase4_3_cnn_gpu PRIVATE /W4)
 else()
     target_compile_options(dlvk PRIVATE -Wall -Wextra -Wpedantic)
     target_compile_options(dlvk_demo PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(demo_phase4_3_cnn_gpu PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
 # Shader compilation
@@ -120,6 +150,7 @@ add_custom_target(
 
 add_dependencies(dlvk shaders)
 add_dependencies(dlvk_demo shaders)
+add_dependencies(demo_phase4_3_cnn_gpu shaders)
 
 # Testing
 enable_testing()

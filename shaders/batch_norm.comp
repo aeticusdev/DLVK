@@ -1,0 +1,109 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) readonly buffer GammaBuffer {
+    float gamma[];
+};
+
+layout(binding = 2) readonly buffer BetaBuffer {
+    float beta[];
+};
+
+layout(binding = 3) buffer RunningMeanBuffer {
+    float running_mean[];
+};
+
+layout(binding = 4) buffer RunningVarBuffer {
+    float running_var[];
+};
+
+layout(binding = 5) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(binding = 6) buffer SavedMeanBuffer {
+    float saved_mean[];
+};
+
+layout(binding = 7) buffer SavedVarBuffer {
+    float saved_var[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint num_features;
+    uint total_elements;
+    float momentum;
+    float epsilon;
+    uint training;
+} pc;
+
+shared float shared_sum[256];
+shared float shared_sum_sq[256];
+
+void main() {
+    uint feature_idx = gl_WorkGroupID.x;
+    uint local_idx = gl_LocalInvocationIndex;
+    
+    if (feature_idx >= pc.num_features) {
+        return;
+    }
+    
+    float sum = 0.0;
+    float sum_sq = 0.0;
+    
+    // Each thread processes multiple elements for this feature
+    uint elements_per_feature = pc.total_elements / pc.num_features;
+    uint start_idx = feature_idx * elements_per_feature;
+    
+    for (uint i = local_idx; i < elements_per_feature; i += gl_WorkGroupSize.x) {
+        float val = input_data[start_idx + i];
+        sum += val;
+        sum_sq += val * val;
+    }
+    
+    shared_sum[local_idx] = sum;
+    shared_sum_sq[local_idx] = sum_sq;
+    
+    barrier();
+    
+    // Reduction to compute mean and variance
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride /= 2) {
+        if (local_idx < stride) {
+            shared_sum[local_idx] += shared_sum[local_idx + stride];
+            shared_sum_sq[local_idx] += shared_sum_sq[local_idx + stride];
+        }
+        barrier();
+    }
+    
+    if (local_idx == 0) {
+        float mean = shared_sum[0] / float(elements_per_feature);
+        float variance = (shared_sum_sq[0] / float(elements_per_feature)) - (mean * mean);
+        
+        saved_mean[feature_idx] = mean;
+        saved_var[feature_idx] = variance;
+        
+        if (pc.training == 1) {
+            // Update running statistics
+            running_mean[feature_idx] = pc.momentum * running_mean[feature_idx] + (1.0 - pc.momentum) * mean;
+            running_var[feature_idx] = pc.momentum * running_var[feature_idx] + (1.0 - pc.momentum) * variance;
+        }
+    }
+    
+    barrier();
+    
+    // Normalize and scale
+    float mean = saved_mean[feature_idx];
+    float var = saved_var[feature_idx];
+    float inv_std = 1.0 / sqrt(var + pc.epsilon);
+    
+    for (uint i = local_idx; i < elements_per_feature; i += gl_WorkGroupSize.x) {
+        float normalized = (input_data[start_idx + i] - mean) * inv_std;
+        output_data[start_idx + i] = gamma[feature_idx] * normalized + beta[feature_idx];
+    }
+}

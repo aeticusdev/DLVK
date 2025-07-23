@@ -1,0 +1,84 @@
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) readonly buffer WeightBuffer {
+    float weight_data[];
+};
+
+layout(binding = 2) readonly buffer BiasBuffer {
+    float bias_data[];
+};
+
+layout(binding = 3) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint in_channels;
+    uint out_channels;
+    uint input_height;
+    uint input_width;
+    uint output_height;
+    uint output_width;
+    uint kernel_height;
+    uint kernel_width;
+    uint stride_h;
+    uint stride_w;
+    uint padding_h;
+    uint padding_w;
+} pc;
+
+void main() {
+    uint output_x = gl_GlobalInvocationID.x;
+    uint output_y = gl_GlobalInvocationID.y;
+    uint batch_idx = gl_GlobalInvocationID.z;
+    
+    if (output_x >= pc.output_width || output_y >= pc.output_height || batch_idx >= pc.batch_size) {
+        return;
+    }
+    
+    // Process all output channels for this spatial location
+    for (uint out_ch = 0; out_ch < pc.out_channels; out_ch++) {
+        float sum = bias_data[out_ch];
+        
+        // Convolution operation
+        for (uint in_ch = 0; in_ch < pc.in_channels; in_ch++) {
+            for (uint ky = 0; ky < pc.kernel_height; ky++) {
+                for (uint kx = 0; kx < pc.kernel_width; kx++) {
+                    // Calculate input coordinates with padding
+                    int input_y = int(output_y * pc.stride_h + ky) - int(pc.padding_h);
+                    int input_x = int(output_x * pc.stride_w + kx) - int(pc.padding_w);
+                    
+                    // Check bounds (padding handled by bounds check)
+                    if (input_y >= 0 && input_y < int(pc.input_height) && 
+                        input_x >= 0 && input_x < int(pc.input_width)) {
+                        
+                        // Calculate indices
+                        uint input_idx = batch_idx * (pc.in_channels * pc.input_height * pc.input_width) +
+                                        in_ch * (pc.input_height * pc.input_width) +
+                                        uint(input_y) * pc.input_width + uint(input_x);
+                        
+                        uint weight_idx = out_ch * (pc.in_channels * pc.kernel_height * pc.kernel_width) +
+                                         in_ch * (pc.kernel_height * pc.kernel_width) +
+                                         ky * pc.kernel_width + kx;
+                        
+                        sum += input_data[input_idx] * weight_data[weight_idx];
+                    }
+                }
+            }
+        }
+        
+        // Store result
+        uint output_idx = batch_idx * (pc.out_channels * pc.output_height * pc.output_width) +
+                         out_ch * (pc.output_height * pc.output_width) +
+                         output_y * pc.output_width + output_x;
+        
+        output_data[output_idx] = sum;
+    }
+}

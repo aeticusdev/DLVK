@@ -1,0 +1,66 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(binding = 2) writeonly buffer MaskBuffer {
+    uint mask_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint total_elements;
+    float dropout_rate;
+    float scale_factor; // 1.0 / (1.0 - dropout_rate)
+    uint training;
+    uint seed;
+} pc;
+
+// Simple xorshift random number generator
+uint xorshift32(uint state) {
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    return state;
+}
+
+// Convert uint to float in [0, 1)
+float uint_to_float(uint x) {
+    return float(x) / 4294967296.0; // 2^32
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    
+    if (idx >= pc.total_elements) {
+        return;
+    }
+    
+    if (pc.training == 0) {
+        // Inference mode - pass through
+        output_data[idx] = input_data[idx];
+        mask_data[idx] = 1;
+    } else {
+        // Training mode - apply dropout
+        uint rng_state = pc.seed + idx * 1103515245 + 12345;
+        rng_state = xorshift32(rng_state);
+        
+        float rand_val = uint_to_float(rng_state);
+        
+        if (rand_val < pc.dropout_rate) {
+            // Drop this element
+            output_data[idx] = 0.0;
+            mask_data[idx] = 0;
+        } else {
+            // Keep and scale
+            output_data[idx] = input_data[idx] * pc.scale_factor;
+            mask_data[idx] = 1;
+        }
+    }
+}

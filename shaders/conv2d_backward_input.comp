@@ -1,0 +1,89 @@
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer GradOutputBuffer {
+    float grad_output[];
+};
+
+layout(binding = 1) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 2) readonly buffer WeightBuffer {
+    float weight_data[];
+};
+
+layout(binding = 3) writeonly buffer GradInputBuffer {
+    float grad_input[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint in_channels;
+    uint out_channels;
+    uint input_height;
+    uint input_width;
+    uint output_height;
+    uint output_width;
+    uint kernel_height;
+    uint kernel_width;
+    uint stride_h;
+    uint stride_w;
+    uint padding_h;
+    uint padding_w;
+} pc;
+
+void main() {
+    uint input_x = gl_GlobalInvocationID.x;
+    uint input_y = gl_GlobalInvocationID.y;
+    uint batch_idx = gl_GlobalInvocationID.z;
+    
+    if (input_x >= pc.input_width || input_y >= pc.input_height || batch_idx >= pc.batch_size) {
+        return;
+    }
+    
+    // Compute gradient w.r.t. input for all input channels at this location
+    for (uint in_ch = 0; in_ch < pc.in_channels; in_ch++) {
+        float grad_sum = 0.0;
+        
+        // For each output channel
+        for (uint out_ch = 0; out_ch < pc.out_channels; out_ch++) {
+            // For each kernel position that could have used this input pixel
+            for (uint ky = 0; ky < pc.kernel_height; ky++) {
+                for (uint kx = 0; kx < pc.kernel_width; kx++) {
+                    // Calculate which output position this kernel tap corresponds to
+                    int output_y = int(input_y + pc.padding_h - ky);
+                    int output_x = int(input_x + pc.padding_w - kx);
+                    
+                    // Check if this maps to a valid output position
+                    if (output_y >= 0 && output_x >= 0 &&
+                        output_y % int(pc.stride_h) == 0 && output_x % int(pc.stride_w) == 0) {
+                        
+                        uint out_y = uint(output_y) / pc.stride_h;
+                        uint out_x = uint(output_x) / pc.stride_w;
+                        
+                        if (out_y < pc.output_height && out_x < pc.output_width) {
+                            uint grad_output_idx = batch_idx * (pc.out_channels * pc.output_height * pc.output_width) +
+                                                  out_ch * (pc.output_height * pc.output_width) +
+                                                  out_y * pc.output_width + out_x;
+                            
+                            uint weight_idx = out_ch * (pc.in_channels * pc.kernel_height * pc.kernel_width) +
+                                             in_ch * (pc.kernel_height * pc.kernel_width) +
+                                             ky * pc.kernel_width + kx;
+                            
+                            grad_sum += grad_output[grad_output_idx] * weight_data[weight_idx];
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Store gradient w.r.t. input
+        uint grad_input_idx = batch_idx * (pc.in_channels * pc.input_height * pc.input_width) +
+                             in_ch * (pc.input_height * pc.input_width) +
+                             input_y * pc.input_width + input_x;
+        
+        grad_input[grad_input_idx] = grad_sum;
+    }
+}

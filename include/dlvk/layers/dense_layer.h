@@ -11,6 +11,8 @@ private:
     std::shared_ptr<Tensor> weights_;
     std::shared_ptr<Tensor> bias_;
     std::shared_ptr<Tensor> last_input_;
+    std::shared_ptr<Tensor> grad_weights_;
+    std::shared_ptr<Tensor> grad_bias_;
     size_t input_size_;
     size_t output_size_;
     VulkanDevice& device_;

@@ -1,0 +1,36 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer GradOutputBuffer {
+    float grad_output[];
+};
+
+layout(binding = 1) readonly buffer MaskBuffer {
+    uint mask_data[];
+};
+
+layout(binding = 2) writeonly buffer GradInputBuffer {
+    float grad_input[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint total_elements;
+    float scale_factor; // 1.0 / (1.0 - dropout_rate)
+} pc;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    
+    if (idx >= pc.total_elements) {
+        return;
+    }
+    
+    if (mask_data[idx] == 0) {
+        // This element was dropped
+        grad_input[idx] = 0.0;
+    } else {
+        // This element was kept and scaled
+        grad_input[idx] = grad_output[idx] * pc.scale_factor;
+    }
+}

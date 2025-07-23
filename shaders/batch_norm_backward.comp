@@ -1,0 +1,136 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer GradOutputBuffer {
+    float grad_output[];
+};
+
+layout(binding = 1) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 2) readonly buffer GammaBuffer {
+    float gamma[];
+};
+
+layout(binding = 3) readonly buffer SavedMeanBuffer {
+    float saved_mean[];
+};
+
+layout(binding = 4) readonly buffer SavedVarBuffer {
+    float saved_var[];
+};
+
+layout(binding = 5) writeonly buffer GradInputBuffer {
+    float grad_input[];
+};
+
+layout(binding = 6) writeonly buffer GradGammaBuffer {
+    float grad_gamma[];
+};
+
+layout(binding = 7) writeonly buffer GradBetaBuffer {
+    float grad_beta[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint num_features;
+    uint total_elements;
+    float epsilon;
+} pc;
+
+shared float shared_grad_gamma[256];
+shared float shared_grad_beta[256];
+shared float shared_sum1[256];
+shared float shared_sum2[256];
+
+void main() {
+    uint feature_idx = gl_WorkGroupID.x;
+    uint local_idx = gl_LocalInvocationIndex;
+    
+    if (feature_idx >= pc.num_features) {
+        return;
+    }
+    
+    uint elements_per_feature = pc.total_elements / pc.num_features;
+    uint start_idx = feature_idx * elements_per_feature;
+    
+    float mean = saved_mean[feature_idx];
+    float var = saved_var[feature_idx];
+    float inv_std = 1.0 / sqrt(var + pc.epsilon);
+    
+    // Compute gradient w.r.t. gamma and beta
+    float grad_gamma_sum = 0.0;
+    float grad_beta_sum = 0.0;
+    
+    for (uint i = local_idx; i < elements_per_feature; i += gl_WorkGroupSize.x) {
+        float x_hat = (input_data[start_idx + i] - mean) * inv_std;
+        grad_gamma_sum += grad_output[start_idx + i] * x_hat;
+        grad_beta_sum += grad_output[start_idx + i];
+    }
+    
+    shared_grad_gamma[local_idx] = grad_gamma_sum;
+    shared_grad_beta[local_idx] = grad_beta_sum;
+    
+    barrier();
+    
+    // Reduction for gradients
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride /= 2) {
+        if (local_idx < stride) {
+            shared_grad_gamma[local_idx] += shared_grad_gamma[local_idx + stride];
+            shared_grad_beta[local_idx] += shared_grad_beta[local_idx + stride];
+        }
+        barrier();
+    }
+    
+    if (local_idx == 0) {
+        grad_gamma[feature_idx] = shared_grad_gamma[0];
+        grad_beta[feature_idx] = shared_grad_beta[0];
+    }
+    
+    barrier();
+    
+    // Compute intermediate sums for input gradient
+    float sum1 = 0.0;
+    float sum2 = 0.0;
+    
+    for (uint i = local_idx; i < elements_per_feature; i += gl_WorkGroupSize.x) {
+        float x_centered = input_data[start_idx + i] - mean;
+        sum1 += grad_output[start_idx + i];
+        sum2 += grad_output[start_idx + i] * x_centered;
+    }
+    
+    shared_sum1[local_idx] = sum1;
+    shared_sum2[local_idx] = sum2;
+    
+    barrier();
+    
+    // Reduction for sums
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride /= 2) {
+        if (local_idx < stride) {
+            shared_sum1[local_idx] += shared_sum1[local_idx + stride];
+            shared_sum2[local_idx] += shared_sum2[local_idx + stride];
+        }
+        barrier();
+    }
+    
+    float total_sum1 = shared_sum1[0];
+    float total_sum2 = shared_sum2[0];
+    
+    // Compute gradient w.r.t. input
+    float N = float(elements_per_feature);
+    float gamma_val = gamma[feature_idx];
+    
+    for (uint i = local_idx; i < elements_per_feature; i += gl_WorkGroupSize.x) {
+        float x_centered = input_data[start_idx + i] - mean;
+        float grad_x_hat = grad_output[start_idx + i] * gamma_val;
+        
+        float term1 = grad_x_hat;
+        float term2 = -(total_sum1 / N) * inv_std;
+        float term3 = -(x_centered * inv_std * inv_std * inv_std * total_sum2) / N;
+        
+        grad_input[start_idx + i] = inv_std * (term1 + term2 + term3);
+    }
+}

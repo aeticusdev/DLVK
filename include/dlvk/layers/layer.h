@@ -20,30 +20,6 @@ protected:
     std::shared_ptr<VulkanDevice> m_device;
 };
 
-class DenseLayer : public Layer {
-public:
-    DenseLayer(size_t input_size, size_t output_size, std::shared_ptr<VulkanDevice> device);
-    
-    std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
-    std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
-    
-    void update_weights(float learning_rate) override;
-    
-private:
-    size_t m_input_size;
-    size_t m_output_size;
-    
-    std::shared_ptr<Tensor> m_weights;
-    std::shared_ptr<Tensor> m_bias;
-    std::shared_ptr<Tensor> m_last_input; // For backward pass
-    
-    // Gradients for training
-    std::shared_ptr<Tensor> m_grad_weights;
-    std::shared_ptr<Tensor> m_grad_bias;
-    
-    void initialize_weights();
-};
-
 class ConvLayer : public Layer {
 public:
     ConvLayer(size_t in_channels, size_t out_channels, size_t kernel_size, 
