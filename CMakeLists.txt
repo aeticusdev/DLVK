@@ -207,6 +207,104 @@ add_executable(data_pipeline_demo
     src/data/dataloader.cpp
 )
 
+# Phase 6.2 Complete Training Pipeline Demo
+add_executable(training_pipeline_demo
+    examples/training_pipeline_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+    src/data/dataset.cpp
+    src/data/mnist.cpp
+    src/data/dataloader.cpp
+    src/training/trainer.cpp
+)
+
+# Phase 6.2 Training Foundation Demo (Simplified)
+add_executable(training_foundation_demo
+    examples/training_foundation_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/compute/compute_pipeline.cpp
+    src/data/dataset.cpp
+    src/data/mnist.cpp
+    src/data/dataloader.cpp
+)
+
+# Phase 6.3 Real Training Demo (Production Training Pipeline)
+add_executable(real_training_demo
+    examples/real_training_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/compute/compute_pipeline.cpp
+    src/data/dataset.cpp
+    src/data/mnist.cpp
+    src/data/dataloader.cpp
+    src/layers/dense_layer.cpp
+    src/layers/activation.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/model/model.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/optimizers/optimizers.cpp
+    src/training/trainer.cpp
+)
+
+# Phase 6.3 Real Production Demo (REAL Values Only!)
+add_executable(real_production_demo
+    examples/real_production_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+)
+
+# Phase 6.3 Advanced Training Features Demo
+add_executable(phase6_3_advanced_training_demo
+    examples/phase6_3_advanced_training_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+)
+
 # Simple ActivationLayer Test
 add_executable(test_activation_only
     test_activation_only.cpp
@@ -318,6 +416,31 @@ target_include_directories(data_pipeline_demo PRIVATE
     ${Vulkan_INCLUDE_DIRS}
 )
 
+target_include_directories(training_pipeline_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(training_foundation_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(real_training_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(real_production_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(phase6_3_advanced_training_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
 target_include_directories(complete_pipeline_demo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${Vulkan_INCLUDE_DIRS}
@@ -400,6 +523,31 @@ target_link_libraries(data_pipeline_demo PRIVATE
     ${Vulkan_LIBRARIES}
 )
 
+target_link_libraries(training_pipeline_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(training_foundation_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(real_training_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(real_production_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
+target_link_libraries(phase6_3_advanced_training_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
 target_link_libraries(complete_pipeline_demo PRIVATE
     dlvk
     ${Vulkan_LIBRARIES}
@@ -457,6 +605,8 @@ add_dependencies(test_gradient_clipping shaders)
 add_dependencies(test_activation_only shaders)
 add_dependencies(test_sequential_model shaders)
 add_dependencies(test_tensor_ops_static shaders)
+add_dependencies(real_production_demo shaders)
+add_dependencies(phase6_3_advanced_training_demo shaders)
 
 # Testing
 enable_testing()
