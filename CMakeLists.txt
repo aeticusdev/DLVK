@@ -101,6 +101,11 @@ add_executable(demo_phase5_simple
     src/model/callbacks.cpp
 )
 
+# Examples
+add_executable(simple_training_demo
+    examples/simple_training_demo.cpp
+)
+
 # Phase 5 Model APIs Demo
 add_executable(demo_phase5_model_apis
     demo_phase5_model_apis.cpp
@@ -305,6 +310,63 @@ add_executable(phase6_3_advanced_training_demo
     src/compute/compute_pipeline.cpp
 )
 
+# Real Model Training Demo - Actually train something!
+add_executable(real_model_training_demo
+    examples/real_model_training_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+)
+
+# Real Model Persistence Demo - Uses actual implemented core library
+add_executable(model_export_demo
+    examples/model_export_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/core/model_persistence.cpp
+)
+
+target_include_directories(model_export_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(model_export_demo PRIVATE
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+target_compile_features(model_export_demo PRIVATE cxx_std_17)
+
+# Complete DLVK Framework Test - ALL Phases 1-6.3
+add_executable(test_complete_dlvk_framework
+    test_complete_dlvk_framework.cpp
+)
+
+target_include_directories(test_complete_dlvk_framework PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(test_complete_dlvk_framework
+    dlvk  # Link against our static library
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+target_compile_features(test_complete_dlvk_framework PRIVATE cxx_std_17)
+
 # Simple ActivationLayer Test
 add_executable(test_activation_only
     test_activation_only.cpp
@@ -362,6 +424,7 @@ add_library(dlvk STATIC
     src/core/pipeline_manager.cpp
     src/tensor/tensor.cpp
     src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
     src/compute/compute_pipeline.cpp
     src/layers/dense_layer.cpp
     src/layers/conv_layer.cpp
@@ -369,10 +432,27 @@ add_library(dlvk STATIC
     src/layers/pooling_layers.cpp
     src/layers/batch_norm_layers.cpp
     src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
     src/optimizers/sgd.cpp
     src/optimizers/adam.cpp
-    src/loss/loss_functions.cpp
     src/optimizers/optimizers.cpp
+    src/loss/loss_functions.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+    src/data/dataset.cpp
+    src/data/dataloader.cpp
+    src/data/mnist.cpp
+    src/training/trainer.cpp
+    src/training/model_persistence.cpp
+    # Phase 6 Advanced Training Features
+    src/training/mixed_precision.cpp
+    src/training/regularization.cpp
+    src/training/advanced_training.cpp
+    # Phase 6 Optimization
+    src/optimization/model_optimizer.cpp
+    # Phase 6 Deployment
+    src/deployment/multi_gpu_trainer.cpp
+    src/deployment/inference_deployment.cpp
 )
 
 # Include directories
@@ -437,6 +517,11 @@ target_include_directories(real_production_demo PRIVATE
 )
 
 target_include_directories(phase6_3_advanced_training_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_include_directories(real_model_training_demo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${Vulkan_INCLUDE_DIRS}
 )
@@ -548,6 +633,11 @@ target_link_libraries(phase6_3_advanced_training_demo PRIVATE
     ${Vulkan_LIBRARIES}
 )
 
+target_link_libraries(real_model_training_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+)
+
 target_link_libraries(complete_pipeline_demo PRIVATE
     dlvk
     ${Vulkan_LIBRARIES}
@@ -607,6 +697,68 @@ add_dependencies(test_sequential_model shaders)
 add_dependencies(test_tensor_ops_static shaders)
 add_dependencies(real_production_demo shaders)
 add_dependencies(phase6_3_advanced_training_demo shaders)
+
+# Deployment and Optimization
+add_executable(optimization_demo
+    examples/optimization_demo.cpp
+    src/core/vulkan_device.cpp
+    src/core/vulkan_context.cpp
+    src/core/buffer_manager.cpp
+    src/core/pipeline_manager.cpp
+    src/tensor/tensor.cpp
+    src/tensor/tensor_ops.cpp
+    src/tensor/tensor_ops_static.cpp
+    src/compute/compute_pipeline.cpp
+    src/layers/dense_layer.cpp
+    src/layers/conv_layer.cpp
+    src/layers/conv2d_layer.cpp
+    src/layers/pooling_layers.cpp
+    src/layers/batch_norm_layers.cpp
+    src/layers/dropout_layer.cpp
+    src/layers/activation.cpp
+    src/optimizers/sgd.cpp
+    src/optimizers/adam.cpp
+    src/loss/loss_functions.cpp
+    src/optimizers/optimizers.cpp
+    src/model/model.cpp
+    src/model/callbacks.cpp
+    src/data/dataset.cpp
+    src/data/mnist.cpp
+    src/data/dataloader.cpp
+    src/training/trainer.cpp
+)
+
+# Target includes for new optimization components
+target_include_directories(optimization_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(optimization_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+target_compile_features(optimization_demo PRIVATE cxx_std_17)
+
+# Phase 6 Complete Demo
+add_executable(phase6_demo
+    examples/phase6_demo.cpp
+)
+
+target_include_directories(phase6_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(phase6_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+target_compile_features(phase6_demo PRIVATE cxx_std_17)
 
 # Testing
 enable_testing()

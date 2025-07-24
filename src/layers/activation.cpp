@@ -136,4 +136,8 @@ void ActivationLayer::load_weights(std::ifstream& file) {
     }
 }
 
+std::unique_ptr<ModernLayer> ActivationLayer::clone() const {
+    return std::make_unique<ActivationLayer>(m_device, m_activation_type);
+}
+
 } // namespace dlvk

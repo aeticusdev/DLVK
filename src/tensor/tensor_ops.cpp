@@ -4,6 +4,7 @@
 #include "dlvk/core/vulkan_device.h"
 #include <iostream>
 #include <cstring>
+#include <cmath>
 
 namespace dlvk {
 
@@ -1777,6 +1778,147 @@ bool TensorOps::tanh_backward(const Tensor& output, const Tensor& grad_output, T
     
     end_single_time_commands(cmd);
     
+    return true;
+}
+
+// Scalar operations for optimizers
+bool TensorOps::scale(const Tensor& input, float scalar, Tensor& result) {
+    // Use multiply with a scalar tensor for now
+    auto scalar_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, m_device);
+    scalar_tensor->upload_data(&scalar);
+    
+    return multiply(input, *scalar_tensor, result);
+}
+
+bool TensorOps::scalar_add(const Tensor& input, float scalar, Tensor& result) {
+    // Use add with a scalar tensor for now  
+    auto scalar_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, m_device);
+    scalar_tensor->upload_data(&scalar);
+    
+    return add(input, *scalar_tensor, result);
+}
+
+bool TensorOps::element_wise_multiply(const Tensor& a, const Tensor& b, Tensor& result) {
+    return multiply(a, b, result);
+}
+
+bool TensorOps::element_wise_sqrt(const Tensor& input, Tensor& result) {
+    // For now, implement with CPU fallback - would need sqrt compute shader
+    std::vector<float> input_data(input.size());
+    std::vector<float> result_data(input.size());
+    
+    const_cast<Tensor&>(input).download_data(input_data.data());
+    
+    for (size_t i = 0; i < input_data.size(); ++i) {
+        result_data[i] = std::sqrt(input_data[i]);
+    }
+    
+    result.upload_data(result_data.data());
+    return true;
+}
+
+bool TensorOps::element_wise_square(const Tensor& input, Tensor& result) {
+    return multiply(input, input, result);
+}
+
+bool TensorOps::adam_update(const Tensor& gradient, const Tensor& m, const Tensor& v, 
+                           Tensor& param, Tensor& new_m, Tensor& new_v,
+                           float lr, float beta1, float beta2, float epsilon) {
+    // Adam update formula implemented with available operations
+    // m = beta1 * m + (1 - beta1) * gradient
+    // v = beta2 * v + (1 - beta2) * gradient^2
+    // param = param - lr * m / (sqrt(v) + epsilon)
+    
+    // For now, implement with CPU fallback - would need dedicated Adam compute shader
+    std::vector<float> grad_data(gradient.size());
+    std::vector<float> m_data(m.size());
+    std::vector<float> v_data(v.size());
+    std::vector<float> param_data(param.size());
+    
+    const_cast<Tensor&>(gradient).download_data(grad_data.data());
+    const_cast<Tensor&>(m).download_data(m_data.data());
+    const_cast<Tensor&>(v).download_data(v_data.data());
+    param.download_data(param_data.data());
+    
+    for (size_t i = 0; i < grad_data.size(); ++i) {
+        // Update biased first moment estimate
+        m_data[i] = beta1 * m_data[i] + (1.0f - beta1) * grad_data[i];
+        
+        // Update biased second moment estimate
+        v_data[i] = beta2 * v_data[i] + (1.0f - beta2) * grad_data[i] * grad_data[i];
+        
+        // Update parameter
+        param_data[i] = param_data[i] - lr * m_data[i] / (std::sqrt(v_data[i]) + epsilon);
+    }
+    
+    // Upload results back to GPU
+    new_m.upload_data(m_data.data());
+    new_v.upload_data(v_data.data());
+    param.upload_data(param_data.data());
+    
+    return true;
+}
+
+bool TensorOps::gradient_clip_by_norm(const Tensor& gradient, float max_norm, Tensor& clipped_gradient) {
+    if (gradient.shape() != clipped_gradient.shape() || gradient.dtype() != clipped_gradient.dtype()) {
+        std::cerr << "Gradient and clipped_gradient tensors must have same shape and dtype" << std::endl;
+        return false;
+    }
+    
+    // First compute the gradient norm using element-wise square and sum
+    auto squared_grad = std::make_shared<Tensor>(gradient.shape(), gradient.dtype(), gradient.device());
+    auto norm_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, gradient.device());
+    
+    if (!element_wise_square(gradient, *squared_grad)) {
+        return false;
+    }
+    
+    if (!sum(*squared_grad, *norm_tensor)) {
+        return false;
+    }
+    
+    // Download norm to check if clipping is needed
+    std::vector<float> norm_data(1);
+    norm_tensor->download_data(norm_data.data());
+    float norm = std::sqrt(norm_data[0]);
+    
+    if (norm <= max_norm) {
+        // No clipping needed, just copy
+        return copy(gradient, clipped_gradient);
+    } else {
+        // Apply clipping: clipped_grad = gradient * (max_norm / norm)
+        float scale_factor = max_norm / norm;
+        return scale(gradient, scale_factor, clipped_gradient);
+    }
+}
+
+bool TensorOps::gradient_clip_by_value(const Tensor& gradient, float min_val, float max_val, Tensor& clipped_gradient) {
+    if (gradient.shape() != clipped_gradient.shape() || gradient.dtype() != clipped_gradient.dtype()) {
+        std::cerr << "Gradient and clipped_gradient tensors must have same shape and dtype" << std::endl;
+        return false;
+    }
+    
+    // For now, we'll implement this using a simple compute shader approach
+    // In a production system, you'd want a dedicated clamp compute shader
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    // Use a simple approach: copy first, then apply clamping via a basic shader
+    if (!copy(gradient, clipped_gradient)) {
+        return false;
+    }
+    
+    // For now, fall back to CPU-based clamping for value clipping
+    // TODO: Implement dedicated GPU clamp compute shader
+    std::vector<float> grad_data(gradient.size());
+    clipped_gradient.download_data(grad_data.data());
+    
+    for (auto& val : grad_data) {
+        val = std::max(min_val, std::min(max_val, val));
+    }
+    
+    clipped_gradient.upload_data(grad_data.data());
+    
+    end_single_time_commands(cmd);
     return true;
 }
 

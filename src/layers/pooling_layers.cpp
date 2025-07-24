@@ -133,6 +133,12 @@ std::shared_ptr<Tensor> MaxPool2DLayer::backward(const std::shared_ptr<Tensor>& 
     return grad_input;
 }
 
+std::unique_ptr<Layer> MaxPool2DLayer::clone() const {
+    return std::make_unique<MaxPool2DLayer>(device_, pool_height_, pool_width_,
+                                           stride_h_, stride_w_,
+                                           padding_h_, padding_w_);
+}
+
 // AvgPool2D Implementation
 AvgPool2DLayer::AvgPool2DLayer(VulkanDevice& device,
                                size_t pool_height, size_t pool_width,
@@ -279,6 +285,12 @@ std::shared_ptr<Tensor> AvgPool2DLayer::backward(const std::shared_ptr<Tensor>& 
     
     grad_input->upload_data(grad_input_data.data());
     return grad_input;
+}
+
+std::unique_ptr<Layer> AvgPool2DLayer::clone() const {
+    return std::make_unique<AvgPool2DLayer>(device_, pool_height_, pool_width_,
+                                           stride_h_, stride_w_,
+                                           padding_h_, padding_w_);
 }
 
 } // namespace dlvk

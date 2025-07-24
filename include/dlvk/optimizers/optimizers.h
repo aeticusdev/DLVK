@@ -16,9 +16,13 @@ public:
     virtual void set_learning_rate(float lr) = 0;
     virtual float get_learning_rate() const = 0;
     
+    // Alias methods for convenience
+    virtual void set_lr(float lr) { set_learning_rate(lr); }
+    virtual float get_lr() const { return get_learning_rate(); }
+    
     // New parameter-based update methods for advanced optimizers
-    virtual void update_parameter(std::shared_ptr<Tensor>& parameter, 
-                                 const std::shared_ptr<Tensor>& gradient) {}
+    virtual void update_parameter(std::shared_ptr<Tensor>& /*parameter*/, 
+                                 const std::shared_ptr<Tensor>& /*gradient*/) {}
     virtual void step() {}
     virtual void zero_gradients() {}
 };

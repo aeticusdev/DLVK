@@ -17,7 +17,8 @@
 namespace dlvk {
 
 // Sequential Model Implementation
-Sequential::Sequential(std::shared_ptr<VulkanDevice> device) : m_is_training(true), m_device(device) {}
+Sequential::Sequential(std::shared_ptr<VulkanDevice> device)
+    : m_device(device), m_is_training(false) {}
 
 void Sequential::add(std::unique_ptr<ModernLayer> layer) {
     m_layers.push_back(std::move(layer));

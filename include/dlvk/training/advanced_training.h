@@ -5,6 +5,8 @@
 #include <functional>
 #include <unordered_map>
 #include <chrono>
+#include <limits>
+#include <random>
 #include "dlvk/training/trainer.h"
 #include "dlvk/training/mixed_precision.h"
 #include "dlvk/training/regularization.h"

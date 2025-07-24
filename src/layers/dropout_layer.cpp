@@ -58,4 +58,10 @@ std::shared_ptr<Tensor> DropoutLayer::backward(const std::shared_ptr<Tensor>& gr
     return grad_output->multiply(*mask_);
 }
 
+std::unique_ptr<Layer> DropoutLayer::clone() const {
+    auto cloned = std::make_unique<DropoutLayer>(device_, dropout_rate_);
+    cloned->training_ = training_;
+    return cloned;
+}
+
 } // namespace dlvk

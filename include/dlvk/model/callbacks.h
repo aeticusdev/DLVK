@@ -7,9 +7,6 @@
 
 namespace dlvk {
 
-/**
- * @brief Progress bar callback for training visualization
- */
 class ProgressCallback : public TrainingCallback {
 private:
     size_t m_total_epochs;
@@ -22,16 +19,13 @@ public:
     
     void on_train_begin() override;
     void on_epoch_begin(size_t epoch) override;
-    void on_epoch_end(size_t epoch, const TrainingMetrics& metrics) override;
-    void on_batch_end(size_t batch, const TrainingMetrics& metrics) override;
+    void on_epoch_end([[maybe_unused]] size_t epoch, const TrainingMetrics& metrics) override;
+    void on_batch_end([[maybe_unused]] size_t batch, [[maybe_unused]] const TrainingMetrics& metrics) override;
     
     void set_total_epochs(size_t epochs) { m_total_epochs = epochs; }
     void set_batches_per_epoch(size_t batches) { m_total_batches_per_epoch = batches; }
 };
 
-/**
- * @brief Model checkpointing callback
- */
 class ModelCheckpoint : public TrainingCallback {
 private:
     std::string m_filepath;
@@ -43,14 +37,6 @@ private:
     Model* m_model;
     
 public:
-    /**
-     * @brief Constructor for model checkpoint callback
-     * @param filepath Path to save the model weights
-     * @param model Pointer to the model to save
-     * @param monitor Metric to monitor for best model ('loss', 'accuracy', 'val_loss', 'val_accuracy')
-     * @param save_best_only Whether to only save when the monitored metric improves
-     * @param save_weights_only Whether to save only weights or the entire model
-     */
     ModelCheckpoint(const std::string& filepath, Model* model,
                    const std::string& monitor = "val_loss",
                    bool save_best_only = true,
@@ -63,9 +49,6 @@ private:
     bool is_improvement(float current_value) const;
 };
 
-/**
- * @brief Early stopping callback
- */
 class EarlyStopping : public TrainingCallback {
 private:
     std::string m_monitor;
@@ -77,12 +60,6 @@ private:
     bool m_should_stop;
     
 public:
-    /**
-     * @brief Constructor for early stopping callback
-     * @param monitor Metric to monitor ('loss', 'accuracy', 'val_loss', 'val_accuracy')
-     * @param patience Number of epochs with no improvement to wait before stopping
-     * @param min_delta Minimum change in monitored metric to qualify as improvement
-     */
     EarlyStopping(const std::string& monitor = "val_loss",
                  size_t patience = 10,
                  float min_delta = 0.0f);
@@ -97,9 +74,6 @@ private:
     bool is_improvement(float current_value) const;
 };
 
-/**
- * @brief Learning rate reduction callback
- */
 class ReduceLROnPlateau : public TrainingCallback {
 private:
     std::string m_monitor;
@@ -113,15 +87,6 @@ private:
     Optimizer* m_optimizer;
     
 public:
-    /**
-     * @brief Constructor for learning rate reduction callback
-     * @param optimizer Pointer to the optimizer to modify
-     * @param monitor Metric to monitor ('loss', 'accuracy', 'val_loss', 'val_accuracy')
-     * @param factor Factor by which to reduce the learning rate
-     * @param patience Number of epochs with no improvement to wait before reducing LR
-     * @param min_delta Minimum change in monitored metric to qualify as improvement
-     * @param min_lr Lower bound on the learning rate
-     */
     ReduceLROnPlateau(Optimizer* optimizer,
                      const std::string& monitor = "val_loss",
                      float factor = 0.1f,
@@ -137,9 +102,6 @@ private:
     bool is_improvement(float current_value) const;
 };
 
-/**
- * @brief CSV logger callback for training metrics
- */
 class CSVLogger : public TrainingCallback {
 private:
     std::string m_filename;
@@ -147,11 +109,6 @@ private:
     bool m_append;
     
 public:
-    /**
-     * @brief Constructor for CSV logger callback
-     * @param filename Path to the CSV file
-     * @param append Whether to append to existing file or overwrite
-     */
     CSVLogger(const std::string& filename, bool append = false);
     ~CSVLogger();
     

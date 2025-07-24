@@ -28,6 +28,7 @@ public:
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
     void update_weights(float learning_rate) override {} // No weights to update
+    std::unique_ptr<Layer> clone() const override;
     
     // Utility functions
     std::vector<size_t> compute_output_shape(const std::vector<size_t>& input_shape) const;
@@ -58,6 +59,7 @@ public:
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
     void update_weights(float learning_rate) override {} // No weights to update
+    std::unique_ptr<Layer> clone() const override;
     
     // Utility functions
     std::vector<size_t> compute_output_shape(const std::vector<size_t>& input_shape) const;

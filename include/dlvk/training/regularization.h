@@ -3,8 +3,8 @@
 #include <memory>
 #include <vector>
 #include <functional>
+#include <limits>
 #include "dlvk/tensor/tensor.h"
-#include "dlvk/layers/layers.h"
 
 namespace dlvk {
 namespace training {

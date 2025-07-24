@@ -25,6 +25,7 @@ public:
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
     void update_weights(float learning_rate) override;
+    std::unique_ptr<Layer> clone() const override;
     
     // Getters for weights and bias (useful for training)
     std::shared_ptr<Tensor> get_weights() const { return weights_; }

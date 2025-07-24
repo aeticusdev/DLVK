@@ -27,12 +27,23 @@ public:
     
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
-    void update_weights(float learning_rate) override;
+    void update_weights([[maybe_unused]] float learning_rate) override;
+    std::unique_ptr<Layer> clone() const override;
     
     void set_training(bool training) { training_ = training; }
     bool is_training() const { return training_; }
     
     void initialize_parameters();
+
+    // Getters and setters for private members
+    std::shared_ptr<Tensor> get_gamma() const { return gamma_; }
+    void set_gamma(std::shared_ptr<Tensor> gamma) { gamma_ = gamma; }
+    std::shared_ptr<Tensor> get_beta() const { return beta_; }
+    void set_beta(std::shared_ptr<Tensor> beta) { beta_ = beta; }
+    std::shared_ptr<Tensor> get_running_mean() const { return running_mean_; }
+    void set_running_mean(std::shared_ptr<Tensor> mean) { running_mean_ = mean; }
+    std::shared_ptr<Tensor> get_running_var() const { return running_var_; }
+    void set_running_var(std::shared_ptr<Tensor> var) { running_var_ = var; }
 };
 
 class BatchNorm2DLayer : public Layer {
@@ -56,12 +67,23 @@ public:
     
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
-    void update_weights(float learning_rate) override;
+    void update_weights([[maybe_unused]] float learning_rate) override;
+    std::unique_ptr<Layer> clone() const override;
     
     void set_training(bool training) { training_ = training; }
     bool is_training() const { return training_; }
     
     void initialize_parameters();
+
+    // Getters and setters for private members
+    std::shared_ptr<Tensor> get_gamma() const { return gamma_; }
+    void set_gamma(std::shared_ptr<Tensor> gamma) { gamma_ = gamma; }
+    std::shared_ptr<Tensor> get_beta() const { return beta_; }
+    void set_beta(std::shared_ptr<Tensor> beta) { beta_ = beta; }
+    std::shared_ptr<Tensor> get_running_mean() const { return running_mean_; }
+    void set_running_mean(std::shared_ptr<Tensor> mean) { running_mean_ = mean; }
+    std::shared_ptr<Tensor> get_running_var() const { return running_var_; }
+    void set_running_var(std::shared_ptr<Tensor> var) { running_var_ = var; }
 };
 
 } // namespace dlvk

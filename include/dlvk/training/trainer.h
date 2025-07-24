@@ -24,6 +24,14 @@ struct TrainingMetrics {
     int epoch = 0;
     int batch = 0;
     std::chrono::milliseconds epoch_time{0};
+    
+    // Additional fields used by model persistence
+    float training_loss = 0.0f;      // alias for train_loss
+    float training_accuracy = 0.0f;  // alias for train_accuracy  
+    float validation_loss = 0.0f;    // alias for val_loss
+    float validation_accuracy = 0.0f; // alias for val_accuracy
+    float learning_rate = 0.0f;
+    float epoch_time_ms = 0.0f;      // epoch time in milliseconds
 };
 
 /**

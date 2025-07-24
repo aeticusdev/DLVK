@@ -21,7 +21,8 @@ public:
     
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
-    void update_weights(float learning_rate) override {} // No weights to update
+    void update_weights([[maybe_unused]] float learning_rate) override {} // No weights to update
+    std::unique_ptr<Layer> clone() const override;
     
     void set_training(bool training) { training_ = training; }
     bool is_training() const { return training_; }
