@@ -1,9 +1,37 @@
 #include "dlvk/loss/loss_functions.h"
+#include "dlvk/loss/loss_ops_gpu.h"
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <memory>
 
 namespace dlvk {
+
+// Global GPU accelerator for loss functions
+static std::unique_ptr<LossOpsGPU> g_loss_gpu = nullptr;
+static std::shared_ptr<VulkanDevice> g_current_device = nullptr;
+
+bool try_initialize_loss_gpu(std::shared_ptr<VulkanDevice> device) {
+    if (g_loss_gpu && g_current_device == device) {
+        return true; // Already initialized for this device
+    }
+    
+    if (g_current_device != device) {
+        g_loss_gpu.reset(); // Reset if device changed
+        g_current_device = device;
+    }
+    
+    if (!g_loss_gpu) {
+        g_loss_gpu = std::make_unique<LossOpsGPU>(device);
+        if (!g_loss_gpu->initialize()) {
+            std::cout << "Warning: Failed to initialize GPU loss operations, using CPU fallback" << std::endl;
+            g_loss_gpu.reset();
+            return false;
+        }
+    }
+    
+    return true;
+}
 
 // Mean Squared Error Implementation
 std::shared_ptr<Tensor> MeanSquaredError::forward(const std::shared_ptr<Tensor>& predictions, 
@@ -12,13 +40,16 @@ std::shared_ptr<Tensor> MeanSquaredError::forward(const std::shared_ptr<Tensor>&
         throw std::runtime_error("Predictions and targets must have the same shape");
     }
     
-    // MSE = mean((predictions - targets)^2)
-    
-    // Create result tensor for scalar loss
     auto device = predictions->device();
     auto loss = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, device);
     
-    // For now, implement on CPU
+    // Try GPU acceleration first
+    if (try_initialize_loss_gpu(device) && g_loss_gpu->mse_forward(predictions, targets, loss)) {
+        return loss;
+    }
+    
+    // CPU Fallback implementation
+    std::cout << "Using CPU fallback for MSE forward" << std::endl;
     std::vector<float> pred_data(predictions->size());
     std::vector<float> target_data(targets->size());
     
@@ -42,10 +73,16 @@ std::shared_ptr<Tensor> MeanSquaredError::backward(const std::shared_ptr<Tensor>
         throw std::runtime_error("Predictions and targets must have the same shape");
     }
     
-    // Gradient: d/dpred MSE = 2 * (predictions - targets) / n
-    auto gradient = std::make_shared<Tensor>(predictions->shape(), DataType::FLOAT32, predictions->device());
+    auto device = predictions->device();
+    auto gradient = std::make_shared<Tensor>(predictions->shape(), DataType::FLOAT32, device);
     
-    // For now, implement on CPU
+    // Try GPU acceleration first
+    if (try_initialize_loss_gpu(device) && g_loss_gpu->mse_backward(predictions, targets, gradient)) {
+        return gradient;
+    }
+    
+    // CPU Fallback implementation
+    std::cout << "Using CPU fallback for MSE backward" << std::endl;
     std::vector<float> pred_data(predictions->size());
     std::vector<float> target_data(targets->size());
     std::vector<float> grad_data(predictions->size());

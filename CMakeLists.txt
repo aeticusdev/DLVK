@@ -437,6 +437,7 @@ add_library(dlvk STATIC
     src/optimizers/adam.cpp
     src/optimizers/optimizers.cpp
     src/loss/loss_functions.cpp
+    src/loss/loss_ops_gpu.cpp
     src/model/model.cpp
     src/model/callbacks.cpp
     src/data/dataset.cpp

@@ -1,0 +1,67 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer PredictionsBuffer {
+    float predictions[];
+};
+
+layout(std430, binding = 1) readonly buffer TargetsBuffer {
+    float targets[];
+};
+
+layout(std430, binding = 2) writeonly buffer OutputBuffer {
+    float result[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+    float epsilon;  // For numerical stability
+} push_constants;
+
+shared float partial_sums[256];
+
+void main() {
+    uint tid = gl_LocalInvocationID.x;
+    uint gid = gl_GlobalInvocationID.x;
+    
+    // Initialize shared memory
+    partial_sums[tid] = 0.0;
+    
+    // Each thread processes multiple elements if needed
+    uint elements_per_thread = (push_constants.size + gl_WorkGroupSize.x - 1) / gl_WorkGroupSize.x;
+    
+    for (uint i = 0; i < elements_per_thread; ++i) {
+        uint idx = gid + i * gl_WorkGroupSize.x * gl_NumWorkGroups.x;
+        if (idx < push_constants.size) {
+            // Binary cross-entropy: -(target * log(pred + eps) + (1-target) * log(1-pred + eps))
+            float pred = predictions[idx];
+            float target = targets[idx];
+            float pred_clamped = clamp(pred, push_constants.epsilon, 1.0 - push_constants.epsilon);
+            
+            float loss = -(target * log(pred_clamped) + (1.0 - target) * log(1.0 - pred_clamped));
+            partial_sums[tid] += loss;
+        }
+    }
+    
+    barrier();
+    
+    // Reduction within workgroup
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (tid < stride) {
+            partial_sums[tid] += partial_sums[tid + stride];
+        }
+        barrier();
+    }
+    
+    // Write result from first thread of first workgroup
+    if (gl_WorkGroupID.x == 0 && tid == 0) {
+        // Average loss
+        result[0] = partial_sums[0] / float(push_constants.size);
+    }
+    
+    // Store partial results for multiple workgroups
+    if (tid == 0 && gl_WorkGroupID.x > 0) {
+        result[gl_WorkGroupID.x] = partial_sums[0];
+    }
+}
