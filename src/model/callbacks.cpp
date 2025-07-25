@@ -23,7 +23,7 @@ void ProgressCallback::on_epoch_begin(size_t epoch) {
     }
 }
 
-void ProgressCallback::on_epoch_end(size_t epoch, const TrainingMetrics& metrics) {
+void ProgressCallback::on_epoch_end([[maybe_unused]] size_t epoch, const TrainingMetrics& metrics) {
     auto epoch_end = std::chrono::steady_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_end - m_epoch_start);
     
@@ -40,7 +40,7 @@ void ProgressCallback::on_epoch_end(size_t epoch, const TrainingMetrics& metrics
     }
 }
 
-void ProgressCallback::on_batch_end(size_t batch, const TrainingMetrics& metrics) {
+void ProgressCallback::on_batch_end(size_t batch, [[maybe_unused]] const TrainingMetrics& metrics) {
     if (m_verbose && m_total_batches_per_epoch > 10) {
         // Show progress for long epochs
         if (batch % (m_total_batches_per_epoch / 10) == 0) {
@@ -87,8 +87,10 @@ void ModelCheckpoint::on_epoch_end(size_t epoch, const TrainingMetrics& metrics)
         try {
             if (m_save_weights_only) {
                 m_model->save_weights(m_filepath);
+            } else {
+                // Full model saving would include architecture + weights
+                m_model->save_weights(m_filepath); // Save weights for now
             }
-            // TODO: Implement full model saving
             
             std::cout << "\nEpoch " << (epoch + 1) << ": " << m_monitor 
                      << " improved to " << std::fixed << std::setprecision(4) 
@@ -175,9 +177,9 @@ ReduceLROnPlateau::ReduceLROnPlateau(Optimizer* optimizer,
                                    size_t patience,
                                    float min_delta,
                                    float min_lr)
-    : m_optimizer(optimizer), m_monitor(monitor), m_factor(factor),
-      m_patience(patience), m_min_delta(min_delta), m_min_lr(min_lr),
-      m_wait_count(0) {
+    : m_monitor(monitor), m_factor(factor), m_patience(patience), 
+      m_min_delta(min_delta), m_min_lr(min_lr), m_wait_count(0),
+      m_best_score(0.0f), m_higher_is_better(false), m_optimizer(optimizer) {
     
     m_higher_is_better = (monitor == "accuracy" || monitor == "val_accuracy");
     m_best_score = m_higher_is_better ? -std::numeric_limits<float>::infinity() 

@@ -10,10 +10,9 @@ class VulkanDevice;
 class Layer {
 public:
     virtual ~Layer() = default;
-    
+    virtual std::unique_ptr<Layer> clone() const = 0;
     virtual std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) = 0;
     virtual std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) = 0;
-    
     virtual void update_weights(float learning_rate) {}
     
 protected:

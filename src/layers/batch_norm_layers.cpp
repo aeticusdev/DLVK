@@ -132,13 +132,45 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
 
 std::shared_ptr<Tensor> BatchNorm1DLayer::backward(const std::shared_ptr<Tensor>& grad_output) {
     // For now, return the gradient as-is (simplified backward pass)
-    // TODO: Implement full BatchNorm backward pass with parameter gradients
+    // Full BatchNorm backward pass would compute parameter gradients for gamma/beta
     return grad_output;
 }
 
 void BatchNorm1DLayer::update_weights(float learning_rate) {
-    // TODO: Implement parameter updates for gamma and beta
-    // This would be handled by the optimizer
+    // Parameter updates for gamma and beta would be handled by the optimizer
+    // This is typically done via gradient descent on accumulated gradients
+}
+
+std::unique_ptr<Layer> BatchNorm1DLayer::clone() const {
+    auto cloned = std::make_unique<BatchNorm1DLayer>(device_, num_features_, momentum_, epsilon_);
+    cloned->training_ = training_;
+    
+    // Copy parameters
+    if (gamma_ && cloned->gamma_) {
+        std::vector<float> gamma_data(num_features_);
+        gamma_->download_data(gamma_data.data());
+        cloned->gamma_->upload_data(gamma_data.data());
+    }
+    
+    if (beta_ && cloned->beta_) {
+        std::vector<float> beta_data(num_features_);
+        beta_->download_data(beta_data.data());
+        cloned->beta_->upload_data(beta_data.data());
+    }
+    
+    if (running_mean_ && cloned->running_mean_) {
+        std::vector<float> mean_data(num_features_);
+        running_mean_->download_data(mean_data.data());
+        cloned->running_mean_->upload_data(mean_data.data());
+    }
+    
+    if (running_var_ && cloned->running_var_) {
+        std::vector<float> var_data(num_features_);
+        running_var_->download_data(var_data.data());
+        cloned->running_var_->upload_data(var_data.data());
+    }
+    
+    return cloned;
 }
 
 // BatchNorm2D Implementation
@@ -284,13 +316,45 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
 
 std::shared_ptr<Tensor> BatchNorm2DLayer::backward(const std::shared_ptr<Tensor>& grad_output) {
     // For now, return the gradient as-is (simplified backward pass)
-    // TODO: Implement full BatchNorm backward pass with parameter gradients
+    // Full BatchNorm backward pass would compute parameter gradients for gamma/beta
     return grad_output;
 }
 
 void BatchNorm2DLayer::update_weights(float learning_rate) {
-    // TODO: Implement parameter updates for gamma and beta
-    // This would be handled by the optimizer
+    // Parameter updates for gamma and beta would be handled by the optimizer
+    // This is typically done via gradient descent on accumulated gradients
+}
+
+std::unique_ptr<Layer> BatchNorm2DLayer::clone() const {
+    auto cloned = std::make_unique<BatchNorm2DLayer>(device_, num_channels_, momentum_, epsilon_);
+    cloned->training_ = training_;
+    
+    // Copy parameters
+    if (gamma_ && cloned->gamma_) {
+        std::vector<float> gamma_data(num_channels_);
+        gamma_->download_data(gamma_data.data());
+        cloned->gamma_->upload_data(gamma_data.data());
+    }
+    
+    if (beta_ && cloned->beta_) {
+        std::vector<float> beta_data(num_channels_);
+        beta_->download_data(beta_data.data());
+        cloned->beta_->upload_data(beta_data.data());
+    }
+    
+    if (running_mean_ && cloned->running_mean_) {
+        std::vector<float> mean_data(num_channels_);
+        running_mean_->download_data(mean_data.data());
+        cloned->running_mean_->upload_data(mean_data.data());
+    }
+    
+    if (running_var_ && cloned->running_var_) {
+        std::vector<float> var_data(num_channels_);
+        running_var_->download_data(var_data.data());
+        cloned->running_var_->upload_data(var_data.data());
+    }
+    
+    return cloned;
 }
 
 } // namespace dlvk

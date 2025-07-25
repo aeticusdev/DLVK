@@ -74,107 +74,104 @@ std::shared_ptr<Tensor> Conv2DLayer::forward(const std::shared_ptr<Tensor>& inpu
     // Store input for backward pass
     last_input_ = input;
     
-    // For now, implement a basic CPU-based convolution
-    // TODO: Implement GPU compute shader for convolution
-    
+    // Use GPU-accelerated convolution through TensorOps
     auto output_shape = compute_output_shape(input->shape());
     auto output = std::make_shared<Tensor>(output_shape, DataType::FLOAT32,
                                           std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Download input and weights for CPU computation
-    std::vector<float> input_data(input->size());
-    std::vector<float> weight_data(weights_->size());
-    std::vector<float> bias_data(bias_->size());
+    // Get TensorOps singleton instance for GPU operations
+    auto* tensor_ops = TensorOps::instance();
     
-    input->download_data(input_data.data());
-    weights_->download_data(weight_data.data());
-    bias_->download_data(bias_data.data());
+    // Perform convolution
+    tensor_ops->conv2d(*input, *weights_, *bias_, *output,
+                      stride_h_, stride_w_, 
+                      padding_h_, padding_w_);
     
-    // CPU implementation of convolution
-    const auto& in_shape = input->shape();
-    size_t batch_size = in_shape[0];
-    size_t input_height = in_shape[2];
-    size_t input_width = in_shape[3];
-    size_t output_height = output_shape[2];
-    size_t output_width = output_shape[3];
-    
-    std::vector<float> output_data(output->size(), 0.0f);
-    
-    for (size_t b = 0; b < batch_size; ++b) {
-        for (size_t oc = 0; oc < out_channels_; ++oc) {
-            for (size_t oh = 0; oh < output_height; ++oh) {
-                for (size_t ow = 0; ow < output_width; ++ow) {
-                    float sum = bias_data[oc]; // Add bias
-                    
-                    for (size_t ic = 0; ic < in_channels_; ++ic) {
-                        for (size_t kh = 0; kh < kernel_height_; ++kh) {
-                            for (size_t kw = 0; kw < kernel_width_; ++kw) {
-                                int ih = static_cast<int>(oh * stride_h_ + kh) - static_cast<int>(padding_h_);
-                                int iw = static_cast<int>(ow * stride_w_ + kw) - static_cast<int>(padding_w_);
-                                
-                                if (ih >= 0 && ih < static_cast<int>(input_height) && 
-                                    iw >= 0 && iw < static_cast<int>(input_width)) {
-                                    
-                                    size_t input_idx = b * (in_channels_ * input_height * input_width) +
-                                                      ic * (input_height * input_width) +
-                                                      ih * input_width + iw;
-                                    
-                                    size_t weight_idx = oc * (in_channels_ * kernel_height_ * kernel_width_) +
-                                                       ic * (kernel_height_ * kernel_width_) +
-                                                       kh * kernel_width_ + kw;
-                                    
-                                    sum += input_data[input_idx] * weight_data[weight_idx];
-                                }
-                            }
-                        }
-                    }
-                    
-                    size_t output_idx = b * (out_channels_ * output_height * output_width) +
-                                       oc * (output_height * output_width) +
-                                       oh * output_width + ow;
-                    output_data[output_idx] = sum;
-                }
-            }
-        }
-    }
-    
-    output->upload_data(output_data.data());
     return output;
 }
 
 std::shared_ptr<Tensor> Conv2DLayer::backward(const std::shared_ptr<Tensor>& grad_output) {
-    // For now, implement basic CPU-based backward pass
-    // TODO: Implement GPU compute shader for convolution backward
-    
     if (!last_input_) {
         throw std::runtime_error("Conv2DLayer::backward called without prior forward pass");
     }
     
+    // Get TensorOps singleton instance for GPU operations
+    auto* tensor_ops = TensorOps::instance();
+    
+    // Create gradient input tensor
     auto input_shape = last_input_->shape();
     auto grad_input = std::make_shared<Tensor>(input_shape, DataType::FLOAT32,
                                               std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Initialize gradient input to zero
-    std::vector<float> grad_input_data(grad_input->size(), 0.0f);
-    grad_input->upload_data(grad_input_data.data());
+    // Initialize weight and bias gradients if not already created
+    if (!weight_grads_) {
+        weight_grads_ = std::make_shared<Tensor>(weights_->shape(), DataType::FLOAT32,
+                                                std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
+    }
     
-    // Note: For a complete implementation, we would:
-    // 1. Compute gradients w.r.t. input (for backpropagation)
-    // 2. Compute gradients w.r.t. weights (for weight updates)
-    // 3. Compute gradients w.r.t. bias (for bias updates)
+    if (!bias_grads_) {
+        bias_grads_ = std::make_shared<Tensor>(bias_->shape(), DataType::FLOAT32,
+                                              std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
+    }
     
-    // For now, return zero gradients (placeholder)
+    // Compute gradients w.r.t. input using GPU acceleration
+    tensor_ops->conv2d_backward_input(*grad_output, *weights_, *grad_input,
+                                     stride_h_, stride_w_,
+                                     padding_h_, padding_w_);
+    
+    // Compute gradients w.r.t. weights and bias using GPU acceleration
+    tensor_ops->conv2d_backward_weight(*last_input_, *grad_output, *weight_grads_, *bias_grads_,
+                                      stride_h_, stride_w_,
+                                      padding_h_, padding_w_);
+    
     return grad_input;
 }
 
 void Conv2DLayer::update_weights(float learning_rate) {
-    // For now, implement basic weight update
-    // TODO: Implement proper gradient-based weight updates
+    if (!weight_grads_ || !bias_grads_) {
+        throw std::runtime_error("Conv2DLayer::update_weights called without computed gradients");
+    }
     
-    // This is a placeholder - in a complete implementation,
-    // we would apply the computed gradients to weights and bias
-    // weights_ = weights_ - learning_rate * weight_gradients
-    // bias_ = bias_ - learning_rate * bias_gradients
+    // Get TensorOps singleton instance for GPU operations
+    auto* tensor_ops = TensorOps::instance();
+    
+    // Apply gradient descent: weights = weights - learning_rate * gradients
+    // Use scalar multiplication and element-wise subtraction for gradient updates
+    if (weight_grads_) {
+        auto scaled_grads = std::make_shared<Tensor>(weight_grads_->shape(), weight_grads_->dtype(), weight_grads_->device());
+        tensor_ops->scalar_multiply(*weight_grads_, learning_rate, *scaled_grads);
+        tensor_ops->subtract(*weights_, *scaled_grads, *weights_);
+    }
+    
+    // Apply gradient descent: bias = bias - learning_rate * bias_gradients
+    if (bias_grads_ && bias_) {
+        auto scaled_bias_grads = std::make_shared<Tensor>(bias_grads_->shape(), bias_grads_->dtype(), bias_grads_->device());
+        tensor_ops->scalar_multiply(*bias_grads_, learning_rate, *scaled_bias_grads);
+        tensor_ops->subtract(*bias_, *scaled_bias_grads, *bias_);
+    }
+}
+
+std::unique_ptr<Layer> Conv2DLayer::clone() const {
+    auto cloned = std::make_unique<Conv2DLayer>(device_, in_channels_, out_channels_,
+                                               kernel_height_, kernel_width_,
+                                               stride_h_, stride_w_,
+                                               padding_h_, padding_w_);
+    
+    // Copy weights and bias
+    if (weights_ && cloned->weights_) {
+        size_t weight_size = out_channels_ * in_channels_ * kernel_height_ * kernel_width_;
+        std::vector<float> weight_data(weight_size);
+        weights_->download_data(weight_data.data());
+        cloned->weights_->upload_data(weight_data.data());
+    }
+    
+    if (bias_ && cloned->bias_) {
+        std::vector<float> bias_data(out_channels_);
+        bias_->download_data(bias_data.data());
+        cloned->bias_->upload_data(bias_data.data());
+    }
+    
+    return cloned;
 }
 
 } // namespace dlvk

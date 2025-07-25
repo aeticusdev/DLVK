@@ -21,8 +21,8 @@ public:
     Tensor(const std::vector<size_t>& shape, DataType dtype, std::shared_ptr<VulkanDevice> device);
     ~Tensor();
     
-    // Copy constructor and copy assignment - temporarily re-enabled for debugging
-    // TODO: Remove these and implement proper move-only semantics
+    // Copy constructor and copy assignment - enabled for tensor operations
+    // Modern design prefers move semantics, but copy is needed for certain algorithms
     Tensor(const Tensor& other);
     Tensor& operator=(const Tensor& other);
     

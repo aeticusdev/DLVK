@@ -4,6 +4,7 @@
 #include "dlvk/core/vulkan_device.h"
 #include <iostream>
 #include <cstring>
+#include <cmath>
 
 namespace dlvk {
 
@@ -94,7 +95,38 @@ bool TensorOps::add_broadcast(const Tensor& a, const Tensor& b, Tensor& result) 
             return false;
         }
         
-        // For now, implement on CPU side - TODO: Create GPU kernel for broadcast
+        // Try GPU implementation first
+        if (m_broadcast_add_pipeline) {
+            // Bind buffers
+            m_broadcast_add_pipeline->update_descriptor_set(0, 0, a.buffer());
+            m_broadcast_add_pipeline->update_descriptor_set(0, 1, b.buffer());
+            m_broadcast_add_pipeline->update_descriptor_set(0, 2, result.buffer());
+            
+            // Set push constants
+            struct PushConstants {
+                uint32_t batch_size;
+                uint32_t features;
+                uint32_t total_size;
+            } push_constants;
+            
+            push_constants.batch_size = static_cast<uint32_t>(a.shape()[0]);
+            push_constants.features = static_cast<uint32_t>(a.shape()[1]);
+            push_constants.total_size = static_cast<uint32_t>(a.size());
+            
+            // Execute
+            VkCommandBuffer cmd = begin_single_time_commands();
+            m_broadcast_add_pipeline->bind(cmd);
+            m_broadcast_add_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+            
+            uint32_t dispatch_x = (a.size() + 255) / 256;
+            vkCmdDispatch(cmd, dispatch_x, 1, 1);
+            
+            end_single_time_commands(cmd);
+            
+            return true;
+        }
+        
+        // CPU fallback
         std::vector<float> a_data(a.size());
         std::vector<float> b_data(b.size());
         std::vector<float> result_data(result.size());
@@ -1271,6 +1303,133 @@ bool TensorOps::create_pipelines() {
         m_dropout_backward_pipeline.reset();
     }
 
+    // === Missing GPU Pipelines that were falling back to CPU ===
+    
+    // Scalar multiply pipeline  
+    m_scalar_multiply_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_scalar_multiply_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
+        PushConstantRange scalar_push_range;
+        scalar_push_range.offset = 0;
+        scalar_push_range.size = sizeof(uint32_t) + sizeof(float);  // size + scalar
+        scalar_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_scalar_multiply_pipeline->set_push_constant_range(scalar_push_range);
+        
+        if (m_scalar_multiply_pipeline->create_from_file("build/shaders/scalar_multiply.comp.spv")) {
+            if (m_scalar_multiply_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Scalar Multiply pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_scalar_multiply_pipeline.reset();
+            }
+        } else {
+            m_scalar_multiply_pipeline.reset();
+        }
+    } else {
+        m_scalar_multiply_pipeline.reset();
+    }
+
+    // Broadcast add pipeline
+    m_broadcast_add_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_broadcast_add_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
+        PushConstantRange broadcast_push_range;
+        broadcast_push_range.offset = 0;
+        broadcast_push_range.size = sizeof(uint32_t) * 3;  // batch_size, features, total_size
+        broadcast_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_broadcast_add_pipeline->set_push_constant_range(broadcast_push_range);
+        
+        if (m_broadcast_add_pipeline->create_from_file("build/shaders/broadcast_add.comp.spv")) {
+            if (m_broadcast_add_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Broadcast Add pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_broadcast_add_pipeline.reset();
+            }
+        } else {
+            m_broadcast_add_pipeline.reset();
+        }
+    } else {
+        m_broadcast_add_pipeline.reset();
+    }
+
+    // Sqrt pipeline
+    m_sqrt_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_sqrt_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
+        PushConstantRange sqrt_push_range;
+        sqrt_push_range.offset = 0;
+        sqrt_push_range.size = sizeof(uint32_t);  // size
+        sqrt_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_sqrt_pipeline->set_push_constant_range(sqrt_push_range);
+        
+        if (m_sqrt_pipeline->create_from_file("build/shaders/sqrt.comp.spv")) {
+            if (m_sqrt_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Sqrt pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_sqrt_pipeline.reset();
+            }
+        } else {
+            m_sqrt_pipeline.reset();
+        }
+    } else {
+        m_sqrt_pipeline.reset();
+    }
+
+    // Clamp pipeline
+    m_clamp_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_clamp_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
+        PushConstantRange clamp_push_range;
+        clamp_push_range.offset = 0;
+        clamp_push_range.size = sizeof(uint32_t) + sizeof(float) * 2;  // size + min_val + max_val
+        clamp_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_clamp_pipeline->set_push_constant_range(clamp_push_range);
+        
+        if (m_clamp_pipeline->create_from_file("build/shaders/clamp.comp.spv")) {
+            if (m_clamp_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Clamp pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_clamp_pipeline.reset();
+            }
+        } else {
+            m_clamp_pipeline.reset();
+        }
+    } else {
+        m_clamp_pipeline.reset();
+    }
+
+    // Create Adam update pipeline
+    m_adam_update_pipeline = std::make_unique<ComputePipeline>(m_device);
+    
+    // Adam needs parameters, gradient, momentum, velocity buffers
+    std::vector<VkDescriptorSetLayoutBinding> adam_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // params
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // gradients
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // momentum
+        {3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // velocity
+    };
+    
+    if (m_adam_update_pipeline->create_descriptor_set_layout(adam_bindings)) {
+        
+        PushConstantRange adam_push_range;
+        adam_push_range.offset = 0;
+        adam_push_range.size = sizeof(uint32_t) + sizeof(float) * 6;  // size + lr + beta1 + beta2 + epsilon + bias_corrections
+        adam_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_adam_update_pipeline->set_push_constant_range(adam_push_range);
+        
+        if (m_adam_update_pipeline->create_from_file("build/shaders/adam_update.comp.spv")) {
+            if (m_adam_update_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Adam update pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_adam_update_pipeline.reset();
+            }
+        } else {
+            m_adam_update_pipeline.reset();
+        }
+    } else {
+        m_adam_update_pipeline.reset();
+    }
+
     std::cout << "Pipeline creation summary: " << success_count << " pipelines created" << std::endl;
     
     // Return true if we have at least some working pipelines
@@ -1777,6 +1936,319 @@ bool TensorOps::tanh_backward(const Tensor& output, const Tensor& grad_output, T
     
     end_single_time_commands(cmd);
     
+    return true;
+}
+
+// Scalar operations for optimizers
+bool TensorOps::scale(const Tensor& input, float scalar, Tensor& result) {
+    // Use multiply with a scalar tensor for now
+    auto scalar_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, m_device);
+    scalar_tensor->upload_data(&scalar);
+    
+    return multiply(input, *scalar_tensor, result);
+}
+
+bool TensorOps::scalar_add(const Tensor& input, float scalar, Tensor& result) {
+    // Use add with a scalar tensor for now  
+    auto scalar_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, m_device);
+    scalar_tensor->upload_data(&scalar);
+    
+    return add(input, *scalar_tensor, result);
+}
+
+bool TensorOps::element_wise_multiply(const Tensor& a, const Tensor& b, Tensor& result) {
+    return multiply(a, b, result);
+}
+
+// === NEW GPU IMPLEMENTATIONS ===
+
+bool TensorOps::scalar_multiply(const Tensor& input, float scalar, Tensor& result) {
+    if (!m_scalar_multiply_pipeline) {
+        return false; // Pipeline not available, caller should use CPU fallback
+    }
+    
+    if (input.size() != result.size()) {
+        std::cerr << "Scalar multiply: input and result tensor sizes don't match" << std::endl;
+        return false;
+    }
+    
+    // Bind buffers
+    m_scalar_multiply_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_scalar_multiply_pipeline->update_descriptor_set(0, 1, result.buffer());
+    
+    // Set push constants
+    struct PushConstants {
+        uint32_t size;
+        float scalar;
+    } push_constants;
+    
+    push_constants.size = static_cast<uint32_t>(input.size());
+    push_constants.scalar = scalar;
+    
+    // Execute
+    VkCommandBuffer cmd = begin_single_time_commands();
+    m_scalar_multiply_pipeline->bind(cmd);
+    m_scalar_multiply_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    uint32_t dispatch_x = (input.size() + 255) / 256;
+    vkCmdDispatch(cmd, dispatch_x, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::clamp(const Tensor& input, float min_val, float max_val, Tensor& result) {
+    if (!m_clamp_pipeline) {
+        return false; // Pipeline not available, caller should use CPU fallback
+    }
+    
+    if (input.size() != result.size()) {
+        std::cerr << "Clamp: input and result tensor sizes don't match" << std::endl;
+        return false;
+    }
+    
+    // Bind buffers
+    m_clamp_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_clamp_pipeline->update_descriptor_set(0, 1, result.buffer());
+    
+    // Set push constants
+    struct PushConstants {
+        uint32_t size;
+        float min_val;
+        float max_val;
+    } push_constants;
+    
+    push_constants.size = static_cast<uint32_t>(input.size());
+    push_constants.min_val = min_val;
+    push_constants.max_val = max_val;
+    
+    // Execute
+    VkCommandBuffer cmd = begin_single_time_commands();
+    m_clamp_pipeline->bind(cmd);
+    m_clamp_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    uint32_t dispatch_x = (input.size() + 255) / 256;
+    vkCmdDispatch(cmd, dispatch_x, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::element_wise_sqrt(const Tensor& input, Tensor& result) {
+    // Try GPU implementation first
+    if (m_sqrt_pipeline) {
+        if (input.size() != result.size()) {
+            std::cerr << "Sqrt: input and result tensor sizes don't match" << std::endl;
+            return false;
+        }
+        
+        // Bind buffers
+        m_sqrt_pipeline->update_descriptor_set(0, 0, input.buffer());
+        m_sqrt_pipeline->update_descriptor_set(0, 1, result.buffer());
+        
+        // Set push constants
+        uint32_t size = static_cast<uint32_t>(input.size());
+        
+        // Execute
+        VkCommandBuffer cmd = begin_single_time_commands();
+        m_sqrt_pipeline->bind(cmd);
+        m_sqrt_pipeline->push_constants(cmd, &size, sizeof(size));
+        
+        uint32_t dispatch_x = (input.size() + 255) / 256;
+        vkCmdDispatch(cmd, dispatch_x, 1, 1);
+        
+        end_single_time_commands(cmd);
+        
+        return true;
+    }
+    
+    // CPU fallback
+    std::vector<float> input_data(input.size());
+    std::vector<float> result_data(input.size());
+    
+    const_cast<Tensor&>(input).download_data(input_data.data());
+    
+    for (size_t i = 0; i < input_data.size(); ++i) {
+        result_data[i] = std::sqrt(input_data[i]);
+    }
+    
+    result.upload_data(result_data.data());
+    return true;
+}
+
+bool TensorOps::element_wise_square(const Tensor& input, Tensor& result) {
+    return multiply(input, input, result);
+}
+
+bool TensorOps::adam_update(const Tensor& gradient, const Tensor& m, const Tensor& v, 
+                           Tensor& param, Tensor& new_m, Tensor& new_v,
+                           float lr, float beta1, float beta2, float epsilon) {
+    // Validate tensor shapes
+    if (gradient.shape() != m.shape() || gradient.shape() != v.shape() || 
+        gradient.shape() != param.shape()) {
+        std::cerr << "All tensors must have the same shape for Adam update" << std::endl;
+        return false;
+    }
+    
+    // Try GPU acceleration first
+    if (m_adam_update_pipeline && gradient.size() > 0) {
+        VkCommandBuffer cmd = begin_single_time_commands();
+        
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_adam_update_pipeline->get_pipeline());
+        
+        // Bind descriptor sets for param, gradient, momentum, velocity
+        std::vector<VkDescriptorBufferInfo> buffer_infos = {
+            {param.buffer(), 0, VK_WHOLE_SIZE},
+            {gradient.buffer(), 0, VK_WHOLE_SIZE},
+            {m.buffer(), 0, VK_WHOLE_SIZE},
+            {v.buffer(), 0, VK_WHOLE_SIZE}
+        };
+        
+        std::vector<VkWriteDescriptorSet> writes(4);
+        for (size_t i = 0; i < 4; ++i) {
+            writes[i] = {};
+            writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            writes[i].dstSet = m_adam_update_pipeline->get_descriptor_set(0);
+            writes[i].dstBinding = i;
+            writes[i].descriptorCount = 1;
+            writes[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            writes[i].pBufferInfo = &buffer_infos[i];
+        }
+        
+        vkUpdateDescriptorSets(m_device->get_device(), writes.size(), writes.data(), 0, nullptr);
+        
+        VkDescriptorSet descriptor_set = m_adam_update_pipeline->get_descriptor_set(0);
+        vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, 
+                               m_adam_update_pipeline->get_layout(), 0, 1, 
+                               &descriptor_set, 0, nullptr);
+        
+        // Set push constants (size, lr, beta1, beta2, epsilon, bias_corrections)
+        struct AdamPushConstants {
+            uint32_t size;
+            float lr;
+            float beta1; 
+            float beta2;
+            float epsilon;
+            float bias_correction1;  // Will be set by optimizer
+            float bias_correction2;  // Will be set by optimizer
+        } pc;
+        
+        pc.size = static_cast<uint32_t>(gradient.size());
+        pc.lr = lr;
+        pc.beta1 = beta1;
+        pc.beta2 = beta2;
+        pc.epsilon = epsilon;
+        pc.bias_correction1 = 1.0f;  // Simplified for now
+        pc.bias_correction2 = 1.0f;  // Simplified for now
+        
+        vkCmdPushConstants(cmd, m_adam_update_pipeline->get_layout(),
+                          VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(pc), &pc);
+        
+        uint32_t dispatch_x = (gradient.size() + 255) / 256;
+        vkCmdDispatch(cmd, dispatch_x, 1, 1);
+        
+        end_single_time_commands(cmd);
+        
+        // Copy updated momentum and velocity back to output tensors
+        copy(m, new_m);
+        copy(v, new_v);
+        
+        return true;
+    }
+    
+    // CPU fallback implementation
+    std::cout << "Using CPU fallback for Adam update" << std::endl;
+    std::vector<float> grad_data(gradient.size());
+    std::vector<float> m_data(m.size());
+    std::vector<float> v_data(v.size());
+    std::vector<float> param_data(param.size());
+    
+    const_cast<Tensor&>(gradient).download_data(grad_data.data());
+    const_cast<Tensor&>(m).download_data(m_data.data());
+    const_cast<Tensor&>(v).download_data(v_data.data());
+    param.download_data(param_data.data());
+    
+    for (size_t i = 0; i < grad_data.size(); ++i) {
+        // Update biased first moment estimate
+        m_data[i] = beta1 * m_data[i] + (1.0f - beta1) * grad_data[i];
+        
+        // Update biased second moment estimate
+        v_data[i] = beta2 * v_data[i] + (1.0f - beta2) * grad_data[i] * grad_data[i];
+        
+        // Update parameter
+        param_data[i] = param_data[i] - lr * m_data[i] / (std::sqrt(v_data[i]) + epsilon);
+    }
+    
+    // Upload results back to GPU
+    new_m.upload_data(m_data.data());
+    new_v.upload_data(v_data.data());
+    param.upload_data(param_data.data());
+    
+    return true;
+}
+
+bool TensorOps::gradient_clip_by_norm(const Tensor& gradient, float max_norm, Tensor& clipped_gradient) {
+    if (gradient.shape() != clipped_gradient.shape() || gradient.dtype() != clipped_gradient.dtype()) {
+        std::cerr << "Gradient and clipped_gradient tensors must have same shape and dtype" << std::endl;
+        return false;
+    }
+    
+    // First compute the gradient norm using element-wise square and sum
+    auto squared_grad = std::make_shared<Tensor>(gradient.shape(), gradient.dtype(), gradient.device());
+    auto norm_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, gradient.device());
+    
+    if (!element_wise_square(gradient, *squared_grad)) {
+        return false;
+    }
+    
+    if (!sum(*squared_grad, *norm_tensor)) {
+        return false;
+    }
+    
+    // Download norm to check if clipping is needed
+    std::vector<float> norm_data(1);
+    norm_tensor->download_data(norm_data.data());
+    float norm = std::sqrt(norm_data[0]);
+    
+    if (norm <= max_norm) {
+        // No clipping needed, just copy
+        return copy(gradient, clipped_gradient);
+    } else {
+        // Apply clipping: clipped_grad = gradient * (max_norm / norm)
+        float scale_factor = max_norm / norm;
+        return scale(gradient, scale_factor, clipped_gradient);
+    }
+}
+
+bool TensorOps::gradient_clip_by_value(const Tensor& gradient, float min_val, float max_val, Tensor& clipped_gradient) {
+    if (gradient.shape() != clipped_gradient.shape() || gradient.dtype() != clipped_gradient.dtype()) {
+        std::cerr << "Gradient and clipped_gradient tensors must have same shape and dtype" << std::endl;
+        return false;
+    }
+    
+    // For now, we'll implement this using a simple compute shader approach
+    // In a production system, you'd want a dedicated clamp compute shader
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    // Use a simple approach: copy first, then apply clamping via a basic shader
+    if (!copy(gradient, clipped_gradient)) {
+        return false;
+    }
+    
+    // For now, fall back to CPU-based clamping for value clipping
+    // Using dedicated GPU clamp compute shader would be optimal
+    std::vector<float> grad_data(gradient.size());
+    clipped_gradient.download_data(grad_data.data());
+    
+    for (auto& val : grad_data) {
+        val = std::max(min_val, std::min(max_val, val));
+    }
+    
+    clipped_gradient.upload_data(grad_data.data());
+    
+    end_single_time_commands(cmd);
     return true;
 }
 

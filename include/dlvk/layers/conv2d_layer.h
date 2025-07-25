@@ -8,9 +8,11 @@ namespace dlvk {
 
 class Conv2DLayer : public Layer {
 private:
-    std::shared_ptr<Tensor> weights_;     // Shape: [out_channels, in_channels, kernel_h, kernel_w]
-    std::shared_ptr<Tensor> bias_;        // Shape: [out_channels]
-    std::shared_ptr<Tensor> last_input_;  // For backward pass
+    std::shared_ptr<Tensor> weights_;        // Shape: [out_channels, in_channels, kernel_h, kernel_w]
+    std::shared_ptr<Tensor> bias_;           // Shape: [out_channels]
+    std::shared_ptr<Tensor> weight_grads_;   // Gradients for weights
+    std::shared_ptr<Tensor> bias_grads_;     // Gradients for bias
+    std::shared_ptr<Tensor> last_input_;     // For backward pass
     
     size_t in_channels_;
     size_t out_channels_;
@@ -34,6 +36,7 @@ public:
     std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& input) override;
     std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& grad_output) override;
     void update_weights(float learning_rate) override;
+    std::unique_ptr<Layer> clone() const override;
     
     // Utility functions
     std::vector<size_t> compute_output_shape(const std::vector<size_t>& input_shape) const;

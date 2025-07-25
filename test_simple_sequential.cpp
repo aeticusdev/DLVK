@@ -54,7 +54,7 @@ int main() {
         std::cout << "✓ TensorOps initialized" << std::endl;
         
         // Create Sequential model with just one layer
-        Sequential model(*device);
+        Sequential model(device);
         std::cout << "✓ Created Sequential model" << std::endl;
         
         // Add just one Dense layer

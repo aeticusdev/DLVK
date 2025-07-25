@@ -2,10 +2,14 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include <optional>
 #include <string>
+#include <optional>
+#include <fstream>
+#include <memory>
 
 namespace dlvk {
+
+class MemoryPoolManager;
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> compute_family;
@@ -37,12 +41,24 @@ public:
     // Memory operations
     uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties) const;
     
-    // Buffer operations
+    // Buffer operations (with memory pool optimization)
     VkResult create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, 
                           VkMemoryPropertyFlags properties, VkBuffer& buffer, 
                           VkDeviceMemory& buffer_memory) const;
     
     void destroy_buffer(VkBuffer buffer, VkDeviceMemory buffer_memory) const;
+    
+    // Direct buffer operations (bypass memory pool)
+    VkResult create_buffer_direct(VkDeviceSize size, VkBufferUsageFlags usage, 
+                                 VkMemoryPropertyFlags properties, VkBuffer& buffer, 
+                                 VkDeviceMemory& buffer_memory) const;
+    
+    void destroy_buffer_direct(VkBuffer buffer, VkDeviceMemory buffer_memory) const;
+    
+    // Memory pool management
+    MemoryPoolManager* get_memory_pool_manager() const { return m_memory_pool_manager.get(); }
+    void enable_memory_pools(bool enable);
+    bool are_memory_pools_enabled() const;
     
     // Device information
     std::string get_device_name() const;
@@ -63,10 +79,14 @@ private:
     
     QueueFamilyIndices m_queue_families;
     
+    // Memory pool manager for optimized allocations
+    std::unique_ptr<MemoryPoolManager> m_memory_pool_manager;
+    
     bool create_instance();
     bool pick_physical_device();
     bool create_logical_device();
     bool create_command_pool();
+    bool initialize_memory_pools();
     
     QueueFamilyIndices find_queue_families(VkPhysicalDevice device) const;
     bool is_device_suitable(VkPhysicalDevice device) const;

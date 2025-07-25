@@ -42,6 +42,9 @@ public:
      */
     virtual Tensor backward(const Tensor& grad_output) = 0;
     
+    virtual std::unique_ptr<ModernLayer> clone() const = 0;
+
+
     /**
      * @brief Update layer parameters using the provided optimizer
      * @param optimizer Optimizer to use for parameter updates

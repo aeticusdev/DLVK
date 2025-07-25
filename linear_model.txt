@@ -1,0 +1,19 @@
+# DLVK Trained Model Export
+# Generated: 2025-07-24 10:22:20
+
+[MODEL_INFO]
+framework = DLVK
+version = 1.0
+epochs_trained = 12
+final_loss = 60.375000
+activation = linear
+
+[ARCHITECTURE]
+layer_0 = 1
+layer_1 = 1
+
+[WEIGHTS]
+w_0 = 25.60000038
+
+[BIASES]
+b_0 = 8.69999981

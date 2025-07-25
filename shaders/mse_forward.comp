@@ -1,0 +1,69 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer PredictionsBuffer {
+    float predictions[];
+};
+
+layout(std430, binding = 1) readonly buffer TargetsBuffer {
+    float targets[];
+};
+
+layout(std430, binding = 2) writeonly buffer OutputBuffer {
+    float result[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+    uint batch_size;
+} push_constants;
+
+shared float partial_sums[256];
+
+void main() {
+    uint tid = gl_LocalInvocationID.x;
+    uint gid = gl_GlobalInvocationID.x;
+    
+    // Initialize shared memory
+    partial_sums[tid] = 0.0;
+    
+    // Process 4 elements per thread for better vectorization
+    uint start_idx = gid * 4;
+    
+    if (start_idx < push_constants.size) {
+        // Vectorized processing - up to 4 elements at once
+        for (uint i = 0; i < 4 && (start_idx + i) < push_constants.size; ++i) {
+            uint idx = start_idx + i;
+            
+            // Optimized MSE computation with fused operations
+            float pred = predictions[idx];
+            float target = targets[idx];
+            float diff = pred - target;
+            
+            // Accumulate squared difference
+            partial_sums[tid] += diff * diff;
+        }
+    }
+    
+    barrier();
+    
+    // Optimized reduction within workgroup
+    for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
+        if (tid < stride) {
+            partial_sums[tid] += partial_sums[tid + stride];
+        }
+        barrier();
+    }
+    
+    // Write result from first thread of first workgroup
+    if (gl_WorkGroupID.x == 0 && tid == 0) {
+        // Mean squared error
+        result[0] = partial_sums[0] / float(push_constants.size);
+    }
+    
+    // Store partial results for multiple workgroups
+    if (tid == 0 && gl_WorkGroupID.x > 0) {
+        result[gl_WorkGroupID.x] = partial_sums[0];
+    }
+}

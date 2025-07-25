@@ -1,4 +1,5 @@
 #include "dlvk/core/vulkan_device.h"
+#include "dlvk/core/memory_pool_manager.h"
 #include <iostream>
 #include <set>
 #include <stdexcept>
@@ -32,10 +33,18 @@ bool VulkanDevice::initialize() {
         return false;
     }
     
+    if (!initialize_memory_pools()) {
+        std::cerr << "Failed to initialize memory pools" << std::endl;
+        return false;
+    }
+    
     return true;
 }
 
 void VulkanDevice::cleanup() {
+    // Clean up memory pool manager first
+    m_memory_pool_manager.reset();
+    
     if (m_command_pool != VK_NULL_HANDLE) {
         vkDestroyCommandPool(m_device, m_command_pool, nullptr);
         m_command_pool = VK_NULL_HANDLE;
@@ -199,6 +208,18 @@ uint32_t VulkanDevice::find_memory_type(uint32_t type_filter, VkMemoryPropertyFl
 VkResult VulkanDevice::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage,
                                    VkMemoryPropertyFlags properties, VkBuffer& buffer,
                                    VkDeviceMemory& buffer_memory) const {
+    // Use memory pool manager if available and enabled
+    if (m_memory_pool_manager && m_memory_pool_manager->is_pool_enabled()) {
+        return m_memory_pool_manager->allocate_buffer(size, usage, properties, buffer, buffer_memory);
+    }
+    
+    // Fall back to direct allocation
+    return create_buffer_direct(size, usage, properties, buffer, buffer_memory);
+}
+
+VkResult VulkanDevice::create_buffer_direct(VkDeviceSize size, VkBufferUsageFlags usage,
+                                           VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                                           VkDeviceMemory& buffer_memory) const {
     VkBufferCreateInfo buffer_info{};
     buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buffer_info.size = size;
@@ -229,8 +250,45 @@ VkResult VulkanDevice::create_buffer(VkDeviceSize size, VkBufferUsageFlags usage
 }
 
 void VulkanDevice::destroy_buffer(VkBuffer buffer, VkDeviceMemory buffer_memory) const {
+    // Use memory pool manager if available and enabled
+    if (m_memory_pool_manager && m_memory_pool_manager->is_pool_enabled()) {
+        m_memory_pool_manager->deallocate_buffer(buffer, buffer_memory);
+        return;
+    }
+    
+    // Fall back to direct deallocation
+    destroy_buffer_direct(buffer, buffer_memory);
+}
+
+void VulkanDevice::destroy_buffer_direct(VkBuffer buffer, VkDeviceMemory buffer_memory) const {
     vkDestroyBuffer(m_device, buffer, nullptr);
     vkFreeMemory(m_device, buffer_memory, nullptr);
+}
+
+bool VulkanDevice::initialize_memory_pools() {
+    try {
+        // Create memory pool manager with raw pointer (no circular dependency)
+        m_memory_pool_manager = std::make_unique<MemoryPoolManager>(this);
+        
+        std::cout << "✅ Memory pool manager initialized successfully" << std::endl;
+        return true;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Exception during memory pool initialization: " << e.what() << std::endl;
+        m_memory_pool_manager.reset();
+        return false;
+    }
+}
+
+void VulkanDevice::enable_memory_pools(bool enable) {
+    if (m_memory_pool_manager) {
+        m_memory_pool_manager->set_pool_enabled(enable);
+        std::cout << "Memory pools " << (enable ? "enabled" : "disabled") << std::endl;
+    }
+}
+
+bool VulkanDevice::are_memory_pools_enabled() const {
+    return m_memory_pool_manager && m_memory_pool_manager->is_pool_enabled();
 }
 
 std::string VulkanDevice::get_device_name() const {

@@ -99,4 +99,23 @@ void DenseLayer::initialize_weights() {
     bias_->upload_data(bias_data.data());
 }
 
+std::unique_ptr<Layer> DenseLayer::clone() const {
+    auto cloned = std::make_unique<DenseLayer>(device_, input_size_, output_size_);
+    
+    // Copy weights and bias
+    if (weights_ && cloned->weights_) {
+        std::vector<float> weight_data(input_size_ * output_size_);
+        weights_->download_data(weight_data.data());
+        cloned->weights_->upload_data(weight_data.data());
+    }
+    
+    if (bias_ && cloned->bias_) {
+        std::vector<float> bias_data(output_size_);
+        bias_->download_data(bias_data.data());
+        cloned->bias_->upload_data(bias_data.data());
+    }
+    
+    return cloned;
+}
+
 } // namespace dlvk

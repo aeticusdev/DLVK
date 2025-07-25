@@ -1,0 +1,49 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer PredictionsBuffer {
+    float predictions[];
+};
+
+layout(std430, binding = 1) readonly buffer TargetsBuffer {
+    float targets[];
+};
+
+layout(std430, binding = 2) writeonly buffer GradientBuffer {
+    float gradients[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+    float epsilon;  // For numerical stability
+    float scale_factor;  // 1.0 / batch_size for normalization
+} push_constants;
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    
+    if (idx >= push_constants.size) {
+        return;
+    }
+    
+    // Vectorized processing - handle multiple elements per thread
+    // Process 4 elements at once if possible
+    uint end_idx = min(idx + 4, push_constants.size);
+    
+    for (uint i = idx; i < end_idx && i < push_constants.size; i += gl_WorkGroupSize.x * gl_NumWorkGroups.x) {
+        // Optimized binary cross-entropy gradient
+        float pred = predictions[i];
+        float target = targets[i];
+        
+        // Fast clamping without branches
+        pred = max(push_constants.epsilon, min(1.0 - push_constants.epsilon, pred));
+        
+        // Simplified and optimized gradient computation
+        // (pred - target) / (pred * (1 - pred)) * scale_factor
+        float one_minus_pred = 1.0 - pred;
+        float denominator = pred * one_minus_pred + push_constants.epsilon;
+        
+        gradients[i] = (pred - target) / denominator * push_constants.scale_factor;
+    }
+}
