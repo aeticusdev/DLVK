@@ -1,0 +1,61 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) buffer ParamBuffer {
+    float params[];
+};
+
+layout(set = 0, binding = 1) buffer GradientBuffer {
+    float gradients[];
+};
+
+layout(set = 0, binding = 2) buffer MomentumBuffer {
+    float momentum[];
+};
+
+layout(set = 0, binding = 3) buffer VelocityBuffer {
+    float velocity[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint size;
+    float lr;
+    float beta1;
+    float beta2;
+    float epsilon;
+    float bias_correction1;  // 1.0 / (1.0 - beta1^t)
+    float bias_correction2;  // 1.0 / (1.0 - beta2^t)
+} pc;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= pc.size) {
+        return;
+    }
+    
+    float grad = gradients[index];
+    float m = momentum[index];
+    float v = velocity[index];
+    
+    // Update biased first moment estimate
+    m = pc.beta1 * m + (1.0 - pc.beta1) * grad;
+    
+    // Update biased second raw moment estimate  
+    v = pc.beta2 * v + (1.0 - pc.beta2) * grad * grad;
+    
+    // Bias-corrected first moment estimate
+    float m_corrected = m * pc.bias_correction1;
+    
+    // Bias-corrected second raw moment estimate
+    float v_corrected = v * pc.bias_correction2;
+    
+    // Update parameter
+    float param_update = pc.lr * m_corrected / (sqrt(v_corrected) + pc.epsilon);
+    params[index] -= param_update;
+    
+    // Store updated moments
+    momentum[index] = m;
+    velocity[index] = v;
+}

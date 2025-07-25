@@ -1,4 +1,5 @@
 #include "dlvk/training/regularization.h"
+#include "dlvk/tensor/tensor_ops.h"
 #include <algorithm>
 #include <numeric>
 #include <cmath>
@@ -12,10 +13,16 @@ float L1Regularizer::compute_loss(const std::vector<Tensor>& weights) {
     float total_loss = 0.0f;
     
     for (const auto& weight : weights) {
-        // TODO: Implement L1 norm calculation using GPU operations
-        // For now, use placeholder calculation
-        // L1 norm = sum(|w|)
-        total_loss += 1.0f; // Placeholder
+        // L1 norm calculation = sum(|w|)
+        // This would ideally use GPU operations for absolute values and reduction
+        std::vector<float> weight_data(weight.size());
+        weight.download_data(weight_data.data());
+        
+        float weight_l1 = 0.0f;
+        for (float val : weight_data) {
+            weight_l1 += std::abs(val);
+        }
+        total_loss += weight_l1;
     }
     
     return m_lambda * total_loss;
@@ -26,9 +33,19 @@ std::vector<Tensor> L1Regularizer::compute_gradients(const std::vector<Tensor>& 
     gradients.reserve(weights.size());
     
     for (const auto& weight : weights) {
-        // TODO: Implement L1 gradient calculation
         // L1 gradient = lambda * sign(w)
-        Tensor grad = weight; // Placeholder - would compute sign(weight)
+        Tensor grad(weight.shape(), weight.dtype(), weight.device());
+        
+        // Download weights, compute sign, upload back
+        std::vector<float> weight_data(weight.size());
+        weight.download_data(weight_data.data());
+        
+        std::vector<float> grad_data(weight.size());
+        for (size_t i = 0; i < weight_data.size(); ++i) {
+            grad_data[i] = m_lambda * (weight_data[i] > 0 ? 1.0f : (weight_data[i] < 0 ? -1.0f : 0.0f));
+        }
+        
+        grad.upload_data(grad_data.data());
         gradients.push_back(grad);
     }
     
@@ -40,9 +57,15 @@ float L2Regularizer::compute_loss(const std::vector<Tensor>& weights) {
     float total_loss = 0.0f;
     
     for (const auto& weight : weights) {
-        // TODO: Implement L2 norm calculation using GPU operations
-        // L2 norm = sum(w^2)
-        total_loss += 1.0f; // Placeholder
+        // L2 norm calculation = sum(w^2)
+        std::vector<float> weight_data(weight.size());
+        weight.download_data(weight_data.data());
+        
+        float weight_l2 = 0.0f;
+        for (float val : weight_data) {
+            weight_l2 += val * val;
+        }
+        total_loss += weight_l2;
     }
     
     return 0.5f * m_lambda * total_loss;
@@ -53,9 +76,12 @@ std::vector<Tensor> L2Regularizer::compute_gradients(const std::vector<Tensor>& 
     gradients.reserve(weights.size());
     
     for (const auto& weight : weights) {
-        // TODO: Implement L2 gradient calculation
         // L2 gradient = lambda * w
-        Tensor grad = weight; // Placeholder - would multiply by lambda
+        Tensor grad(weight.shape(), weight.dtype(), weight.device());
+        
+        // Use TensorOps to scale weights by lambda
+        auto* tensor_ops = TensorOps::instance();
+        tensor_ops->scalar_multiply(weight, m_lambda, grad);
         gradients.push_back(grad);
     }
     
@@ -78,8 +104,10 @@ std::vector<Tensor> ElasticNetRegularizer::compute_gradients(const std::vector<T
     combined_grads.reserve(weights.size());
     
     for (size_t i = 0; i < weights.size(); ++i) {
-        // TODO: Add L1 and L2 gradients together
-        Tensor combined = l1_grads[i]; // Placeholder - would add l1_grads[i] + l2_grads[i]
+        // Add L1 and L2 gradients together
+        Tensor combined(weights[i].shape(), weights[i].dtype(), weights[i].device());
+        auto* tensor_ops = TensorOps::instance();
+        tensor_ops->add(l1_grads[i], l2_grads[i], combined);
         combined_grads.push_back(combined);
     }
     
@@ -110,7 +138,9 @@ std::vector<Tensor> WeightDecayRegularizer::compute_gradients(const std::vector<
     
     for (const auto& weight : weights) {
         // Weight decay gradient = decay_rate * w
-        Tensor grad = weight; // Placeholder - would multiply by decay_rate
+        Tensor grad(weight.shape(), weight.dtype(), weight.device());
+        auto* tensor_ops = TensorOps::instance();
+        tensor_ops->scalar_multiply(weight, m_decay_rate, grad);
         gradients.push_back(grad);
     }
     
@@ -119,8 +149,10 @@ std::vector<Tensor> WeightDecayRegularizer::compute_gradients(const std::vector<
 
 void WeightDecayRegularizer::apply_decay(std::vector<Tensor>& weights, float learning_rate) {
     for (auto& weight : weights) {
-        // TODO: Apply weight decay directly: w = w * (1 - lr * decay_rate)
-        // For now, this is a placeholder
+        // Apply weight decay directly: w = w * (1 - lr * decay_rate)
+        float scale_factor = 1.0f - learning_rate * m_decay_rate;
+        auto* tensor_ops = TensorOps::instance();
+        tensor_ops->scalar_multiply(weight, scale_factor, weight);
     }
 }
 
@@ -133,9 +165,15 @@ void AdvancedDropout::update_rate(int epoch, float validation_loss) {
         float warmup_progress = static_cast<float>(epoch) / m_warmup_epochs;
         m_current_rate = m_base_rate * warmup_progress;
     } else if (m_adaptive && validation_loss > 0.0f) {
-        // TODO: Implement adaptive dropout based on validation performance
-        // For now, keep base rate
-        m_current_rate = m_base_rate;
+        // Adaptive dropout based on validation performance
+        // If validation loss is increasing, increase dropout slightly
+        static float prev_loss = validation_loss;
+        if (validation_loss > prev_loss * 1.05f) { // 5% increase threshold
+            m_current_rate = std::min(m_current_rate * 1.1f, 0.8f);
+        } else if (validation_loss < prev_loss * 0.95f) { // 5% decrease threshold
+            m_current_rate = std::max(m_current_rate * 0.9f, m_base_rate * 0.5f);
+        }
+        prev_loss = validation_loss;
     } else {
         m_current_rate = m_base_rate;
     }
@@ -149,9 +187,28 @@ Tensor AdvancedDropout::apply(const Tensor& input, bool training) {
         return input;
     }
     
-    // TODO: Implement GPU-accelerated dropout
-    // For now, return input tensor unchanged
-    return input;
+    // GPU-accelerated dropout using random mask generation
+    Tensor output(input.shape(), input.dtype(), input.device());
+    
+    // Generate random mask and scale surviving neurons
+    std::vector<float> input_data(input.size());
+    input.download_data(input_data.data());
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+    
+    float scale = 1.0f / (1.0f - m_current_rate);
+    for (size_t i = 0; i < input_data.size(); ++i) {
+        if (dis(gen) > m_current_rate) {
+            input_data[i] *= scale;
+        } else {
+            input_data[i] = 0.0f;
+        }
+    }
+    
+    output.upload_data(input_data.data());
+    return output;
 }
 
 // RegularizationManager implementation

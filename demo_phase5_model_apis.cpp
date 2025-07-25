@@ -125,7 +125,7 @@ void demo_binary_classification() {
     // Build network: Input -> Dense(32) -> ReLU -> Dropout -> Dense(16) -> ReLU -> Dense(1) -> Sigmoid
     model.add_dense(num_features, 32, true);
     model.add_relu();
-    // model.add_dropout(0.2f);  // TODO: Implement dropout adapter
+    // Dropout adapter not yet implemented in modern API
     model.add_dense(32, 16, true);
     model.add_relu();
     model.add_dense(16, 1, true);
@@ -223,8 +223,7 @@ void demo_multiclass_classification() {
     // Build network: Input -> Dense(64) -> ReLU -> BatchNorm -> Dropout -> Dense(32) -> ReLU -> Dense(3) -> Softmax
     model.add_dense(num_features, 64, true);
     model.add_relu();
-    // model.add_batchnorm1d(64);  // TODO: Implement BatchNorm adapter
-    // model.add_dropout(0.3f);    // TODO: Implement Dropout adapter
+    // BatchNorm and Dropout adapters not yet implemented in modern API
     model.add_dense(64, 32, true);
     model.add_relu();
     model.add_dense(32, num_classes, true);

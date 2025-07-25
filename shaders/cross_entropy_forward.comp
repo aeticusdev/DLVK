@@ -29,22 +29,30 @@ void main() {
     // Initialize shared memory
     partial_sums[tid] = 0.0;
     
-    // Each thread processes multiple elements if needed
-    uint elements_per_thread = (push_constants.size + gl_WorkGroupSize.x - 1) / gl_WorkGroupSize.x;
+    // Process 4 elements per thread for better vectorization
+    uint start_idx = gid * 4;
     
-    for (uint i = 0; i < elements_per_thread; ++i) {
-        uint idx = gid + i * gl_WorkGroupSize.x * gl_NumWorkGroups.x;
-        if (idx < push_constants.size) {
-            // Cross-entropy: -targets * log(predictions + epsilon)
-            float pred = predictions[idx] + push_constants.epsilon;
-            float loss = -targets[idx] * log(pred);
+    if (start_idx < push_constants.size) {
+        // Vectorized processing - up to 4 elements at once
+        for (uint i = 0; i < 4 && (start_idx + i) < push_constants.size; ++i) {
+            uint idx = start_idx + i;
+            
+            // Optimized cross-entropy computation with fused operations
+            float pred = predictions[idx];
+            float target = targets[idx];
+            
+            // Fast clamping for numerical stability
+            pred = max(push_constants.epsilon, pred);
+            
+            // Fused computation: -target * log(pred)
+            float loss = -target * log(pred);
             partial_sums[tid] += loss;
         }
     }
     
     barrier();
     
-    // Reduction within workgroup
+    // Optimized reduction within workgroup
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
         if (tid < stride) {
             partial_sums[tid] += partial_sums[tid + stride];

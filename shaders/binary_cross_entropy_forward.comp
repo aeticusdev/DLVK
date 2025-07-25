@@ -28,18 +28,27 @@ void main() {
     // Initialize shared memory
     partial_sums[tid] = 0.0;
     
-    // Each thread processes multiple elements if needed
-    uint elements_per_thread = (push_constants.size + gl_WorkGroupSize.x - 1) / gl_WorkGroupSize.x;
+    // Process 4 elements per thread for better vectorization
+    uint start_idx = gid * 4;
     
-    for (uint i = 0; i < elements_per_thread; ++i) {
-        uint idx = gid + i * gl_WorkGroupSize.x * gl_NumWorkGroups.x;
-        if (idx < push_constants.size) {
-            // Binary cross-entropy: -(target * log(pred + eps) + (1-target) * log(1-pred + eps))
+    if (start_idx < push_constants.size) {
+        // Vectorized processing - up to 4 elements at once
+        for (uint i = 0; i < 4 && (start_idx + i) < push_constants.size; ++i) {
+            uint idx = start_idx + i;
+            
+            // Optimized binary cross-entropy with fused operations
             float pred = predictions[idx];
             float target = targets[idx];
-            float pred_clamped = clamp(pred, push_constants.epsilon, 1.0 - push_constants.epsilon);
             
-            float loss = -(target * log(pred_clamped) + (1.0 - target) * log(1.0 - pred_clamped));
+            // Fast clamping - avoid conditional branches
+            pred = max(push_constants.epsilon, min(1.0 - push_constants.epsilon, pred));
+            
+            // Fused computation: -(target * log(pred) + (1-target) * log(1-pred))
+            // Use fast math approximations where possible
+            float log_pred = log(pred);
+            float log_one_minus_pred = log(1.0 - pred);
+            
+            float loss = -(target * log_pred + (1.0 - target) * log_one_minus_pred);
             partial_sums[tid] += loss;
         }
     }

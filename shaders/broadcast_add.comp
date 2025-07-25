@@ -1,0 +1,36 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) readonly buffer InputBufferA {
+    float a[];
+};
+
+layout(set = 0, binding = 1) readonly buffer InputBufferB {
+    float b[];
+};
+
+layout(set = 0, binding = 2) writeonly buffer OutputBuffer {
+    float result[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint features;
+    uint total_size;
+} pc;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    
+    if (index >= pc.total_size) {
+        return;
+    }
+    
+    // Calculate matrix position (i, j)
+    uint i = index / pc.features;  // batch index
+    uint j = index % pc.features;  // feature index
+    
+    // Matrix[i][j] + Vector[j] = Result[i][j]
+    result[index] = a[index] + b[j];
+}

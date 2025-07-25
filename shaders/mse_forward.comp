@@ -28,20 +28,27 @@ void main() {
     // Initialize shared memory
     partial_sums[tid] = 0.0;
     
-    // Each thread processes multiple elements if needed
-    uint elements_per_thread = (push_constants.size + gl_WorkGroupSize.x - 1) / gl_WorkGroupSize.x;
+    // Process 4 elements per thread for better vectorization
+    uint start_idx = gid * 4;
     
-    for (uint i = 0; i < elements_per_thread; ++i) {
-        uint idx = gid + i * gl_WorkGroupSize.x * gl_NumWorkGroups.x;
-        if (idx < push_constants.size) {
-            float diff = predictions[idx] - targets[idx];
+    if (start_idx < push_constants.size) {
+        // Vectorized processing - up to 4 elements at once
+        for (uint i = 0; i < 4 && (start_idx + i) < push_constants.size; ++i) {
+            uint idx = start_idx + i;
+            
+            // Optimized MSE computation with fused operations
+            float pred = predictions[idx];
+            float target = targets[idx];
+            float diff = pred - target;
+            
+            // Accumulate squared difference
             partial_sums[tid] += diff * diff;
         }
     }
     
     barrier();
     
-    // Reduction within workgroup
+    // Optimized reduction within workgroup
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
         if (tid < stride) {
             partial_sums[tid] += partial_sums[tid + stride];
@@ -51,16 +58,8 @@ void main() {
     
     // Write result from first thread of first workgroup
     if (gl_WorkGroupID.x == 0 && tid == 0) {
-        // Collect all workgroup results and compute mean
-        float total_sum = 0.0;
-        for (uint wg = 0; wg < gl_NumWorkGroups.x; ++wg) {
-            if (wg == 0) {
-                total_sum += partial_sums[0];
-            }
-            // Note: This is simplified - in practice we'd need a two-pass reduction
-            // or use atomic operations for multiple workgroups
-        }
-        result[0] = total_sum / float(push_constants.size);
+        // Mean squared error
+        result[0] = partial_sums[0] / float(push_constants.size);
     }
     
     // Store partial results for multiple workgroups

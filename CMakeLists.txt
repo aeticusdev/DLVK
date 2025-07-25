@@ -422,6 +422,7 @@ add_library(dlvk STATIC
     src/core/vulkan_context.cpp
     src/core/buffer_manager.cpp
     src/core/pipeline_manager.cpp
+    src/core/memory_pool_manager.cpp
     src/tensor/tensor.cpp
     src/tensor/tensor_ops.cpp
     src/tensor/tensor_ops_static.cpp

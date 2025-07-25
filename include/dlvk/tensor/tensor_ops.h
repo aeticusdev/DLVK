@@ -52,6 +52,8 @@ public:
     // Scalar operations for optimizers
     bool scale(const Tensor& input, float scalar, Tensor& result);
     bool scalar_add(const Tensor& input, float scalar, Tensor& result);
+    bool scalar_multiply(const Tensor& input, float scalar, Tensor& result);  // GPU version
+    bool clamp(const Tensor& input, float min_val, float max_val, Tensor& result);  // GPU version
     bool element_wise_multiply(const Tensor& a, const Tensor& b, Tensor& result);
     bool element_wise_sqrt(const Tensor& input, Tensor& result);
     bool element_wise_square(const Tensor& input, Tensor& result);
@@ -132,6 +134,15 @@ private:
     
     // Specialized reduction pipelines
     std::unique_ptr<ComputePipeline> m_reduce_sum_axis0_pipeline;
+    
+    // Missing GPU pipelines that were falling back to CPU
+    std::unique_ptr<ComputePipeline> m_scalar_multiply_pipeline;
+    std::unique_ptr<ComputePipeline> m_broadcast_add_pipeline;
+    std::unique_ptr<ComputePipeline> m_sqrt_pipeline;
+    std::unique_ptr<ComputePipeline> m_clamp_pipeline;
+    
+    // Optimizer pipelines
+    std::unique_ptr<ComputePipeline> m_adam_update_pipeline;
     
     // CNN pipelines
     std::unique_ptr<ComputePipeline> m_conv2d_pipeline;

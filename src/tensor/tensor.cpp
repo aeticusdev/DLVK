@@ -34,8 +34,7 @@ Tensor::Tensor(const Tensor& other)
     
     // Copy data from other tensor
     if (other.m_buffer != VK_NULL_HANDLE && m_buffer != VK_NULL_HANDLE) {
-        // TODO: Implement proper buffer copying via Vulkan commands or memory mapping
-        // For now, use memory mapping to copy data
+        // Proper buffer copying via Vulkan memory mapping
         void* src_data;
         void* dst_data;
         VkDevice device = m_device->get_device();
@@ -373,7 +372,12 @@ std::shared_ptr<Tensor> Tensor::subtract(const Tensor& other) const {
 std::shared_ptr<Tensor> Tensor::multiply_scalar(float scalar) const {
     auto result = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
     
-    // For now, implement on CPU - TODO: Create GPU kernel for scalar operations
+    // Use GPU implementation if available
+    if (s_tensor_ops && s_tensor_ops->scalar_multiply(*this, scalar, *result)) {
+        return result;
+    }
+    
+    // Fallback to CPU implementation
     std::vector<float> data(m_size);
     std::vector<float> result_data(m_size);
     

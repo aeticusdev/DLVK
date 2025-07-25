@@ -136,12 +136,19 @@ void Conv2DLayer::update_weights(float learning_rate) {
     auto* tensor_ops = TensorOps::instance();
     
     // Apply gradient descent: weights = weights - learning_rate * gradients
-    // TODO: Implement proper scaled addition - for now just skip weight updates
-    // tensor_ops->scaled_add(weights_, weight_grads_, -learning_rate);
+    // Use scalar multiplication and element-wise subtraction for gradient updates
+    if (weight_grads_) {
+        auto scaled_grads = std::make_shared<Tensor>(weight_grads_->shape(), weight_grads_->dtype(), weight_grads_->device());
+        tensor_ops->scalar_multiply(*weight_grads_, learning_rate, *scaled_grads);
+        tensor_ops->subtract(*weights_, *scaled_grads, *weights_);
+    }
     
     // Apply gradient descent: bias = bias - learning_rate * bias_gradients
-    // TODO: Implement proper scaled addition - for now just skip bias updates
-    // tensor_ops->scaled_add(bias_, bias_grads_, -learning_rate);
+    if (bias_grads_ && bias_) {
+        auto scaled_bias_grads = std::make_shared<Tensor>(bias_grads_->shape(), bias_grads_->dtype(), bias_grads_->device());
+        tensor_ops->scalar_multiply(*bias_grads_, learning_rate, *scaled_bias_grads);
+        tensor_ops->subtract(*bias_, *scaled_bias_grads, *bias_);
+    }
 }
 
 std::unique_ptr<Layer> Conv2DLayer::clone() const {

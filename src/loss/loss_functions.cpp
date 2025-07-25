@@ -106,6 +106,16 @@ std::shared_ptr<Tensor> CrossEntropyLoss::forward(const std::shared_ptr<Tensor>&
         throw std::runtime_error("Predictions and targets must have the same shape");
     }
     
+    auto device = predictions->device();
+    auto loss = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, device);
+    
+    // Try GPU acceleration first
+    if (try_initialize_loss_gpu(device) && g_loss_gpu->cross_entropy_forward(predictions, targets, loss)) {
+        return loss;
+    }
+    
+    // CPU fallback
+    std::cout << "Using CPU fallback for CrossEntropy forward" << std::endl;
     // For now, implement cross-entropy on CPU
     // loss = -sum(targets * log(predictions + epsilon))
     std::vector<float> pred_data(predictions->size());
@@ -124,10 +134,8 @@ std::shared_ptr<Tensor> CrossEntropyLoss::forward(const std::shared_ptr<Tensor>&
     // Average loss
     total_loss /= static_cast<float>(predictions->shape()[0]); // Batch size
     
-    auto result = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, predictions->device());
-    result->upload_data(&total_loss);
-    
-    return result;
+    loss->upload_data(&total_loss);
+    return loss;
 }
 
 std::shared_ptr<Tensor> CrossEntropyLoss::backward(const std::shared_ptr<Tensor>& predictions,
@@ -136,6 +144,16 @@ std::shared_ptr<Tensor> CrossEntropyLoss::backward(const std::shared_ptr<Tensor>
         throw std::runtime_error("Predictions and targets must have the same shape");
     }
     
+    auto device = predictions->device();
+    auto gradient = std::make_shared<Tensor>(predictions->shape(), DataType::FLOAT32, device);
+    
+    // Try GPU acceleration first
+    if (try_initialize_loss_gpu(device) && g_loss_gpu->cross_entropy_backward(predictions, targets, gradient)) {
+        return gradient;
+    }
+    
+    // CPU fallback
+    std::cout << "Using CPU fallback for CrossEntropy backward" << std::endl;
     // Cross-entropy gradient: grad = (predictions - targets) / batch_size
     auto grad = predictions->subtract(*targets);
     float batch_size = static_cast<float>(predictions->shape()[0]);
@@ -151,6 +169,16 @@ std::shared_ptr<Tensor> BinaryCrossEntropyLoss::forward(const std::shared_ptr<Te
         throw std::runtime_error("Predictions and targets must have the same shape");
     }
     
+    auto device = predictions->device();
+    auto loss = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, device);
+    
+    // Try GPU acceleration first
+    if (try_initialize_loss_gpu(device) && g_loss_gpu->binary_cross_entropy_forward(predictions, targets, loss)) {
+        return loss;
+    }
+    
+    // CPU fallback
+    std::cout << "Using CPU fallback for BinaryCrossEntropy forward" << std::endl;
     // Download data
     std::vector<float> pred_data(predictions->size());
     std::vector<float> target_data(targets->size());
@@ -171,10 +199,8 @@ std::shared_ptr<Tensor> BinaryCrossEntropyLoss::forward(const std::shared_ptr<Te
     // Average loss
     total_loss /= static_cast<float>(predictions->shape()[0]); // Batch size
     
-    auto result = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, predictions->device());
-    result->upload_data(&total_loss);
-    
-    return result;
+    loss->upload_data(&total_loss);
+    return loss;
 }
 
 std::shared_ptr<Tensor> BinaryCrossEntropyLoss::backward(const std::shared_ptr<Tensor>& predictions,
@@ -183,6 +209,16 @@ std::shared_ptr<Tensor> BinaryCrossEntropyLoss::backward(const std::shared_ptr<T
         throw std::runtime_error("Predictions and targets must have the same shape");
     }
     
+    auto device = predictions->device();
+    auto gradient = std::make_shared<Tensor>(predictions->shape(), DataType::FLOAT32, device);
+    
+    // Try GPU acceleration first
+    if (try_initialize_loss_gpu(device) && g_loss_gpu->binary_cross_entropy_backward(predictions, targets, gradient)) {
+        return gradient;
+    }
+    
+    // CPU fallback
+    std::cout << "Using CPU fallback for BinaryCrossEntropy backward" << std::endl;
     // Download data
     std::vector<float> pred_data(predictions->size());
     std::vector<float> target_data(targets->size());

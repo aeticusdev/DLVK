@@ -111,6 +111,84 @@ bool LossOpsGPU::create_pipelines() {
         }
     }
     
+    // Create CrossEntropy forward pipeline
+    m_cross_entropy_forward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_cross_entropy_forward_pipeline->create_descriptor_set_layout(bindings)) {
+        m_cross_entropy_forward_pipeline->set_push_constant_range(push_range);
+        if (m_cross_entropy_forward_pipeline->create_from_file("build/shaders/cross_entropy_forward.comp.spv")) {
+            if (m_cross_entropy_forward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ CrossEntropy forward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                std::cout << "✗ CrossEntropy forward pipeline descriptor allocation failed" << std::endl;
+                m_cross_entropy_forward_pipeline.reset();
+            }
+        } else {
+            std::cout << "✗ CrossEntropy forward pipeline shader loading failed" << std::endl;
+            m_cross_entropy_forward_pipeline.reset();
+        }
+    } else {
+        std::cout << "✗ CrossEntropy forward pipeline descriptor layout creation failed" << std::endl;
+        m_cross_entropy_forward_pipeline.reset();
+    }
+    
+    // Create CrossEntropy backward pipeline
+    m_cross_entropy_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_cross_entropy_backward_pipeline->create_descriptor_set_layout(bindings)) {
+        m_cross_entropy_backward_pipeline->set_push_constant_range(push_range);
+        if (m_cross_entropy_backward_pipeline->create_from_file("build/shaders/cross_entropy_backward.comp.spv")) {
+            if (m_cross_entropy_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ CrossEntropy backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                std::cout << "✗ CrossEntropy backward pipeline descriptor allocation failed" << std::endl;
+                m_cross_entropy_backward_pipeline.reset();
+            }
+        } else {
+            std::cout << "✗ CrossEntropy backward pipeline shader loading failed" << std::endl;
+            m_cross_entropy_backward_pipeline.reset();
+        }
+    }
+    
+    // Create BinaryCrossEntropy forward pipeline
+    m_binary_cross_entropy_forward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_binary_cross_entropy_forward_pipeline->create_descriptor_set_layout(bindings)) {
+        m_binary_cross_entropy_forward_pipeline->set_push_constant_range(push_range);
+        if (m_binary_cross_entropy_forward_pipeline->create_from_file("build/shaders/binary_cross_entropy_forward.comp.spv")) {
+            if (m_binary_cross_entropy_forward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ BinaryCrossEntropy forward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                std::cout << "✗ BinaryCrossEntropy forward pipeline descriptor allocation failed" << std::endl;
+                m_binary_cross_entropy_forward_pipeline.reset();
+            }
+        } else {
+            std::cout << "✗ BinaryCrossEntropy forward pipeline shader loading failed" << std::endl;
+            m_binary_cross_entropy_forward_pipeline.reset();
+        }
+    } else {
+        std::cout << "✗ BinaryCrossEntropy forward pipeline descriptor layout creation failed" << std::endl;
+        m_binary_cross_entropy_forward_pipeline.reset();
+    }
+    
+    // Create BinaryCrossEntropy backward pipeline
+    m_binary_cross_entropy_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_binary_cross_entropy_backward_pipeline->create_descriptor_set_layout(bindings)) {
+        m_binary_cross_entropy_backward_pipeline->set_push_constant_range(push_range);
+        if (m_binary_cross_entropy_backward_pipeline->create_from_file("build/shaders/binary_cross_entropy_backward.comp.spv")) {
+            if (m_binary_cross_entropy_backward_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ BinaryCrossEntropy backward pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                std::cout << "✗ BinaryCrossEntropy backward pipeline descriptor allocation failed" << std::endl;
+                m_binary_cross_entropy_backward_pipeline.reset();
+            }
+        } else {
+            std::cout << "✗ BinaryCrossEntropy backward pipeline shader loading failed" << std::endl;
+            m_binary_cross_entropy_backward_pipeline.reset();
+        }
+    }
+    
     std::cout << "Created " << success_count << " loss function pipelines successfully" << std::endl;
     return success_count > 0;
 }
@@ -216,39 +294,175 @@ bool LossOpsGPU::mse_backward(const std::shared_ptr<Tensor>& predictions,
     return true;
 }
 
-// Placeholder implementations for other loss functions
+// CrossEntropy Loss GPU implementations
 bool LossOpsGPU::cross_entropy_forward(const std::shared_ptr<Tensor>& predictions,
                                         const std::shared_ptr<Tensor>& targets,
                                         std::shared_ptr<Tensor>& result) {
-    // TODO: Implement when cross entropy pipeline is ready
-    std::cerr << "Cross entropy forward GPU implementation not yet ready" << std::endl;
-    return false;
+    if (!m_cross_entropy_forward_pipeline) {
+        std::cerr << "CrossEntropy forward pipeline not available" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    // Update descriptor sets
+    m_cross_entropy_forward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
+    m_cross_entropy_forward_pipeline->update_descriptor_set(0, 1, targets->buffer());
+    m_cross_entropy_forward_pipeline->update_descriptor_set(0, 2, result->buffer());
+    
+    // Bind pipeline
+    m_cross_entropy_forward_pipeline->bind(cmd);
+    
+    // Push constants
+    struct CrossEntropyPushConstants {
+        uint32_t size;
+        uint32_t batch_size;
+        uint32_t num_classes;
+    } push_constants;
+    
+    push_constants.size = static_cast<uint32_t>(predictions->size());
+    push_constants.batch_size = static_cast<uint32_t>(predictions->shape()[0]);
+    push_constants.num_classes = static_cast<uint32_t>(predictions->shape()[1]);
+    
+    m_cross_entropy_forward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    // Dispatch compute shader
+    uint32_t workgroup_size = 256;
+    uint32_t num_workgroups = (push_constants.batch_size + workgroup_size - 1) / workgroup_size;
+    m_cross_entropy_forward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
 }
 
 bool LossOpsGPU::cross_entropy_backward(const std::shared_ptr<Tensor>& predictions,
                                          const std::shared_ptr<Tensor>& targets,
                                          std::shared_ptr<Tensor>& gradient) {
-    // TODO: Implement when cross entropy pipeline is ready
-    std::cerr << "Cross entropy backward GPU implementation not yet ready" << std::endl;
-    return false;
+    if (!m_cross_entropy_backward_pipeline) {
+        std::cerr << "CrossEntropy backward pipeline not available" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    // Update descriptor sets
+    m_cross_entropy_backward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
+    m_cross_entropy_backward_pipeline->update_descriptor_set(0, 1, targets->buffer());
+    m_cross_entropy_backward_pipeline->update_descriptor_set(0, 2, gradient->buffer());
+    
+    // Bind pipeline
+    m_cross_entropy_backward_pipeline->bind(cmd);
+    
+    // Push constants
+    struct CrossEntropyBackwardPushConstants {
+        uint32_t size;
+        uint32_t batch_size;
+        uint32_t num_classes;
+        float scale_factor;
+    } push_constants;
+    
+    push_constants.size = static_cast<uint32_t>(predictions->size());
+    push_constants.batch_size = static_cast<uint32_t>(predictions->shape()[0]);
+    push_constants.num_classes = static_cast<uint32_t>(predictions->shape()[1]);
+    push_constants.scale_factor = 1.0f / static_cast<float>(push_constants.batch_size);
+    
+    m_cross_entropy_backward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    // Dispatch compute shader
+    uint32_t workgroup_size = 256;
+    uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
+    m_cross_entropy_backward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
 }
 
 bool LossOpsGPU::binary_cross_entropy_forward(const std::shared_ptr<Tensor>& predictions,
                                                const std::shared_ptr<Tensor>& targets,
                                                std::shared_ptr<Tensor>& result,
                                                float epsilon) {
-    // TODO: Implement when binary cross entropy pipeline is ready
-    std::cerr << "Binary cross entropy forward GPU implementation not yet ready" << std::endl;
-    return false;
+    if (!m_binary_cross_entropy_forward_pipeline) {
+        std::cerr << "BinaryCrossEntropy forward pipeline not available" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    // Update descriptor sets
+    m_binary_cross_entropy_forward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
+    m_binary_cross_entropy_forward_pipeline->update_descriptor_set(0, 1, targets->buffer());
+    m_binary_cross_entropy_forward_pipeline->update_descriptor_set(0, 2, result->buffer());
+    
+    // Bind pipeline
+    m_binary_cross_entropy_forward_pipeline->bind(cmd);
+    
+    // Push constants
+    struct BinaryCrossEntropyPushConstants {
+        uint32_t size;
+        uint32_t batch_size;
+        float epsilon;
+    } push_constants;
+    
+    push_constants.size = static_cast<uint32_t>(predictions->size());
+    push_constants.batch_size = static_cast<uint32_t>(predictions->shape()[0]);
+    push_constants.epsilon = epsilon;
+    
+    m_binary_cross_entropy_forward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    // Dispatch compute shader
+    uint32_t workgroup_size = 256;
+    uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
+    m_binary_cross_entropy_forward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
 }
 
 bool LossOpsGPU::binary_cross_entropy_backward(const std::shared_ptr<Tensor>& predictions,
                                                 const std::shared_ptr<Tensor>& targets,
                                                 std::shared_ptr<Tensor>& gradient,
                                                 float epsilon) {
-    // TODO: Implement when binary cross entropy pipeline is ready
-    std::cerr << "Binary cross entropy backward GPU implementation not yet ready" << std::endl;
-    return false;
+    if (!m_binary_cross_entropy_backward_pipeline) {
+        std::cerr << "BinaryCrossEntropy backward pipeline not available" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    // Update descriptor sets
+    m_binary_cross_entropy_backward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
+    m_binary_cross_entropy_backward_pipeline->update_descriptor_set(0, 1, targets->buffer());
+    m_binary_cross_entropy_backward_pipeline->update_descriptor_set(0, 2, gradient->buffer());
+    
+    // Bind pipeline
+    m_binary_cross_entropy_backward_pipeline->bind(cmd);
+    
+    // Push constants
+    struct BinaryCrossEntropyBackwardPushConstants {
+        uint32_t size;
+        uint32_t batch_size;
+        float epsilon;
+        float scale_factor;
+    } push_constants;
+    
+    push_constants.size = static_cast<uint32_t>(predictions->size());
+    push_constants.batch_size = static_cast<uint32_t>(predictions->shape()[0]);
+    push_constants.epsilon = epsilon;
+    push_constants.scale_factor = 1.0f / static_cast<float>(push_constants.batch_size);
+    
+    m_binary_cross_entropy_backward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+    // Dispatch compute shader
+    uint32_t workgroup_size = 256;
+    uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
+    m_binary_cross_entropy_backward_pipeline->dispatch(cmd, num_workgroups);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
 }
 
 } // namespace dlvk
