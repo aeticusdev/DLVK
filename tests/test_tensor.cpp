@@ -12,7 +12,7 @@ int main() {
             return -1;
         }
         
-        // Test tensor creation
+
         std::vector<size_t> shape = {4, 4};
         auto tensor = std::make_shared<dlvk::Tensor>(shape, dlvk::DataType::FLOAT32, device);
         
@@ -20,7 +20,7 @@ int main() {
         std::cout << "✓ Shape: [" << shape[0] << ", " << shape[1] << "]\n";
         std::cout << "✓ Size: " << tensor->size() << " elements\n";
         
-        // Test data upload/download
+
         std::vector<float> data(16);
         for (int i = 0; i < 16; ++i) {
             data[i] = static_cast<float>(i);

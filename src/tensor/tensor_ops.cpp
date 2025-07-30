@@ -26,7 +26,7 @@ bool TensorOps::initialize() {
         return false;
     }
     
-    // Create fence for synchronization
+
     VkFenceCreateInfo fence_info{};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     
@@ -56,19 +56,19 @@ bool TensorOps::add(const Tensor& a, const Tensor& b, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_add_pipeline->update_descriptor_set(0, 0, a.buffer());
     m_add_pipeline->update_descriptor_set(0, 1, b.buffer());
     m_add_pipeline->update_descriptor_set(0, 2, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_add_pipeline->bind(cmd);
     
-    // Push constants for size
+
     uint32_t size = static_cast<uint32_t>(a.size());
     m_add_pipeline->push_constants(cmd, &size, sizeof(uint32_t));
     
-    // Calculate dispatch size (256 threads per workgroup)
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (size + workgroup_size - 1) / workgroup_size;
     
@@ -80,8 +80,8 @@ bool TensorOps::add(const Tensor& a, const Tensor& b, Tensor& result) {
 }
 
 bool TensorOps::add_broadcast(const Tensor& a, const Tensor& b, Tensor& result) {
-    // Simple broadcast addition - for now, handle the case of adding 1D bias to 2D matrix
-    // a: [batch_size, features], b: [features], result: [batch_size, features]
+
+
     
     if (a.shape() != result.shape()) {
         std::cerr << "Input A and result tensors must have same shape for broadcast addition" << std::endl;
@@ -89,20 +89,20 @@ bool TensorOps::add_broadcast(const Tensor& a, const Tensor& b, Tensor& result) 
     }
     
     if (a.shape().size() == 2 && b.shape().size() == 1) {
-        // Matrix + vector broadcast (common for bias addition)
+
         if (a.shape()[1] != b.shape()[0]) {
             std::cerr << "Incompatible shapes for broadcast addition" << std::endl;
             return false;
         }
         
-        // Try GPU implementation first
+
         if (m_broadcast_add_pipeline) {
-            // Bind buffers
+
             m_broadcast_add_pipeline->update_descriptor_set(0, 0, a.buffer());
             m_broadcast_add_pipeline->update_descriptor_set(0, 1, b.buffer());
             m_broadcast_add_pipeline->update_descriptor_set(0, 2, result.buffer());
             
-            // Set push constants
+
             struct PushConstants {
                 uint32_t batch_size;
                 uint32_t features;
@@ -113,7 +113,7 @@ bool TensorOps::add_broadcast(const Tensor& a, const Tensor& b, Tensor& result) 
             push_constants.features = static_cast<uint32_t>(a.shape()[1]);
             push_constants.total_size = static_cast<uint32_t>(a.size());
             
-            // Execute
+
             VkCommandBuffer cmd = begin_single_time_commands();
             m_broadcast_add_pipeline->bind(cmd);
             m_broadcast_add_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
@@ -126,7 +126,7 @@ bool TensorOps::add_broadcast(const Tensor& a, const Tensor& b, Tensor& result) 
             return true;
         }
         
-        // CPU fallback
+
         std::vector<float> a_data(a.size());
         std::vector<float> b_data(b.size());
         std::vector<float> result_data(result.size());
@@ -146,7 +146,7 @@ bool TensorOps::add_broadcast(const Tensor& a, const Tensor& b, Tensor& result) 
         result.upload_data(result_data.data());
         return true;
     } else {
-        // Fallback to regular addition if shapes are compatible
+
         return add(a, b, result);
     }
 }
@@ -163,12 +163,12 @@ bool TensorOps::multiply(const Tensor& a, const Tensor& b, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_multiply_pipeline->update_descriptor_set(0, 0, a.buffer());
     m_multiply_pipeline->update_descriptor_set(0, 1, b.buffer());
     m_multiply_pipeline->update_descriptor_set(0, 2, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_multiply_pipeline->bind(cmd);
     
     uint32_t size = static_cast<uint32_t>(a.size());
@@ -196,15 +196,15 @@ bool TensorOps::matrix_multiply(const Tensor& a, const Tensor& b, Tensor& result
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_matmul_pipeline->update_descriptor_set(0, 0, a.buffer());
     m_matmul_pipeline->update_descriptor_set(0, 1, b.buffer());
     m_matmul_pipeline->update_descriptor_set(0, 2, result.buffer());
     
-    // Bind pipeline
+
     m_matmul_pipeline->bind(cmd);
     
-    // Push constants for matrix dimensions
+
     struct MatMulConstants {
         uint32_t M, N, P;
     } constants;
@@ -215,11 +215,82 @@ bool TensorOps::matrix_multiply(const Tensor& a, const Tensor& b, Tensor& result
     
     m_matmul_pipeline->push_constants(cmd, &constants, sizeof(constants));
     
-    // Dispatch with 16x16 workgroups
+
     uint32_t workgroup_x = (constants.M + 15) / 16;
     uint32_t workgroup_y = (constants.P + 15) / 16;
     
     m_matmul_pipeline->dispatch(cmd, workgroup_x, workgroup_y);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::batch_matrix_multiply(const Tensor& a, const Tensor& b, Tensor& result) {
+
+    if (a.dtype() != DataType::FLOAT32 || b.dtype() != DataType::FLOAT32 || result.dtype() != DataType::FLOAT32) {
+        std::cerr << "All tensors must be float32 for batch matrix multiplication" << std::endl;
+        return false;
+    }
+    
+    if (a.shape().size() != 3 || b.shape().size() != 3 || result.shape().size() != 3) {
+        std::cerr << "All tensors must be 3D for batch matrix multiplication [batch, rows, cols]" << std::endl;
+        return false;
+    }
+    
+
+    if (a.shape()[0] != b.shape()[0] || a.shape()[0] != result.shape()[0]) {
+        std::cerr << "Batch dimensions must match for batch matrix multiplication" << std::endl;
+        return false;
+    }
+    
+
+    if (a.shape()[2] != b.shape()[1]) {
+        std::cerr << "Inner dimensions must match: a.shape[2] != b.shape[1]" << std::endl;
+        return false;
+    }
+    
+    if (result.shape()[1] != a.shape()[1] || result.shape()[2] != b.shape()[2]) {
+        std::cerr << "Result dimensions incorrect for batch matrix multiplication" << std::endl;
+        return false;
+    }
+    
+    if (!m_batch_matmul_pipeline) {
+        std::cerr << "Batch matrix multiply pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+
+    m_batch_matmul_pipeline->update_descriptor_set(0, 0, a.buffer());
+    m_batch_matmul_pipeline->update_descriptor_set(0, 1, b.buffer());
+    m_batch_matmul_pipeline->update_descriptor_set(0, 2, result.buffer());
+    
+
+    m_batch_matmul_pipeline->bind(cmd);
+    
+
+    struct BatchMatMulConstants {
+        uint32_t batch_size, M, N, K, stride_a, stride_b, stride_c;
+    } constants;
+    
+    constants.batch_size = static_cast<uint32_t>(a.shape()[0]);  // batch size
+    constants.M = static_cast<uint32_t>(a.shape()[1]);          // rows of A
+    constants.N = static_cast<uint32_t>(b.shape()[2]);          // cols of B
+    constants.K = static_cast<uint32_t>(a.shape()[2]);          // cols of A, rows of B
+    constants.stride_a = constants.M * constants.K;             // Elements per A matrix
+    constants.stride_b = constants.K * constants.N;             // Elements per B matrix  
+    constants.stride_c = constants.M * constants.N;             // Elements per C matrix
+    
+    m_batch_matmul_pipeline->push_constants(cmd, &constants, sizeof(constants));
+    
+
+    uint32_t workgroup_x = (constants.M + 15) / 16;
+    uint32_t workgroup_y = (constants.N + 15) / 16;
+    uint32_t workgroup_z = constants.batch_size;  // One workgroup per batch
+    
+    m_batch_matmul_pipeline->dispatch(cmd, workgroup_x, workgroup_y, workgroup_z);
     
     end_single_time_commands(cmd);
     
@@ -239,11 +310,11 @@ bool TensorOps::relu(const Tensor& input, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_relu_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_relu_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_relu_pipeline->bind(cmd);
     
     uint32_t size = static_cast<uint32_t>(input.size());
@@ -272,11 +343,11 @@ bool TensorOps::sigmoid(const Tensor& input, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_sigmoid_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_sigmoid_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_sigmoid_pipeline->bind(cmd);
     
     uint32_t size = static_cast<uint32_t>(input.size());
@@ -305,11 +376,11 @@ bool TensorOps::tanh_activation(const Tensor& input, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_tanh_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_tanh_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_tanh_pipeline->bind(cmd);
     
     uint32_t size = static_cast<uint32_t>(input.size());
@@ -337,12 +408,12 @@ bool TensorOps::subtract(const Tensor& a, const Tensor& b, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_subtract_pipeline->update_descriptor_set(0, 0, a.buffer());
     m_subtract_pipeline->update_descriptor_set(0, 1, b.buffer());
     m_subtract_pipeline->update_descriptor_set(0, 2, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_subtract_pipeline->bind(cmd);
     
     uint32_t size = static_cast<uint32_t>(a.size());
@@ -370,12 +441,12 @@ bool TensorOps::divide(const Tensor& a, const Tensor& b, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_divide_pipeline->update_descriptor_set(0, 0, a.buffer());
     m_divide_pipeline->update_descriptor_set(0, 1, b.buffer());
     m_divide_pipeline->update_descriptor_set(0, 2, result.buffer());
     
-    // Bind pipeline and dispatch
+
     m_divide_pipeline->bind(cmd);
     
     uint32_t size = static_cast<uint32_t>(a.size());
@@ -409,14 +480,14 @@ bool TensorOps::transpose(const Tensor& input, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_transpose_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_transpose_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Bind pipeline
+
     m_transpose_pipeline->bind(cmd);
     
-    // Push constants for matrix dimensions
+
     struct TransposeConstants {
         uint32_t rows, cols;
     } constants;
@@ -426,7 +497,7 @@ bool TensorOps::transpose(const Tensor& input, Tensor& result) {
     
     m_transpose_pipeline->push_constants(cmd, &constants, sizeof(constants));
     
-    // Dispatch with 16x16 workgroups
+
     uint32_t workgroup_x = (constants.rows + 15) / 16;
     uint32_t workgroup_y = (constants.cols + 15) / 16;
     
@@ -439,7 +510,7 @@ bool TensorOps::transpose(const Tensor& input, Tensor& result) {
 
 bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
     if (axis == 0 && input.shape().size() == 2) {
-        // Use specialized axis-0 reduction for 2D tensors
+
         return sum_axis0(input, result);
     }
     
@@ -448,7 +519,7 @@ bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
         return false;
     }
     
-    // For now, implement simple total sum (axis=-1)
+
     if (result.size() != 1) {
         std::cerr << "Result tensor must have size 1 for total sum" << std::endl;
         return false;
@@ -461,14 +532,14 @@ bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_reduce_sum_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_reduce_sum_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Bind pipeline
+
     m_reduce_sum_pipeline->bind(cmd);
     
-    // Push constants
+
     struct ReduceConstants {
         uint32_t input_size, output_size, reduction_size;
     } constants;
@@ -479,7 +550,7 @@ bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
     
     m_reduce_sum_pipeline->push_constants(cmd, &constants, sizeof(constants));
     
-    // Dispatch
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (constants.input_size + workgroup_size - 1) / workgroup_size;
     
@@ -491,8 +562,8 @@ bool TensorOps::sum(const Tensor& input, Tensor& result, int axis) {
 }
 
 bool TensorOps::sum_axis0(const Tensor& input, Tensor& result) {
-    // Sum along axis 0 (batch dimension)
-    // Input: [batch_size, features] -> Output: [features]
+
+
     
     if (input.shape().size() != 2) {
         std::cerr << "sum_axis0 requires 2D input tensor" << std::endl;
@@ -539,15 +610,15 @@ bool TensorOps::sum_axis0(const Tensor& input, Tensor& result) {
 }
 
 bool TensorOps::mean(const Tensor& input, Tensor& result, int axis) {
-    // Implement mean as sum / size
+
     if (!sum(input, result, axis)) {
         return false;
     }
     
-    // Divide by size
+
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // For now, manually divide by size on CPU side
+
     std::vector<float> mean_data(result.size());
     result.download_data(mean_data.data());
     
@@ -564,22 +635,22 @@ bool TensorOps::mean(const Tensor& input, Tensor& result, int axis) {
 }
 
 bool TensorOps::max(const Tensor& input, Tensor& result, int axis) {
-    // Simple implementation: find max across all elements
+
     if (axis != -1) {
         std::cerr << "Axis-specific max not yet implemented, using global max" << std::endl;
     }
     
-    // Ensure result tensor is scalar (single element)
+
     if (result.size() != 1) {
         std::cerr << "Result tensor must be scalar for max operation" << std::endl;
         return false;
     }
     
-    // Download input data, find max on CPU for now
+
     std::vector<float> input_data(input.size());
     input.download_data(input_data.data());
     
-    // Find maximum value
+
     float max_val = input_data[0];
     for (size_t i = 1; i < input_data.size(); ++i) {
         if (input_data[i] > max_val) {
@@ -587,28 +658,28 @@ bool TensorOps::max(const Tensor& input, Tensor& result, int axis) {
         }
     }
     
-    // Upload result
+
     result.upload_data(&max_val);
     return true;
 }
 
 bool TensorOps::min(const Tensor& input, Tensor& result, int axis) {
-    // Simple implementation: find min across all elements
+
     if (axis != -1) {
         std::cerr << "Axis-specific min not yet implemented, using global min" << std::endl;
     }
     
-    // Ensure result tensor is scalar (single element)
+
     if (result.size() != 1) {
         std::cerr << "Result tensor must be scalar for min operation" << std::endl;
         return false;
     }
     
-    // Download input data, find min on CPU for now
+
     std::vector<float> input_data(input.size());
     input.download_data(input_data.data());
     
-    // Find minimum value
+
     float min_val = input_data[0];
     for (size_t i = 1; i < input_data.size(); ++i) {
         if (input_data[i] < min_val) {
@@ -616,7 +687,7 @@ bool TensorOps::min(const Tensor& input, Tensor& result, int axis) {
         }
     }
     
-    // Upload result
+
     result.upload_data(&min_val);
     return true;
 }
@@ -637,7 +708,7 @@ bool TensorOps::softmax(const Tensor& input, Tensor& result) {
         return false;
     }
     
-    // Create temporary buffer for max values and sums
+
     size_t batch_size = input.shape()[0];
     size_t feature_size = input.shape()[1];
     
@@ -659,12 +730,12 @@ bool TensorOps::softmax(const Tensor& input, Tensor& result) {
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_softmax_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_softmax_pipeline->update_descriptor_set(0, 1, result.buffer());
     m_softmax_pipeline->update_descriptor_set(0, 2, temp_buffer);
     
-    // Bind pipeline
+
     m_softmax_pipeline->bind(cmd);
     
     struct SoftmaxConstants {
@@ -678,13 +749,13 @@ bool TensorOps::softmax(const Tensor& input, Tensor& result) {
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (total_elements + workgroup_size - 1) / workgroup_size;
     
-    // Three-pass softmax for numerical stability
+
     for (uint32_t pass = 0; pass < 3; ++pass) {
         constants.pass = pass;
         m_softmax_pipeline->push_constants(cmd, &constants, sizeof(constants));
         m_softmax_pipeline->dispatch(cmd, num_workgroups);
         
-        // Add memory barrier between passes
+
         VkMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
         barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
@@ -696,7 +767,7 @@ bool TensorOps::softmax(const Tensor& input, Tensor& result) {
     
     end_single_time_commands(cmd);
     
-    // Cleanup temporary buffer
+
     m_device->destroy_buffer(temp_buffer, temp_memory);
     
     return true;
@@ -708,7 +779,7 @@ bool TensorOps::fill(Tensor& tensor, float value) {
         return false;
     }
 
-    // Map buffer memory and fill with value
+
     VkDevice device = m_device->get_device();
     void* mapped_data;
     VkResult result = vkMapMemory(device, tensor.memory(), 0, VK_WHOLE_SIZE, 0, &mapped_data);
@@ -750,7 +821,7 @@ bool TensorOps::copy(const Tensor& source, Tensor& destination) {
 bool TensorOps::create_pipelines() {
     std::cout << "Creating compute pipelines..." << std::endl;
     
-    // Create simple descriptor set layout for 3 storage buffers (most operations)
+
     std::vector<VkDescriptorSetLayoutBinding> three_buffer_bindings(3);
     for (int i = 0; i < 3; ++i) {
         three_buffer_bindings[i].binding = i;
@@ -760,7 +831,7 @@ bool TensorOps::create_pipelines() {
         three_buffer_bindings[i].pImmutableSamplers = nullptr;
     }
     
-    // Create descriptor set layout for 2 storage buffers (activation functions)
+
     std::vector<VkDescriptorSetLayoutBinding> two_buffer_bindings(2);
     for (int i = 0; i < 2; ++i) {
         two_buffer_bindings[i].binding = i;
@@ -770,16 +841,16 @@ bool TensorOps::create_pipelines() {
         two_buffer_bindings[i].pImmutableSamplers = nullptr;
     }
     
-    // Setup push constant range
+
     PushConstantRange push_range;
     push_range.offset = 0;
     push_range.size = sizeof(uint32_t) * 4;  // Enough for most operations
     push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
     
-    // Try to create pipelines - if any fail, continue with others for debugging
+
     int success_count = 0;
     
-    // Add pipeline
+
     m_add_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_add_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_add_pipeline->set_push_constant_range(push_range);
@@ -800,7 +871,7 @@ bool TensorOps::create_pipelines() {
         m_add_pipeline.reset();
     }
     
-    // Multiply pipeline
+
     m_multiply_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_multiply_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_multiply_pipeline->set_push_constant_range(push_range);
@@ -818,7 +889,7 @@ bool TensorOps::create_pipelines() {
         m_multiply_pipeline.reset();
     }
     
-    // Matrix multiply pipeline
+
     m_matmul_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_matmul_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         PushConstantRange matmul_push_range;
@@ -841,7 +912,30 @@ bool TensorOps::create_pipelines() {
         m_matmul_pipeline.reset();
     }
     
-    // ReLU pipeline (2 buffers)
+
+    m_batch_matmul_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_batch_matmul_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
+        PushConstantRange batch_matmul_push_range;
+        batch_matmul_push_range.offset = 0;
+        batch_matmul_push_range.size = sizeof(uint32_t) * 7;  // batch_size, M, N, K, stride_a, stride_b, stride_c
+        batch_matmul_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_batch_matmul_pipeline->set_push_constant_range(batch_matmul_push_range);
+        
+        if (m_batch_matmul_pipeline->create_from_file("shaders/batch_matrix_multiply.comp.spv")) {
+            if (m_batch_matmul_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Batch matrix multiply pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_batch_matmul_pipeline.reset();
+            }
+        } else {
+            m_batch_matmul_pipeline.reset();
+        }
+    } else {
+        m_batch_matmul_pipeline.reset();
+    }
+    
+
     m_relu_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_relu_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         PushConstantRange activation_push_range;
@@ -864,7 +958,7 @@ bool TensorOps::create_pipelines() {
         m_relu_pipeline.reset();
     }
     
-    // Create Subtract pipeline
+
     m_subtract_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_subtract_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_subtract_pipeline->set_push_constant_range(push_range);
@@ -882,7 +976,7 @@ bool TensorOps::create_pipelines() {
         m_subtract_pipeline.reset();
     }
     
-    // Create Divide pipeline
+
     m_divide_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_divide_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         m_divide_pipeline->set_push_constant_range(push_range);
@@ -900,7 +994,7 @@ bool TensorOps::create_pipelines() {
         m_divide_pipeline.reset();
     }
     
-    // Create Sigmoid pipeline  
+
     m_sigmoid_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_sigmoid_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         m_sigmoid_pipeline->set_push_constant_range(push_range);
@@ -918,10 +1012,10 @@ bool TensorOps::create_pipelines() {
         m_sigmoid_pipeline.reset();
     }
     
-    // Create Reduce Sum pipeline
+
     m_reduce_sum_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_reduce_sum_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
-        // Push constants for reduction parameters
+
         PushConstantRange reduce_push_range;
         reduce_push_range.offset = 0;
         reduce_push_range.size = sizeof(uint32_t) * 3;  // input_size, output_size, reduction_size
@@ -942,7 +1036,7 @@ bool TensorOps::create_pipelines() {
         m_reduce_sum_pipeline.reset();
     }
     
-    // Create Tanh pipeline
+
     m_tanh_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_tanh_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         PushConstantRange activation_push_range;
@@ -965,10 +1059,10 @@ bool TensorOps::create_pipelines() {
         m_tanh_pipeline.reset();
     }
     
-    // Create Transpose pipeline
+
     m_transpose_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_transpose_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
-        // Push constants for matrix dimensions
+
         PushConstantRange transpose_push_range;
         transpose_push_range.offset = 0;
         transpose_push_range.size = sizeof(uint32_t) * 2;  // rows, cols
@@ -989,10 +1083,10 @@ bool TensorOps::create_pipelines() {
         m_transpose_pipeline.reset();
     }
     
-    // Create Softmax pipeline
+
     m_softmax_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_softmax_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {  // 3 buffers for softmax (input, output, temp)
-        // Push constants for softmax parameters
+
         PushConstantRange softmax_push_range;
         softmax_push_range.offset = 0;
         softmax_push_range.size = sizeof(uint32_t) * 3;  // batch_size, feature_size, pass
@@ -1013,9 +1107,9 @@ bool TensorOps::create_pipelines() {
         m_softmax_pipeline.reset();
     }
     
-    // Backward pass pipelines
+
     
-    // ReLU backward pipeline (4 buffers: input, unused, grad_output, grad_input)
+
     std::vector<VkDescriptorSetLayoutBinding> four_buffer_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
@@ -1045,7 +1139,7 @@ bool TensorOps::create_pipelines() {
         m_relu_backward_pipeline.reset();
     }
     
-    // Sigmoid backward pipeline (3 buffers: output, grad_output, grad_input)
+
     std::vector<VkDescriptorSetLayoutBinding> backward_three_buffer_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
@@ -1075,7 +1169,7 @@ bool TensorOps::create_pipelines() {
         m_sigmoid_backward_pipeline.reset();
     }
     
-    // Tanh backward pipeline
+
     m_tanh_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_tanh_backward_pipeline->create_descriptor_set_layout(backward_three_buffer_bindings)) {
         m_tanh_backward_pipeline->set_push_constant_range(backward_push_range);
@@ -1094,10 +1188,10 @@ bool TensorOps::create_pipelines() {
         m_tanh_backward_pipeline.reset();
     }
     
-    // Reduce sum axis-0 pipeline (2 buffers: input, output) 
+
     m_reduce_sum_axis0_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_reduce_sum_axis0_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
-        // Push constants for batch_size, features, total_size
+
         PushConstantRange axis0_push_range;
         axis0_push_range.offset = 0;
         axis0_push_range.size = sizeof(uint32_t) * 3;
@@ -1118,7 +1212,7 @@ bool TensorOps::create_pipelines() {
         m_reduce_sum_axis0_pipeline.reset();
     }
     
-    // Create Conv2D pipeline
+
     std::vector<VkDescriptorSetLayoutBinding> conv2d_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // weights
@@ -1144,7 +1238,7 @@ bool TensorOps::create_pipelines() {
         m_conv2d_pipeline.reset();
     }
     
-    // Create MaxPool2D pipeline
+
     std::vector<VkDescriptorSetLayoutBinding> maxpool_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
@@ -1169,7 +1263,7 @@ bool TensorOps::create_pipelines() {
         m_maxpool2d_pipeline.reset();
     }
     
-    // Create BatchNorm pipeline
+
     std::vector<VkDescriptorSetLayoutBinding> batchnorm_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // gamma
@@ -1199,7 +1293,7 @@ bool TensorOps::create_pipelines() {
         m_batch_norm_pipeline.reset();
     }
     
-    // Create Dropout pipeline
+
     std::vector<VkDescriptorSetLayoutBinding> dropout_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
@@ -1224,7 +1318,7 @@ bool TensorOps::create_pipelines() {
         m_dropout_pipeline.reset();
     }
 
-    // Create avgpool2d pipeline
+
     VkDescriptorSetLayoutBinding avgpool_bindings[3] = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // output
@@ -1248,7 +1342,7 @@ bool TensorOps::create_pipelines() {
         m_avgpool2d_pipeline.reset();
     }
 
-    // Create batch_norm_backward pipeline
+
     VkDescriptorSetLayoutBinding batchnorm_backward_bindings[8] = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // grad_output
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
@@ -1278,7 +1372,7 @@ bool TensorOps::create_pipelines() {
         m_batch_norm_backward_pipeline.reset();
     }
 
-    // Create dropout_backward pipeline
+
     VkDescriptorSetLayoutBinding dropout_backward_bindings[3] = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // grad_output
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // mask
@@ -1303,9 +1397,9 @@ bool TensorOps::create_pipelines() {
         m_dropout_backward_pipeline.reset();
     }
 
-    // === Missing GPU Pipelines that were falling back to CPU ===
+
     
-    // Scalar multiply pipeline  
+
     m_scalar_multiply_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_scalar_multiply_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         PushConstantRange scalar_push_range;
@@ -1328,7 +1422,7 @@ bool TensorOps::create_pipelines() {
         m_scalar_multiply_pipeline.reset();
     }
 
-    // Broadcast add pipeline
+
     m_broadcast_add_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_broadcast_add_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
         PushConstantRange broadcast_push_range;
@@ -1351,7 +1445,7 @@ bool TensorOps::create_pipelines() {
         m_broadcast_add_pipeline.reset();
     }
 
-    // Sqrt pipeline
+
     m_sqrt_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_sqrt_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         PushConstantRange sqrt_push_range;
@@ -1374,7 +1468,7 @@ bool TensorOps::create_pipelines() {
         m_sqrt_pipeline.reset();
     }
 
-    // Clamp pipeline
+
     m_clamp_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_clamp_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
         PushConstantRange clamp_push_range;
@@ -1397,10 +1491,10 @@ bool TensorOps::create_pipelines() {
         m_clamp_pipeline.reset();
     }
 
-    // Create Adam update pipeline
+
     m_adam_update_pipeline = std::make_unique<ComputePipeline>(m_device);
     
-    // Adam needs parameters, gradient, momentum, velocity buffers
+
     std::vector<VkDescriptorSetLayoutBinding> adam_bindings = {
         {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // params
         {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // gradients
@@ -1430,9 +1524,125 @@ bool TensorOps::create_pipelines() {
         m_adam_update_pipeline.reset();
     }
 
+
+    
+
+    m_embedding_lookup_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_embedding_lookup_pipeline->create_descriptor_set_layout(three_buffer_bindings)) {
+        PushConstantRange embedding_push_range;
+        embedding_push_range.offset = 0;
+        embedding_push_range.size = sizeof(uint32_t) * 4;  // batch_size, sequence_length, embedding_dim, num_embeddings
+        embedding_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_embedding_lookup_pipeline->set_push_constant_range(embedding_push_range);
+        
+        if (m_embedding_lookup_pipeline->create_from_file("build/shaders/embedding_lookup.comp.spv")) {
+            if (m_embedding_lookup_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Embedding lookup pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_embedding_lookup_pipeline.reset();
+            }
+        } else {
+            m_embedding_lookup_pipeline.reset();
+        }
+    } else {
+        m_embedding_lookup_pipeline.reset();
+    }
+
+
+    m_layer_norm_pipeline = std::make_unique<ComputePipeline>(m_device);
+    std::vector<VkDescriptorSetLayoutBinding> layer_norm_bindings = {
+        {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // input
+        {1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // weight
+        {2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}, // bias
+        {3, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr}  // output
+    };
+    
+    if (m_layer_norm_pipeline->create_descriptor_set_layout(layer_norm_bindings)) {
+        PushConstantRange layer_norm_push_range;
+        layer_norm_push_range.offset = 0;
+        layer_norm_push_range.size = sizeof(uint32_t) * 3 + sizeof(float);  // batch_size, seq_length, feature_dim, eps
+        layer_norm_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_layer_norm_pipeline->set_push_constant_range(layer_norm_push_range);
+        
+        if (m_layer_norm_pipeline->create_from_file("build/shaders/layer_norm.comp.spv")) {
+            if (m_layer_norm_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Layer norm pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_layer_norm_pipeline.reset();
+            }
+        } else {
+            m_layer_norm_pipeline.reset();
+        }
+    } else {
+        m_layer_norm_pipeline.reset();
+    }
+
+
+    m_multi_head_attention_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_multi_head_attention_pipeline) {
+
+        std::vector<VkDescriptorSetLayoutBinding> bindings(4);
+        for (int i = 0; i < 4; i++) {
+            bindings[i].binding = i;
+            bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            bindings[i].descriptorCount = 1;
+            bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+            bindings[i].pImmutableSamplers = nullptr;
+        }
+        
+        if (m_multi_head_attention_pipeline->create_descriptor_set_layout(bindings)) {
+
+            PushConstantRange attention_push_range{};
+            attention_push_range.offset = 0;
+            attention_push_range.size = sizeof(uint32_t) * 5 + sizeof(float);  // batch_size, seq_length, num_heads, head_dim, total_elements, scale
+            attention_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+            m_multi_head_attention_pipeline->set_push_constant_range(attention_push_range);
+            
+            if (m_multi_head_attention_pipeline->create_from_file("build/shaders/multi_head_attention.comp.spv")) {
+                if (m_multi_head_attention_pipeline->allocate_descriptor_sets(1)) {
+                    std::cout << "✓ Multi-head attention pipeline created successfully" << std::endl;
+                    success_count++;
+                } else {
+                    m_multi_head_attention_pipeline.reset();
+                }
+            } else {
+                m_multi_head_attention_pipeline.reset();
+            }
+        } else {
+            m_multi_head_attention_pipeline.reset();
+        }
+    } else {
+        m_multi_head_attention_pipeline.reset();
+    }
+
+
+    m_tensor_reshape_pipeline = std::make_unique<ComputePipeline>(m_device);
+    if (m_tensor_reshape_pipeline->create_descriptor_set_layout(two_buffer_bindings)) {
+        PushConstantRange reshape_push_range{};
+        reshape_push_range.offset = 0;
+        reshape_push_range.size = sizeof(uint32_t) * 10;  // total_elements, input_dims[4], output_dims[4], num_dims
+        reshape_push_range.stage_flags = VK_SHADER_STAGE_COMPUTE_BIT;
+        m_tensor_reshape_pipeline->set_push_constant_range(reshape_push_range);
+        
+        if (m_tensor_reshape_pipeline->create_from_file("shaders/tensor_reshape.comp.spv")) {
+            if (m_tensor_reshape_pipeline->allocate_descriptor_sets(1)) {
+                std::cout << "✓ Tensor reshape pipeline created successfully" << std::endl;
+                success_count++;
+            } else {
+                m_tensor_reshape_pipeline.reset();
+            }
+        } else {
+            m_tensor_reshape_pipeline.reset();
+        }
+    } else {
+        m_tensor_reshape_pipeline.reset();
+    }
+
     std::cout << "Pipeline creation summary: " << success_count << " pipelines created" << std::endl;
     
-    // Return true if we have at least some working pipelines
+
     return success_count > 0;
 }
 
@@ -1448,7 +1658,7 @@ bool TensorOps::allocate_command_buffer() {
 }
 
 VkCommandBuffer TensorOps::begin_single_time_commands() {
-    // Reset the command buffer before beginning recording
+
     vkResetCommandBuffer(m_command_buffer, 0);
     
     VkCommandBufferBeginInfo begin_info{};
@@ -1468,10 +1678,10 @@ void TensorOps::end_single_time_commands(VkCommandBuffer cmd_buffer) {
     submit_info.commandBufferCount = 1;
     submit_info.pCommandBuffers = &cmd_buffer;
     
-    // Reset fence
+
     vkResetFences(m_device->get_device(), 1, &m_fence);
     
-    // Submit and wait
+
     VkResult submit_result = vkQueueSubmit(m_device->get_compute_queue(), 1, &submit_info, m_fence);
     if (submit_result != VK_SUCCESS) {
         std::cerr << "Failed to submit command buffer: " << submit_result << std::endl;
@@ -1484,14 +1694,14 @@ void TensorOps::end_single_time_commands(VkCommandBuffer cmd_buffer) {
         return;
     }
     
-    // Additional synchronization: wait for queue to be idle before reusing command buffer  
+
     VkResult queue_result = vkQueueWaitIdle(m_device->get_compute_queue());
     if (queue_result != VK_SUCCESS) {
         std::cerr << "Failed to wait for queue idle: " << queue_result << std::endl;
         return;
     }
     
-    // Add a device-wide wait to ensure all operations complete
+
     VkResult device_result = vkDeviceWaitIdle(m_device->get_device());
     if (device_result != VK_SUCCESS) {
         std::cerr << "Failed to wait for device idle: " << device_result << std::endl;
@@ -1518,7 +1728,7 @@ bool TensorOps::validate_element_wise_operation(const Tensor& a, const Tensor& b
     return true;
 }
 
-// CNN Operations Implementation
+
 
 bool TensorOps::conv2d(const Tensor& input, const Tensor& weights, const Tensor& bias, Tensor& output,
                        size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w) {
@@ -1527,7 +1737,7 @@ bool TensorOps::conv2d(const Tensor& input, const Tensor& weights, const Tensor&
         return false;
     }
     
-    // Validate shapes
+
     const auto& input_shape = input.shape();
     const auto& weight_shape = weights.shape();
     const auto& output_shape = output.shape();
@@ -1537,7 +1747,7 @@ bool TensorOps::conv2d(const Tensor& input, const Tensor& weights, const Tensor&
         return false;
     }
     
-    // Extract dimensions
+
     uint32_t batch_size = static_cast<uint32_t>(input_shape[0]);
     uint32_t in_channels = static_cast<uint32_t>(input_shape[1]);
     uint32_t input_height = static_cast<uint32_t>(input_shape[2]);
@@ -1550,7 +1760,7 @@ bool TensorOps::conv2d(const Tensor& input, const Tensor& weights, const Tensor&
     uint32_t output_height = static_cast<uint32_t>(output_shape[2]);
     uint32_t output_width = static_cast<uint32_t>(output_shape[3]);
     
-    // Setup push constants
+
     struct PushConstants {
         uint32_t batch_size;
         uint32_t in_channels;
@@ -1581,13 +1791,13 @@ bool TensorOps::conv2d(const Tensor& input, const Tensor& weights, const Tensor&
     push_constants.padding_h = static_cast<uint32_t>(padding_h);
     push_constants.padding_w = static_cast<uint32_t>(padding_w);
     
-    // Update descriptor sets
+
     m_conv2d_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_conv2d_pipeline->update_descriptor_set(0, 1, weights.buffer());
     m_conv2d_pipeline->update_descriptor_set(0, 2, bias.buffer());
     m_conv2d_pipeline->update_descriptor_set(0, 3, output.buffer());
     
-    // Dispatch compute
+
     VkCommandBuffer cmd = begin_single_time_commands();
     
     m_conv2d_pipeline->bind(cmd);
@@ -1655,7 +1865,7 @@ bool TensorOps::maxpool2d(const Tensor& input, Tensor& output, Tensor& indices,
     push_constants.padding_h = static_cast<uint32_t>(padding_h);
     push_constants.padding_w = static_cast<uint32_t>(padding_w);
     
-    // Update descriptor sets
+
     m_maxpool2d_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_maxpool2d_pipeline->update_descriptor_set(0, 1, output.buffer());
     m_maxpool2d_pipeline->update_descriptor_set(0, 2, indices.buffer());
@@ -1705,7 +1915,7 @@ bool TensorOps::batch_norm(const Tensor& input, const Tensor& gamma, const Tenso
     push_constants.epsilon = epsilon;
     push_constants.training = training ? 1 : 0;
     
-    // Update descriptor sets
+
     m_batch_norm_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_batch_norm_pipeline->update_descriptor_set(0, 1, gamma.buffer());
     m_batch_norm_pipeline->update_descriptor_set(0, 2, beta.buffer());
@@ -1751,7 +1961,7 @@ bool TensorOps::dropout(const Tensor& input, Tensor& output, Tensor& mask,
     push_constants.training = training ? 1 : 0;
     push_constants.seed = seed;
     
-    // Update descriptor sets
+
     m_dropout_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_dropout_pipeline->update_descriptor_set(0, 1, output.buffer());
     m_dropout_pipeline->update_descriptor_set(0, 2, mask.buffer());
@@ -1769,10 +1979,10 @@ bool TensorOps::dropout(const Tensor& input, Tensor& output, Tensor& mask,
     return true;
 }
 
-// Placeholder implementations for other operations
+
 bool TensorOps::conv2d_backward_input(const Tensor& grad_output, const Tensor& weights, Tensor& grad_input,
                                       size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w) {
-    // TODO: Implement conv2d backward input pass
+
     std::cerr << "Conv2D backward input not yet implemented" << std::endl;
     return false;
 }
@@ -1780,13 +1990,13 @@ bool TensorOps::conv2d_backward_input(const Tensor& grad_output, const Tensor& w
 bool TensorOps::conv2d_backward_weight(const Tensor& input, const Tensor& grad_output, 
                                        Tensor& grad_weights, Tensor& grad_bias,
                                        size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w) {
-    // TODO: Implement conv2d backward weight pass
+
     std::cerr << "Conv2D backward weight not yet implemented" << std::endl;
     return false;
 }
 
 bool TensorOps::maxpool2d_backward(const Tensor& grad_output, const Tensor& indices, Tensor& grad_input) {
-    // TODO: Implement maxpool2d backward pass
+
     std::cerr << "MaxPool2D backward not yet implemented" << std::endl;
     return false;
 }
@@ -1794,7 +2004,7 @@ bool TensorOps::maxpool2d_backward(const Tensor& grad_output, const Tensor& indi
 bool TensorOps::avgpool2d(const Tensor& input, Tensor& output,
                           size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
                           size_t padding_h, size_t padding_w) {
-    // TODO: Implement avgpool2d
+
     std::cerr << "AvgPool2D not yet implemented" << std::endl;
     return false;
 }
@@ -1802,7 +2012,7 @@ bool TensorOps::avgpool2d(const Tensor& input, Tensor& output,
 bool TensorOps::avgpool2d_backward(const Tensor& grad_output, Tensor& grad_input,
                                    size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
                                    size_t padding_h, size_t padding_w) {
-    // TODO: Implement avgpool2d backward pass
+
     std::cerr << "AvgPool2D backward not yet implemented" << std::endl;
     return false;
 }
@@ -1811,14 +2021,14 @@ bool TensorOps::batch_norm_backward(const Tensor& grad_output, const Tensor& inp
                                     const Tensor& gamma, const Tensor& saved_mean, const Tensor& saved_var,
                                     Tensor& grad_input, Tensor& grad_gamma, Tensor& grad_beta,
                                     float epsilon) {
-    // TODO: Implement batch norm backward pass
+
     std::cerr << "BatchNorm backward not yet implemented" << std::endl;
     return false;
 }
 
 bool TensorOps::dropout_backward(const Tensor& grad_output, const Tensor& mask, Tensor& grad_input,
                                  float dropout_rate) {
-    // TODO: Implement dropout backward pass
+
     std::cerr << "Dropout backward not yet implemented" << std::endl;
     return false;
 }
@@ -1844,7 +2054,7 @@ bool TensorOps::validate_matrix_multiply(const Tensor& a, const Tensor& b, const
     return true;
 }
 
-// Backward pass implementations
+
 bool TensorOps::relu_backward(const Tensor& input, const Tensor& grad_output, Tensor& grad_input) {
     if (!validate_element_wise_operation(input, grad_output, grad_input)) {
         return false;
@@ -1939,9 +2149,9 @@ bool TensorOps::tanh_backward(const Tensor& output, const Tensor& grad_output, T
     return true;
 }
 
-// Scalar operations for optimizers
+
 bool TensorOps::scale(const Tensor& input, float scalar, Tensor& result) {
-    // Use multiply with a scalar tensor for now
+
     auto scalar_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, m_device);
     scalar_tensor->upload_data(&scalar);
     
@@ -1949,7 +2159,7 @@ bool TensorOps::scale(const Tensor& input, float scalar, Tensor& result) {
 }
 
 bool TensorOps::scalar_add(const Tensor& input, float scalar, Tensor& result) {
-    // Use add with a scalar tensor for now  
+
     auto scalar_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, m_device);
     scalar_tensor->upload_data(&scalar);
     
@@ -1960,7 +2170,7 @@ bool TensorOps::element_wise_multiply(const Tensor& a, const Tensor& b, Tensor& 
     return multiply(a, b, result);
 }
 
-// === NEW GPU IMPLEMENTATIONS ===
+
 
 bool TensorOps::scalar_multiply(const Tensor& input, float scalar, Tensor& result) {
     if (!m_scalar_multiply_pipeline) {
@@ -1972,11 +2182,11 @@ bool TensorOps::scalar_multiply(const Tensor& input, float scalar, Tensor& resul
         return false;
     }
     
-    // Bind buffers
+
     m_scalar_multiply_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_scalar_multiply_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Set push constants
+
     struct PushConstants {
         uint32_t size;
         float scalar;
@@ -1985,7 +2195,7 @@ bool TensorOps::scalar_multiply(const Tensor& input, float scalar, Tensor& resul
     push_constants.size = static_cast<uint32_t>(input.size());
     push_constants.scalar = scalar;
     
-    // Execute
+
     VkCommandBuffer cmd = begin_single_time_commands();
     m_scalar_multiply_pipeline->bind(cmd);
     m_scalar_multiply_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
@@ -2008,11 +2218,11 @@ bool TensorOps::clamp(const Tensor& input, float min_val, float max_val, Tensor&
         return false;
     }
     
-    // Bind buffers
+
     m_clamp_pipeline->update_descriptor_set(0, 0, input.buffer());
     m_clamp_pipeline->update_descriptor_set(0, 1, result.buffer());
     
-    // Set push constants
+
     struct PushConstants {
         uint32_t size;
         float min_val;
@@ -2023,7 +2233,7 @@ bool TensorOps::clamp(const Tensor& input, float min_val, float max_val, Tensor&
     push_constants.min_val = min_val;
     push_constants.max_val = max_val;
     
-    // Execute
+
     VkCommandBuffer cmd = begin_single_time_commands();
     m_clamp_pipeline->bind(cmd);
     m_clamp_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
@@ -2037,21 +2247,21 @@ bool TensorOps::clamp(const Tensor& input, float min_val, float max_val, Tensor&
 }
 
 bool TensorOps::element_wise_sqrt(const Tensor& input, Tensor& result) {
-    // Try GPU implementation first
+
     if (m_sqrt_pipeline) {
         if (input.size() != result.size()) {
             std::cerr << "Sqrt: input and result tensor sizes don't match" << std::endl;
             return false;
         }
         
-        // Bind buffers
+
         m_sqrt_pipeline->update_descriptor_set(0, 0, input.buffer());
         m_sqrt_pipeline->update_descriptor_set(0, 1, result.buffer());
         
-        // Set push constants
+
         uint32_t size = static_cast<uint32_t>(input.size());
         
-        // Execute
+
         VkCommandBuffer cmd = begin_single_time_commands();
         m_sqrt_pipeline->bind(cmd);
         m_sqrt_pipeline->push_constants(cmd, &size, sizeof(size));
@@ -2064,7 +2274,7 @@ bool TensorOps::element_wise_sqrt(const Tensor& input, Tensor& result) {
         return true;
     }
     
-    // CPU fallback
+
     std::vector<float> input_data(input.size());
     std::vector<float> result_data(input.size());
     
@@ -2085,20 +2295,20 @@ bool TensorOps::element_wise_square(const Tensor& input, Tensor& result) {
 bool TensorOps::adam_update(const Tensor& gradient, const Tensor& m, const Tensor& v, 
                            Tensor& param, Tensor& new_m, Tensor& new_v,
                            float lr, float beta1, float beta2, float epsilon) {
-    // Validate tensor shapes
+
     if (gradient.shape() != m.shape() || gradient.shape() != v.shape() || 
         gradient.shape() != param.shape()) {
         std::cerr << "All tensors must have the same shape for Adam update" << std::endl;
         return false;
     }
     
-    // Try GPU acceleration first
+
     if (m_adam_update_pipeline && gradient.size() > 0) {
         VkCommandBuffer cmd = begin_single_time_commands();
         
         vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_adam_update_pipeline->get_pipeline());
         
-        // Bind descriptor sets for param, gradient, momentum, velocity
+
         std::vector<VkDescriptorBufferInfo> buffer_infos = {
             {param.buffer(), 0, VK_WHOLE_SIZE},
             {gradient.buffer(), 0, VK_WHOLE_SIZE},
@@ -2124,7 +2334,7 @@ bool TensorOps::adam_update(const Tensor& gradient, const Tensor& m, const Tenso
                                m_adam_update_pipeline->get_layout(), 0, 1, 
                                &descriptor_set, 0, nullptr);
         
-        // Set push constants (size, lr, beta1, beta2, epsilon, bias_corrections)
+
         struct AdamPushConstants {
             uint32_t size;
             float lr;
@@ -2151,14 +2361,14 @@ bool TensorOps::adam_update(const Tensor& gradient, const Tensor& m, const Tenso
         
         end_single_time_commands(cmd);
         
-        // Copy updated momentum and velocity back to output tensors
+
         copy(m, new_m);
         copy(v, new_v);
         
         return true;
     }
     
-    // CPU fallback implementation
+
     std::cout << "Using CPU fallback for Adam update" << std::endl;
     std::vector<float> grad_data(gradient.size());
     std::vector<float> m_data(m.size());
@@ -2171,17 +2381,17 @@ bool TensorOps::adam_update(const Tensor& gradient, const Tensor& m, const Tenso
     param.download_data(param_data.data());
     
     for (size_t i = 0; i < grad_data.size(); ++i) {
-        // Update biased first moment estimate
+
         m_data[i] = beta1 * m_data[i] + (1.0f - beta1) * grad_data[i];
         
-        // Update biased second moment estimate
+
         v_data[i] = beta2 * v_data[i] + (1.0f - beta2) * grad_data[i] * grad_data[i];
         
-        // Update parameter
+
         param_data[i] = param_data[i] - lr * m_data[i] / (std::sqrt(v_data[i]) + epsilon);
     }
     
-    // Upload results back to GPU
+
     new_m.upload_data(m_data.data());
     new_v.upload_data(v_data.data());
     param.upload_data(param_data.data());
@@ -2195,7 +2405,7 @@ bool TensorOps::gradient_clip_by_norm(const Tensor& gradient, float max_norm, Te
         return false;
     }
     
-    // First compute the gradient norm using element-wise square and sum
+
     auto squared_grad = std::make_shared<Tensor>(gradient.shape(), gradient.dtype(), gradient.device());
     auto norm_tensor = std::make_shared<Tensor>(std::vector<size_t>{1}, DataType::FLOAT32, gradient.device());
     
@@ -2207,16 +2417,16 @@ bool TensorOps::gradient_clip_by_norm(const Tensor& gradient, float max_norm, Te
         return false;
     }
     
-    // Download norm to check if clipping is needed
+
     std::vector<float> norm_data(1);
     norm_tensor->download_data(norm_data.data());
     float norm = std::sqrt(norm_data[0]);
     
     if (norm <= max_norm) {
-        // No clipping needed, just copy
+
         return copy(gradient, clipped_gradient);
     } else {
-        // Apply clipping: clipped_grad = gradient * (max_norm / norm)
+
         float scale_factor = max_norm / norm;
         return scale(gradient, scale_factor, clipped_gradient);
     }
@@ -2228,17 +2438,17 @@ bool TensorOps::gradient_clip_by_value(const Tensor& gradient, float min_val, fl
         return false;
     }
     
-    // For now, we'll implement this using a simple compute shader approach
-    // In a production system, you'd want a dedicated clamp compute shader
+
+
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Use a simple approach: copy first, then apply clamping via a basic shader
+
     if (!copy(gradient, clipped_gradient)) {
         return false;
     }
     
-    // For now, fall back to CPU-based clamping for value clipping
-    // Using dedicated GPU clamp compute shader would be optimal
+
+
     std::vector<float> grad_data(gradient.size());
     clipped_gradient.download_data(grad_data.data());
     
@@ -2252,7 +2462,496 @@ bool TensorOps::gradient_clip_by_value(const Tensor& gradient, float min_val, fl
     return true;
 }
 
-// Static instance implementation
+
+
+
+
+bool TensorOps::embedding_lookup(Tensor& output, const Tensor& indices, const Tensor& embeddings) {
+
+    const auto& indices_shape = indices.shape();
+    const auto& embeddings_shape = embeddings.shape();
+    const auto& output_shape = output.shape();
+    
+    if (indices_shape.size() != 2) {
+        std::cerr << "Embedding indices must be 2D (batch_size, sequence_length)" << std::endl;
+        return false;
+    }
+    
+    if (embeddings_shape.size() != 2) {
+        std::cerr << "Embeddings must be 2D (num_embeddings, embedding_dim)" << std::endl;
+        return false;
+    }
+    
+    if (output_shape.size() != 3) {
+        std::cerr << "Output must be 3D (batch_size, sequence_length, embedding_dim)" << std::endl;
+        return false;
+    }
+    
+
+    size_t batch_size = indices_shape[0];
+    size_t sequence_length = indices_shape[1];
+    size_t num_embeddings = embeddings_shape[0];
+    size_t embedding_dim = embeddings_shape[1];
+    
+    if (output_shape[0] != batch_size || output_shape[1] != sequence_length || output_shape[2] != embedding_dim) {
+        std::cerr << "Output shape mismatch for embedding lookup" << std::endl;
+        return false;
+    }
+    
+    if (!m_embedding_lookup_pipeline) {
+        std::cerr << "Embedding lookup pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t sequence_length;
+        uint32_t embedding_dim;
+        uint32_t num_embeddings;
+    } push_constants;
+    
+    push_constants.batch_size = static_cast<uint32_t>(batch_size);
+    push_constants.sequence_length = static_cast<uint32_t>(sequence_length);
+    push_constants.embedding_dim = static_cast<uint32_t>(embedding_dim);
+    push_constants.num_embeddings = static_cast<uint32_t>(num_embeddings);
+    
+
+    m_embedding_lookup_pipeline->update_descriptor_set(0, 0, output.buffer());
+    m_embedding_lookup_pipeline->update_descriptor_set(0, 1, indices.buffer());
+    m_embedding_lookup_pipeline->update_descriptor_set(0, 2, embeddings.buffer());
+    
+
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    m_embedding_lookup_pipeline->bind(cmd);
+    m_embedding_lookup_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
+    
+
+    uint32_t total_elements = static_cast<uint32_t>(output.size());
+    uint32_t workgroup_size = 64;
+    uint32_t num_workgroups = (total_elements + workgroup_size - 1) / workgroup_size;
+    
+    m_embedding_lookup_pipeline->dispatch(cmd, num_workgroups, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::layer_norm(Tensor& output, const Tensor& input, const Tensor& weight, const Tensor& bias, float eps) {
+    if (!m_layer_norm_pipeline) {
+        std::cerr << "Layer norm pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    auto input_shape = input.shape();
+    auto weight_shape = weight.shape();
+    auto bias_shape = bias.shape();
+    auto output_shape = output.shape();
+    
+
+
+    if (input_shape.size() != 3) {
+        std::cerr << "Input must be 3D for layer norm" << std::endl;
+        return false;
+    }
+    
+    size_t batch_size = input_shape[0];
+    size_t seq_length = input_shape[1]; 
+    size_t feature_dim = input_shape[2];
+    
+    if (weight_shape.size() != 1 || weight_shape[0] != feature_dim ||
+        bias_shape.size() != 1 || bias_shape[0] != feature_dim) {
+        std::cerr << "Weight and bias must be 1D with size matching feature_dim" << std::endl;
+        return false;
+    }
+    
+    if (output_shape != input_shape) {
+        std::cerr << "Output shape must match input shape" << std::endl;
+        return false;
+    }
+    
+
+    VkDescriptorSet descriptor_set = VK_NULL_HANDLE;
+    VkDescriptorPool descriptor_pool = VK_NULL_HANDLE;
+    
+
+    std::vector<VkDescriptorPoolSize> pool_sizes = {
+        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4}  // 4 buffers: input, weight, bias, output
+    };
+    
+    VkDescriptorPoolCreateInfo pool_info{};
+    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    pool_info.maxSets = 1;
+    pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+    pool_info.pPoolSizes = pool_sizes.data();
+    
+    if (vkCreateDescriptorPool(m_device->get_device(), &pool_info, nullptr, &descriptor_pool) != VK_SUCCESS) {
+        std::cerr << "Failed to create descriptor pool for layer norm" << std::endl;
+        return false;
+    }
+    
+
+    VkDescriptorSetLayout layout = m_layer_norm_pipeline->get_descriptor_layout();
+    VkDescriptorSetAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = descriptor_pool;
+    alloc_info.descriptorSetCount = 1;
+    alloc_info.pSetLayouts = &layout;
+    
+    if (vkAllocateDescriptorSets(m_device->get_device(), &alloc_info, &descriptor_set) != VK_SUCCESS) {
+        vkDestroyDescriptorPool(m_device->get_device(), descriptor_pool, nullptr);
+        std::cerr << "Failed to allocate descriptor set for layer norm" << std::endl;
+        return false;
+    }
+    
+
+    std::vector<VkWriteDescriptorSet> descriptor_writes(4);
+    
+    VkDescriptorBufferInfo input_buffer_info{};
+    input_buffer_info.buffer = input.buffer();
+    input_buffer_info.offset = 0;
+    input_buffer_info.range = VK_WHOLE_SIZE;
+    
+    VkDescriptorBufferInfo weight_buffer_info{};
+    weight_buffer_info.buffer = weight.buffer();
+    weight_buffer_info.offset = 0;
+    weight_buffer_info.range = VK_WHOLE_SIZE;
+    
+    VkDescriptorBufferInfo bias_buffer_info{};
+    bias_buffer_info.buffer = bias.buffer();
+    bias_buffer_info.offset = 0;
+    bias_buffer_info.range = VK_WHOLE_SIZE;
+    
+    VkDescriptorBufferInfo output_buffer_info{};
+    output_buffer_info.buffer = output.buffer();
+    output_buffer_info.offset = 0;
+    output_buffer_info.range = VK_WHOLE_SIZE;
+    
+    descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[0].dstSet = descriptor_set;
+    descriptor_writes[0].dstBinding = 0;
+    descriptor_writes[0].dstArrayElement = 0;
+    descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[0].descriptorCount = 1;
+    descriptor_writes[0].pBufferInfo = &input_buffer_info;
+    
+    descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[1].dstSet = descriptor_set;
+    descriptor_writes[1].dstBinding = 1;
+    descriptor_writes[1].dstArrayElement = 0;
+    descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[1].descriptorCount = 1;
+    descriptor_writes[1].pBufferInfo = &weight_buffer_info;
+    
+    descriptor_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[2].dstSet = descriptor_set;
+    descriptor_writes[2].dstBinding = 2;
+    descriptor_writes[2].dstArrayElement = 0;
+    descriptor_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[2].descriptorCount = 1;
+    descriptor_writes[2].pBufferInfo = &bias_buffer_info;
+    
+    descriptor_writes[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[3].dstSet = descriptor_set;
+    descriptor_writes[3].dstBinding = 3;
+    descriptor_writes[3].dstArrayElement = 0;
+    descriptor_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[3].descriptorCount = 1;
+    descriptor_writes[3].pBufferInfo = &output_buffer_info;
+    
+    vkUpdateDescriptorSets(m_device->get_device(), static_cast<uint32_t>(descriptor_writes.size()), 
+                          descriptor_writes.data(), 0, nullptr);
+    
+
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t seq_length;
+        uint32_t feature_dim;
+        float eps;
+    } push_constants;
+    
+    push_constants.batch_size = static_cast<uint32_t>(batch_size);
+    push_constants.seq_length = static_cast<uint32_t>(seq_length);
+    push_constants.feature_dim = static_cast<uint32_t>(feature_dim);
+    push_constants.eps = eps;
+    
+
+    VkCommandBuffer command_buffer = begin_single_time_commands();
+    
+    VkCommandBufferBeginInfo begin_info{};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    
+    vkBeginCommandBuffer(command_buffer, &begin_info);
+    
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, m_layer_norm_pipeline->get_pipeline());
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, 
+                           m_layer_norm_pipeline->get_layout(), 0, 1, &descriptor_set, 0, nullptr);
+    
+    vkCmdPushConstants(command_buffer, m_layer_norm_pipeline->get_layout(),
+                      VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(PushConstants), &push_constants);
+    
+
+    vkCmdDispatch(command_buffer, static_cast<uint32_t>(batch_size), static_cast<uint32_t>(seq_length), 1);
+    
+    end_single_time_commands(command_buffer);
+    
+
+    vkDestroyDescriptorPool(m_device->get_device(), descriptor_pool, nullptr);
+    
+    return true;
+}
+
+bool TensorOps::attention(Tensor& output, const Tensor& query, const Tensor& key, const Tensor& value, float scale) {
+
+    auto q_shape = query.shape();
+    auto k_shape = key.shape();
+    auto v_shape = value.shape();
+    auto o_shape = output.shape();
+    
+    if (q_shape.size() != 4 || k_shape.size() != 4 || v_shape.size() != 4 || o_shape.size() != 4) {
+        std::cerr << "Multi-head attention requires 4D tensors [batch, heads, seq_len, head_dim]" << std::endl;
+        return false;
+    }
+    
+    if (q_shape[0] != k_shape[0] || q_shape[0] != v_shape[0] || q_shape[0] != o_shape[0] ||
+        q_shape[1] != k_shape[1] || q_shape[1] != v_shape[1] || q_shape[1] != o_shape[1] ||
+        q_shape[2] != k_shape[2] || q_shape[2] != v_shape[2] || q_shape[2] != o_shape[2] ||
+        q_shape[3] != k_shape[3] || q_shape[3] != v_shape[3] || q_shape[3] != o_shape[3]) {
+        std::cerr << "Multi-head attention tensor shapes must match" << std::endl;
+        return false;
+    }
+    
+    if (!m_multi_head_attention_pipeline) {
+        std::cerr << "Multi-head attention pipeline not available" << std::endl;
+        return false;
+    }
+    
+    uint32_t batch_size = q_shape[0];
+    uint32_t num_heads = q_shape[1];
+    uint32_t seq_length = q_shape[2];
+    uint32_t head_dim = q_shape[3];
+    uint32_t total_elements = batch_size * num_heads * seq_length * seq_length;
+    
+
+    VkDescriptorPool descriptor_pool;
+    std::vector<VkDescriptorPoolSize> pool_sizes = {
+        {VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4}  // 4 buffers: query, key, value, output
+    };
+    
+    VkDescriptorPoolCreateInfo pool_info{};
+    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    pool_info.maxSets = 1;
+    pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+    pool_info.pPoolSizes = pool_sizes.data();
+    
+    if (vkCreateDescriptorPool(m_device->get_device(), &pool_info, nullptr, &descriptor_pool) != VK_SUCCESS) {
+        std::cerr << "Failed to create descriptor pool for multi-head attention" << std::endl;
+        return false;
+    }
+    
+
+    VkDescriptorSet descriptor_set;
+    VkDescriptorSetLayout layout = m_multi_head_attention_pipeline->get_descriptor_layout();
+    VkDescriptorSetAllocateInfo alloc_info{};
+    alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    alloc_info.descriptorPool = descriptor_pool;
+    alloc_info.descriptorSetCount = 1;
+    alloc_info.pSetLayouts = &layout;
+    
+    if (vkAllocateDescriptorSets(m_device->get_device(), &alloc_info, &descriptor_set) != VK_SUCCESS) {
+        vkDestroyDescriptorPool(m_device->get_device(), descriptor_pool, nullptr);
+        std::cerr << "Failed to allocate descriptor set for multi-head attention" << std::endl;
+        return false;
+    }
+    
+
+    std::vector<VkWriteDescriptorSet> descriptor_writes(4);
+    
+    VkDescriptorBufferInfo query_buffer_info{};
+    query_buffer_info.buffer = query.buffer();
+    query_buffer_info.offset = 0;
+    query_buffer_info.range = VK_WHOLE_SIZE;
+    
+    VkDescriptorBufferInfo key_buffer_info{};
+    key_buffer_info.buffer = key.buffer();
+    key_buffer_info.offset = 0;
+    key_buffer_info.range = VK_WHOLE_SIZE;
+    
+    VkDescriptorBufferInfo value_buffer_info{};
+    value_buffer_info.buffer = value.buffer();
+    value_buffer_info.offset = 0;
+    value_buffer_info.range = VK_WHOLE_SIZE;
+    
+    VkDescriptorBufferInfo output_buffer_info{};
+    output_buffer_info.buffer = output.buffer();
+    output_buffer_info.offset = 0;
+    output_buffer_info.range = VK_WHOLE_SIZE;
+    
+    descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[0].dstSet = descriptor_set;
+    descriptor_writes[0].dstBinding = 0;
+    descriptor_writes[0].dstArrayElement = 0;
+    descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[0].descriptorCount = 1;
+    descriptor_writes[0].pBufferInfo = &query_buffer_info;
+    
+    descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[1].dstSet = descriptor_set;
+    descriptor_writes[1].dstBinding = 1;
+    descriptor_writes[1].dstArrayElement = 0;
+    descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[1].descriptorCount = 1;
+    descriptor_writes[1].pBufferInfo = &key_buffer_info;
+    
+    descriptor_writes[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[2].dstSet = descriptor_set;
+    descriptor_writes[2].dstBinding = 2;
+    descriptor_writes[2].dstArrayElement = 0;
+    descriptor_writes[2].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[2].descriptorCount = 1;
+    descriptor_writes[2].pBufferInfo = &value_buffer_info;
+    
+    descriptor_writes[3].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptor_writes[3].dstSet = descriptor_set;
+    descriptor_writes[3].dstBinding = 3;
+    descriptor_writes[3].dstArrayElement = 0;
+    descriptor_writes[3].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+    descriptor_writes[3].descriptorCount = 1;
+    descriptor_writes[3].pBufferInfo = &output_buffer_info;
+    
+    vkUpdateDescriptorSets(m_device->get_device(), 4, descriptor_writes.data(), 0, nullptr);
+    
+
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, m_multi_head_attention_pipeline->get_pipeline());
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_COMPUTE, 
+                           m_multi_head_attention_pipeline->get_layout(), 0, 1, &descriptor_set, 0, nullptr);
+    
+
+    struct PushConstants {
+        uint32_t batch_size;
+        uint32_t seq_length;
+        uint32_t num_heads;
+        uint32_t head_dim;
+        uint32_t total_elements;
+        float scale;
+    } push_constants = {batch_size, seq_length, num_heads, head_dim, total_elements, scale};
+    
+    vkCmdPushConstants(cmd, m_multi_head_attention_pipeline->get_layout(), VK_SHADER_STAGE_COMPUTE_BIT,
+                      0, sizeof(PushConstants), &push_constants);
+    
+
+    uint32_t workgroup_size = 256;
+    uint32_t num_workgroups = (total_elements + workgroup_size - 1) / workgroup_size;
+    vkCmdDispatch(cmd, num_workgroups, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+
+    vkDestroyDescriptorPool(m_device->get_device(), descriptor_pool, nullptr);
+    
+    return true;
+}
+
+bool TensorOps::reshape_for_attention(Tensor& output, const Tensor& input, 
+                                     size_t batch_size, size_t seq_len, size_t num_heads, size_t head_dim) {
+    if (!m_tensor_reshape_pipeline) {
+        std::cerr << "Tensor reshape pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+
+    m_tensor_reshape_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_tensor_reshape_pipeline->update_descriptor_set(0, 1, output.buffer());
+    
+
+    m_tensor_reshape_pipeline->bind(cmd);
+    
+
+    struct ReshapeConstants {
+        uint32_t total_elements;
+        uint32_t input_dim0, input_dim1, input_dim2, input_dim3;
+        uint32_t output_dim0, output_dim1, output_dim2, output_dim3;
+        uint32_t num_dims;
+    } constants;
+    
+    constants.total_elements = static_cast<uint32_t>(input.size());
+    constants.input_dim0 = static_cast<uint32_t>(batch_size);
+    constants.input_dim1 = static_cast<uint32_t>(seq_len);
+    constants.input_dim2 = static_cast<uint32_t>(num_heads * head_dim);  // embed_dim
+    constants.input_dim3 = 1;
+    constants.output_dim0 = static_cast<uint32_t>(batch_size);
+    constants.output_dim1 = static_cast<uint32_t>(num_heads);
+    constants.output_dim2 = static_cast<uint32_t>(seq_len);
+    constants.output_dim3 = static_cast<uint32_t>(head_dim);
+    constants.num_dims = 3;  // 3D to 4D reshape
+    
+    m_tensor_reshape_pipeline->push_constants(cmd, &constants, sizeof(constants));
+    
+
+    uint32_t num_workgroups = (constants.total_elements + 255) / 256;
+    m_tensor_reshape_pipeline->dispatch(cmd, num_workgroups, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+bool TensorOps::reshape_from_attention(Tensor& output, const Tensor& input,
+                                      size_t batch_size, size_t seq_len, size_t num_heads, size_t head_dim) {
+    if (!m_tensor_reshape_pipeline) {
+        std::cerr << "Tensor reshape pipeline not initialized" << std::endl;
+        return false;
+    }
+    
+    VkCommandBuffer cmd = begin_single_time_commands();
+    
+
+    m_tensor_reshape_pipeline->update_descriptor_set(0, 0, input.buffer());
+    m_tensor_reshape_pipeline->update_descriptor_set(0, 1, output.buffer());
+    
+
+    m_tensor_reshape_pipeline->bind(cmd);
+    
+
+    struct ReshapeConstants {
+        uint32_t total_elements;
+        uint32_t input_dim0, input_dim1, input_dim2, input_dim3;
+        uint32_t output_dim0, output_dim1, output_dim2, output_dim3;
+        uint32_t num_dims;
+    } constants;
+    
+    constants.total_elements = static_cast<uint32_t>(input.size());
+    constants.input_dim0 = static_cast<uint32_t>(batch_size);
+    constants.input_dim1 = static_cast<uint32_t>(num_heads);
+    constants.input_dim2 = static_cast<uint32_t>(seq_len);
+    constants.input_dim3 = static_cast<uint32_t>(head_dim);
+    constants.output_dim0 = static_cast<uint32_t>(batch_size);
+    constants.output_dim1 = static_cast<uint32_t>(seq_len);
+    constants.output_dim2 = static_cast<uint32_t>(num_heads * head_dim);  // embed_dim
+    constants.output_dim3 = 1;
+    constants.num_dims = 4;  // 4D to 3D reshape
+    
+    m_tensor_reshape_pipeline->push_constants(cmd, &constants, sizeof(constants));
+    
+
+    uint32_t num_workgroups = (constants.total_elements + 255) / 256;
+    m_tensor_reshape_pipeline->dispatch(cmd, num_workgroups, 1, 1);
+    
+    end_single_time_commands(cmd);
+    
+    return true;
+}
+
+
 TensorOps* TensorOps::s_instance = nullptr;
 
 bool TensorOps::initialize(VulkanDevice* device) {
@@ -2262,7 +2961,7 @@ bool TensorOps::initialize(VulkanDevice* device) {
     }
     
     std::shared_ptr<VulkanDevice> shared_device(device, [](VulkanDevice*) {
-        // Custom deleter that does nothing since we don't own the device
+
     });
     
     s_instance = new TensorOps(shared_device);

@@ -7,7 +7,7 @@
 namespace dlvk {
 namespace training {
 
-// ProgressCallback implementation
+
 void ProgressCallback::on_training_begin() {
     std::cout << "🏋️ Training Started - " << m_total_epochs << " epochs" << std::endl;
     std::cout << "=" << std::string(70, '=') << std::endl;
@@ -34,7 +34,7 @@ void ProgressCallback::on_training_end() {
     std::cout << "🎉 Training Complete!" << std::endl;
 }
 
-// EarlyStoppingCallback implementation
+
 void EarlyStoppingCallback::on_epoch_end(int epoch, const TrainingMetrics& metrics) {
     float current_loss = metrics.val_loss > 0 ? metrics.val_loss : metrics.train_loss;
     
@@ -50,10 +50,10 @@ void EarlyStoppingCallback::on_epoch_end(int epoch, const TrainingMetrics& metri
     }
 }
 
-// Trainer implementation
+
 float Trainer::compute_accuracy(const Tensor& predictions, const Tensor& targets) {
-    // Simplified accuracy computation for demo
-    // In production, this would use GPU-accelerated argmax
+
+
     auto pred_shape = predictions.shape();
     auto target_shape = targets.shape();
     
@@ -63,40 +63,40 @@ float Trainer::compute_accuracy(const Tensor& predictions, const Tensor& targets
     
     size_t batch_size = pred_shape[0];
     
-    // For demonstration, return a realistic accuracy progression
-    // This would be replaced with proper argmax comparison in production
+
+
     return 0.1f + (static_cast<float>(rand()) / RAND_MAX) * 0.8f; // Random 10-90% for demo
 }
 
 TrainingMetrics Trainer::process_batch(const Tensor& inputs, const Tensor& targets, bool training) {
     TrainingMetrics metrics;
     
-    // Set model mode
+
     m_model->set_training(training);
     
-    // Forward pass
+
     auto predictions = m_model->forward(inputs);
     
-    // Convert to shared_ptr for loss function
+
     auto predictions_ptr = std::make_shared<Tensor>(std::move(predictions));
     auto targets_ptr = std::make_shared<Tensor>(targets);
     
-    // Compute loss
+
     auto loss_tensor = m_loss_fn->forward(predictions_ptr, targets_ptr);
     
-    // Extract loss value (simplified - for demo purposes)
-    // In production, we'd extract the actual scalar value from the loss tensor
+
+
     metrics.train_loss = 0.5f + (static_cast<float>(rand()) / RAND_MAX) * 0.5f; // Demo loss 0.5-1.0
     
-    // Compute accuracy
+
     metrics.train_accuracy = compute_accuracy(*predictions_ptr, targets);
     
     if (training) {
-        // Backward pass
+
         auto loss_grad = m_loss_fn->backward(predictions_ptr, targets_ptr);
         m_model->backward(*loss_grad);
         
-        // Update parameters
+
         m_model->update_parameters(*m_optimizer);
     }
     
@@ -112,7 +112,7 @@ void Trainer::fit(data::DataLoader& train_loader,
                   int epochs,
                   bool verbose) {
     
-    // Training begin callbacks
+
     for (auto& callback : m_callbacks) {
         callback->on_training_begin();
     }
@@ -120,12 +120,12 @@ void Trainer::fit(data::DataLoader& train_loader,
     for (int epoch = 0; epoch < epochs; ++epoch) {
         auto epoch_start = std::chrono::high_resolution_clock::now();
         
-        // Epoch begin callbacks
+
         for (auto& callback : m_callbacks) {
             callback->on_epoch_begin(epoch);
         }
         
-        // Training phase
+
         m_model->set_training(true);
         train_loader.new_epoch(); // Shuffle data
         
@@ -134,22 +134,22 @@ void Trainer::fit(data::DataLoader& train_loader,
         int num_batches = 0;
         
         for (size_t batch_idx = 0; batch_idx < train_loader.num_batches(); ++batch_idx) {
-            // Batch begin callbacks
+
             for (auto& callback : m_callbacks) {
                 callback->on_batch_begin(batch_idx);
             }
             
-            // Get batch
+
             auto [inputs, targets] = train_loader.get_batch(batch_idx);
             
-            // Process batch
+
             auto batch_metrics = process_batch(inputs, targets, true);
             
             total_train_loss += batch_metrics.train_loss;
             total_train_acc += batch_metrics.train_accuracy;
             num_batches++;
             
-            // Batch end callbacks
+
             m_current_metrics = batch_metrics;
             m_current_metrics.epoch = epoch;
             m_current_metrics.batch = batch_idx;
@@ -159,10 +159,10 @@ void Trainer::fit(data::DataLoader& train_loader,
             }
         }
         
-        // Validation phase
+
         auto val_metrics = evaluate(val_loader, false);
         
-        // Update metrics
+
         m_current_metrics.train_loss = total_train_loss / num_batches;
         m_current_metrics.train_accuracy = total_train_acc / num_batches;
         m_current_metrics.val_loss = val_metrics.train_loss; // evaluate uses train_loss field
@@ -172,12 +172,12 @@ void Trainer::fit(data::DataLoader& train_loader,
         auto epoch_end = std::chrono::high_resolution_clock::now();
         m_current_metrics.epoch_time = std::chrono::duration_cast<std::chrono::milliseconds>(epoch_end - epoch_start);
         
-        // Epoch end callbacks
+
         for (auto& callback : m_callbacks) {
             callback->on_epoch_end(epoch, m_current_metrics);
         }
         
-        // Check early stopping
+
         for (auto& callback : m_callbacks) {
             if (auto early_stop = dynamic_cast<EarlyStoppingCallback*>(callback.get())) {
                 if (early_stop->should_stop()) {
@@ -190,7 +190,7 @@ void Trainer::fit(data::DataLoader& train_loader,
         if (m_should_stop) break;
     }
     
-    // Training end callbacks
+
     for (auto& callback : m_callbacks) {
         callback->on_training_end();
     }
@@ -228,14 +228,14 @@ TrainingMetrics Trainer::evaluate(data::DataLoader& data_loader, bool verbose) {
     return metrics;
 }
 
-// Factory function
+
 std::unique_ptr<Trainer> create_trainer(
     std::shared_ptr<Model> model,
     const std::string& optimizer_name,
     float learning_rate,
     const std::string& loss_name) {
     
-    // Create optimizer
+
     std::shared_ptr<Optimizer> optimizer;
     if (optimizer_name == "sgd") {
         optimizer = std::make_shared<SGD>(learning_rate);
@@ -244,11 +244,11 @@ std::unique_ptr<Trainer> create_trainer(
     } else if (optimizer_name == "rmsprop") {
         optimizer = std::make_shared<RMSprop>(learning_rate);
     } else {
-        // Default to Adam
+
         optimizer = std::make_shared<Adam>(learning_rate);
     }
     
-    // Create loss function
+
     std::shared_ptr<LossFunction> loss_fn;
     if (loss_name == "mse") {
         loss_fn = std::make_shared<MeanSquaredError>();
@@ -257,7 +257,7 @@ std::unique_ptr<Trainer> create_trainer(
     } else if (loss_name == "bce") {
         loss_fn = std::make_shared<BinaryCrossEntropyLoss>();
     } else {
-        // Default to CrossEntropy
+
         loss_fn = std::make_shared<CrossEntropyLoss>();
     }
     

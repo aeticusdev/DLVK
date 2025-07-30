@@ -9,11 +9,11 @@ class LossFunction {
 public:
     virtual ~LossFunction() = default;
     
-    // Compute the loss value
+
     virtual std::shared_ptr<Tensor> forward(const std::shared_ptr<Tensor>& predictions, 
                                            const std::shared_ptr<Tensor>& targets) = 0;
     
-    // Compute gradients with respect to predictions
+
     virtual std::shared_ptr<Tensor> backward(const std::shared_ptr<Tensor>& predictions,
                                             const std::shared_ptr<Tensor>& targets) = 0;
 };

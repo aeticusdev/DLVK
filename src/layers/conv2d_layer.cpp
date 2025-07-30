@@ -16,12 +16,12 @@ Conv2DLayer::Conv2DLayer(VulkanDevice& device,
       stride_h_(stride_h), stride_w_(stride_w),
       padding_h_(padding_h), padding_w_(padding_w) {
     
-    // Create weight tensor: [out_channels, in_channels, kernel_h, kernel_w]
+
     std::vector<size_t> weight_shape = {out_channels, in_channels, kernel_height, kernel_width};
     weights_ = std::make_shared<Tensor>(weight_shape, DataType::FLOAT32, 
                                        std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Create bias tensor: [out_channels]
+
     std::vector<size_t> bias_shape = {out_channels};
     bias_ = std::make_shared<Tensor>(bias_shape, DataType::FLOAT32,
                                     std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
@@ -30,7 +30,7 @@ Conv2DLayer::Conv2DLayer(VulkanDevice& device,
 }
 
 void Conv2DLayer::initialize_weights() {
-    // Xavier/Glorot initialization for conv layers
+
     size_t fan_in = in_channels_ * kernel_height_ * kernel_width_;
     size_t fan_out = out_channels_ * kernel_height_ * kernel_width_;
     float variance = 2.0f / (fan_in + fan_out);
@@ -40,21 +40,21 @@ void Conv2DLayer::initialize_weights() {
     std::mt19937 gen(rd());
     std::normal_distribution<float> dist(0.0f, std_dev);
     
-    // Initialize weights
+
     std::vector<float> weight_data(weights_->size());
     for (size_t i = 0; i < weight_data.size(); ++i) {
         weight_data[i] = dist(gen);
     }
     weights_->upload_data(weight_data.data());
     
-    // Initialize bias to zero
+
     std::vector<float> bias_data(bias_->size(), 0.0f);
     bias_->upload_data(bias_data.data());
 }
 
 std::vector<size_t> Conv2DLayer::compute_output_shape(const std::vector<size_t>& input_shape) const {
-    // Input shape: [batch_size, in_channels, height, width]
-    // Output shape: [batch_size, out_channels, out_height, out_width]
+
+
     
     if (input_shape.size() != 4) {
         throw std::runtime_error("Conv2D input must be 4D: [batch, channels, height, width]");
@@ -71,18 +71,18 @@ std::vector<size_t> Conv2DLayer::compute_output_shape(const std::vector<size_t>&
 }
 
 std::shared_ptr<Tensor> Conv2DLayer::forward(const std::shared_ptr<Tensor>& input) {
-    // Store input for backward pass
+
     last_input_ = input;
     
-    // Use GPU-accelerated convolution through TensorOps
+
     auto output_shape = compute_output_shape(input->shape());
     auto output = std::make_shared<Tensor>(output_shape, DataType::FLOAT32,
                                           std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Get TensorOps singleton instance for GPU operations
+
     auto* tensor_ops = TensorOps::instance();
     
-    // Perform convolution
+
     tensor_ops->conv2d(*input, *weights_, *bias_, *output,
                       stride_h_, stride_w_, 
                       padding_h_, padding_w_);
@@ -95,15 +95,15 @@ std::shared_ptr<Tensor> Conv2DLayer::backward(const std::shared_ptr<Tensor>& gra
         throw std::runtime_error("Conv2DLayer::backward called without prior forward pass");
     }
     
-    // Get TensorOps singleton instance for GPU operations
+
     auto* tensor_ops = TensorOps::instance();
     
-    // Create gradient input tensor
+
     auto input_shape = last_input_->shape();
     auto grad_input = std::make_shared<Tensor>(input_shape, DataType::FLOAT32,
                                               std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Initialize weight and bias gradients if not already created
+
     if (!weight_grads_) {
         weight_grads_ = std::make_shared<Tensor>(weights_->shape(), DataType::FLOAT32,
                                                 std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
@@ -114,12 +114,12 @@ std::shared_ptr<Tensor> Conv2DLayer::backward(const std::shared_ptr<Tensor>& gra
                                               std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     }
     
-    // Compute gradients w.r.t. input using GPU acceleration
+
     tensor_ops->conv2d_backward_input(*grad_output, *weights_, *grad_input,
                                      stride_h_, stride_w_,
                                      padding_h_, padding_w_);
     
-    // Compute gradients w.r.t. weights and bias using GPU acceleration
+
     tensor_ops->conv2d_backward_weight(*last_input_, *grad_output, *weight_grads_, *bias_grads_,
                                       stride_h_, stride_w_,
                                       padding_h_, padding_w_);
@@ -132,18 +132,18 @@ void Conv2DLayer::update_weights(float learning_rate) {
         throw std::runtime_error("Conv2DLayer::update_weights called without computed gradients");
     }
     
-    // Get TensorOps singleton instance for GPU operations
+
     auto* tensor_ops = TensorOps::instance();
     
-    // Apply gradient descent: weights = weights - learning_rate * gradients
-    // Use scalar multiplication and element-wise subtraction for gradient updates
+
+
     if (weight_grads_) {
         auto scaled_grads = std::make_shared<Tensor>(weight_grads_->shape(), weight_grads_->dtype(), weight_grads_->device());
         tensor_ops->scalar_multiply(*weight_grads_, learning_rate, *scaled_grads);
         tensor_ops->subtract(*weights_, *scaled_grads, *weights_);
     }
     
-    // Apply gradient descent: bias = bias - learning_rate * bias_gradients
+
     if (bias_grads_ && bias_) {
         auto scaled_bias_grads = std::make_shared<Tensor>(bias_grads_->shape(), bias_grads_->dtype(), bias_grads_->device());
         tensor_ops->scalar_multiply(*bias_grads_, learning_rate, *scaled_bias_grads);
@@ -157,7 +157,7 @@ std::unique_ptr<Layer> Conv2DLayer::clone() const {
                                                stride_h_, stride_w_,
                                                padding_h_, padding_w_);
     
-    // Copy weights and bias
+
     if (weights_ && cloned->weights_) {
         size_t weight_size = out_channels_ * in_channels_ * kernel_height_ * kernel_width_;
         std::vector<float> weight_data(weight_size);

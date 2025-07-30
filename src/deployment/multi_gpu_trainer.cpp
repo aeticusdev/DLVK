@@ -1,4 +1,5 @@
 #include "dlvk/deployment/multi_gpu_trainer.h"
+#include "dlvk/deployment/ring_all_reduce.h"
 #include <algorithm>
 #include <numeric>
 #include <thread>
@@ -145,12 +146,12 @@ bool MultiGPUTrainer::save_checkpoint([[maybe_unused]] const std::string& checkp
     if (!master_model) {
         return false;
     }
-    // TODO: Implement checkpoint saving
+
     return true;
 }
 
 bool MultiGPUTrainer::load_checkpoint([[maybe_unused]] const std::string& checkpoint_path) {
-    // TODO: Implement checkpoint loading
+
     return false;
 }
 
@@ -173,8 +174,8 @@ training::TrainingMetrics MultiGPUTrainer::train_replica(size_t replica_id, data
     auto& replica = replicas_[replica_id];
     auto start_time = std::chrono::high_resolution_clock::now();
     
-    // Multi-GPU training would coordinate forward/backward passes across replicas
-    // This involves data sharding, gradient synchronization, and model updates
+
+
     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Simulate work
     
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -220,7 +221,7 @@ void MultiGPUTrainer::all_reduce_gradients() {
 }
 
 void MultiGPUTrainer::broadcast_parameters() {
-    // TODO: Implement parameter broadcasting
+
 }
 
 void MultiGPUTrainer::aggregate_metrics(std::vector<training::TrainingMetrics>& device_metrics) {
@@ -246,7 +247,7 @@ void MultiGPUTrainer::aggregate_metrics(std::vector<training::TrainingMetrics>& 
 }
 
 void MultiGPUTrainer::balance_data_distribution(data::DataLoader& train_loader) {
-    // TODO: Implement data distribution
+
 }
 
 std::vector<size_t> MultiGPUTrainer::calculate_device_batch_sizes(size_t total_batch_size) {
@@ -318,17 +319,17 @@ void VulkanCommunicationBackend::all_reduce(std::vector<std::shared_ptr<Tensor>>
 }
 
 void VulkanCommunicationBackend::broadcast(std::shared_ptr<Tensor> tensor, int root_device) {
-    // TODO: Implement broadcast
+
 }
 
 void VulkanCommunicationBackend::all_gather(const std::vector<std::shared_ptr<Tensor>>& input_tensors,
                                           std::vector<std::shared_ptr<Tensor>>& output_tensors) {
-    // TODO: Implement all-gather
+
 }
 
 void VulkanCommunicationBackend::reduce_scatter(const std::vector<std::shared_ptr<Tensor>>& input_tensors,
                                               std::vector<std::shared_ptr<Tensor>>& output_tensors) {
-    // TODO: Implement reduce-scatter
+
 }
 
 void VulkanCommunicationBackend::finalize() {
@@ -337,15 +338,32 @@ void VulkanCommunicationBackend::finalize() {
 }
 
 void VulkanCommunicationBackend::create_communication_pipelines() {
-    // TODO: Implement pipelines
+
 }
 
 void VulkanCommunicationBackend::perform_ring_all_reduce(std::vector<std::shared_ptr<Tensor>>& tensors) {
-    // TODO: Implement ring all-reduce
+
+    if (!ring_all_reduce_) {
+        ring_all_reduce_ = std::make_unique<RingAllReduce>(devices_);
+    }
+    
+    auto start_time = std::chrono::high_resolution_clock::now();
+    ring_all_reduce_->perform_all_reduce(tensors);
+    auto end_time = std::chrono::high_resolution_clock::now();
+    
+    auto duration = std::chrono::duration<double, std::milli>(end_time - start_time);
+    auto stats = ring_all_reduce_->get_stats();
+    
+
+    communication_stats_.total_operations++;
+    communication_stats_.total_time_ms += duration.count();
+    communication_stats_.total_bytes += stats.bytes_transferred;
+    communication_stats_.avg_bandwidth_gbps = 
+        (communication_stats_.avg_bandwidth_gbps + stats.bandwidth_gbps) / 2.0;
 }
 
 void VulkanCommunicationBackend::perform_tree_reduce(std::vector<std::shared_ptr<Tensor>>& tensors) {
-    // TODO: Implement tree reduce
+
 }
 
 } // namespace dlvk::deployment

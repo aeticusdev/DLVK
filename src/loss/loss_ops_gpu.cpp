@@ -23,7 +23,7 @@ bool LossOpsGPU::initialize() {
         return false;
     }
     
-    // Create fence for synchronization
+
     VkFenceCreateInfo fence_info{};
     fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     
@@ -54,7 +54,7 @@ bool LossOpsGPU::allocate_command_buffer() {
 }
 
 bool LossOpsGPU::create_pipelines() {
-    // Setup descriptor set layout for loss functions (3 buffers: input1, input2, output)
+
     std::vector<VkDescriptorSetLayoutBinding> bindings(3);
     for (int i = 0; i < 3; ++i) {
         bindings[i].binding = i;
@@ -64,7 +64,7 @@ bool LossOpsGPU::create_pipelines() {
         bindings[i].pImmutableSamplers = nullptr;
     }
     
-    // Setup push constant range
+
     PushConstantRange push_range;
     push_range.offset = 0;
     push_range.size = sizeof(uint32_t) * 4;  // size, batch_size, and additional params
@@ -72,7 +72,7 @@ bool LossOpsGPU::create_pipelines() {
     
     int success_count = 0;
     
-    // Create MSE forward pipeline
+
     m_mse_forward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_mse_forward_pipeline->create_descriptor_set_layout(bindings)) {
         m_mse_forward_pipeline->set_push_constant_range(push_range);
@@ -93,7 +93,7 @@ bool LossOpsGPU::create_pipelines() {
         m_mse_forward_pipeline.reset();
     }
     
-    // Create MSE backward pipeline
+
     m_mse_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_mse_backward_pipeline->create_descriptor_set_layout(bindings)) {
         m_mse_backward_pipeline->set_push_constant_range(push_range);
@@ -111,7 +111,7 @@ bool LossOpsGPU::create_pipelines() {
         }
     }
     
-    // Create CrossEntropy forward pipeline
+
     m_cross_entropy_forward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_cross_entropy_forward_pipeline->create_descriptor_set_layout(bindings)) {
         m_cross_entropy_forward_pipeline->set_push_constant_range(push_range);
@@ -132,7 +132,7 @@ bool LossOpsGPU::create_pipelines() {
         m_cross_entropy_forward_pipeline.reset();
     }
     
-    // Create CrossEntropy backward pipeline
+
     m_cross_entropy_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_cross_entropy_backward_pipeline->create_descriptor_set_layout(bindings)) {
         m_cross_entropy_backward_pipeline->set_push_constant_range(push_range);
@@ -150,7 +150,7 @@ bool LossOpsGPU::create_pipelines() {
         }
     }
     
-    // Create BinaryCrossEntropy forward pipeline
+
     m_binary_cross_entropy_forward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_binary_cross_entropy_forward_pipeline->create_descriptor_set_layout(bindings)) {
         m_binary_cross_entropy_forward_pipeline->set_push_constant_range(push_range);
@@ -171,7 +171,7 @@ bool LossOpsGPU::create_pipelines() {
         m_binary_cross_entropy_forward_pipeline.reset();
     }
     
-    // Create BinaryCrossEntropy backward pipeline
+
     m_binary_cross_entropy_backward_pipeline = std::make_unique<ComputePipeline>(m_device);
     if (m_binary_cross_entropy_backward_pipeline->create_descriptor_set_layout(bindings)) {
         m_binary_cross_entropy_backward_pipeline->set_push_constant_range(push_range);
@@ -226,15 +226,15 @@ bool LossOpsGPU::mse_forward(const std::shared_ptr<Tensor>& predictions,
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_mse_forward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
     m_mse_forward_pipeline->update_descriptor_set(0, 1, targets->buffer());
     m_mse_forward_pipeline->update_descriptor_set(0, 2, result->buffer());
     
-    // Bind pipeline
+
     m_mse_forward_pipeline->bind(cmd);
     
-    // Push constants
+
     struct MSEPushConstants {
         uint32_t size;
         uint32_t batch_size;
@@ -245,7 +245,7 @@ bool LossOpsGPU::mse_forward(const std::shared_ptr<Tensor>& predictions,
     
     m_mse_forward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
     
-    // Dispatch compute shader (256 threads per workgroup)
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
     m_mse_forward_pipeline->dispatch(cmd, num_workgroups);
@@ -265,15 +265,15 @@ bool LossOpsGPU::mse_backward(const std::shared_ptr<Tensor>& predictions,
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_mse_backward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
     m_mse_backward_pipeline->update_descriptor_set(0, 1, targets->buffer());
     m_mse_backward_pipeline->update_descriptor_set(0, 2, gradient->buffer());
     
-    // Bind pipeline
+
     m_mse_backward_pipeline->bind(cmd);
     
-    // Push constants
+
     struct MSEBackwardPushConstants {
         uint32_t size;
         float scale_factor;
@@ -284,7 +284,7 @@ bool LossOpsGPU::mse_backward(const std::shared_ptr<Tensor>& predictions,
     
     m_mse_backward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
     
-    // Dispatch compute shader
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
     m_mse_backward_pipeline->dispatch(cmd, num_workgroups);
@@ -294,7 +294,7 @@ bool LossOpsGPU::mse_backward(const std::shared_ptr<Tensor>& predictions,
     return true;
 }
 
-// CrossEntropy Loss GPU implementations
+
 bool LossOpsGPU::cross_entropy_forward(const std::shared_ptr<Tensor>& predictions,
                                         const std::shared_ptr<Tensor>& targets,
                                         std::shared_ptr<Tensor>& result) {
@@ -305,15 +305,15 @@ bool LossOpsGPU::cross_entropy_forward(const std::shared_ptr<Tensor>& prediction
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_cross_entropy_forward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
     m_cross_entropy_forward_pipeline->update_descriptor_set(0, 1, targets->buffer());
     m_cross_entropy_forward_pipeline->update_descriptor_set(0, 2, result->buffer());
     
-    // Bind pipeline
+
     m_cross_entropy_forward_pipeline->bind(cmd);
     
-    // Push constants
+
     struct CrossEntropyPushConstants {
         uint32_t size;
         uint32_t batch_size;
@@ -326,7 +326,7 @@ bool LossOpsGPU::cross_entropy_forward(const std::shared_ptr<Tensor>& prediction
     
     m_cross_entropy_forward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
     
-    // Dispatch compute shader
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (push_constants.batch_size + workgroup_size - 1) / workgroup_size;
     m_cross_entropy_forward_pipeline->dispatch(cmd, num_workgroups);
@@ -346,15 +346,15 @@ bool LossOpsGPU::cross_entropy_backward(const std::shared_ptr<Tensor>& predictio
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_cross_entropy_backward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
     m_cross_entropy_backward_pipeline->update_descriptor_set(0, 1, targets->buffer());
     m_cross_entropy_backward_pipeline->update_descriptor_set(0, 2, gradient->buffer());
     
-    // Bind pipeline
+
     m_cross_entropy_backward_pipeline->bind(cmd);
     
-    // Push constants
+
     struct CrossEntropyBackwardPushConstants {
         uint32_t size;
         uint32_t batch_size;
@@ -369,7 +369,7 @@ bool LossOpsGPU::cross_entropy_backward(const std::shared_ptr<Tensor>& predictio
     
     m_cross_entropy_backward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
     
-    // Dispatch compute shader
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
     m_cross_entropy_backward_pipeline->dispatch(cmd, num_workgroups);
@@ -390,15 +390,15 @@ bool LossOpsGPU::binary_cross_entropy_forward(const std::shared_ptr<Tensor>& pre
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_binary_cross_entropy_forward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
     m_binary_cross_entropy_forward_pipeline->update_descriptor_set(0, 1, targets->buffer());
     m_binary_cross_entropy_forward_pipeline->update_descriptor_set(0, 2, result->buffer());
     
-    // Bind pipeline
+
     m_binary_cross_entropy_forward_pipeline->bind(cmd);
     
-    // Push constants
+
     struct BinaryCrossEntropyPushConstants {
         uint32_t size;
         uint32_t batch_size;
@@ -411,7 +411,7 @@ bool LossOpsGPU::binary_cross_entropy_forward(const std::shared_ptr<Tensor>& pre
     
     m_binary_cross_entropy_forward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
     
-    // Dispatch compute shader
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
     m_binary_cross_entropy_forward_pipeline->dispatch(cmd, num_workgroups);
@@ -432,15 +432,15 @@ bool LossOpsGPU::binary_cross_entropy_backward(const std::shared_ptr<Tensor>& pr
     
     VkCommandBuffer cmd = begin_single_time_commands();
     
-    // Update descriptor sets
+
     m_binary_cross_entropy_backward_pipeline->update_descriptor_set(0, 0, predictions->buffer());
     m_binary_cross_entropy_backward_pipeline->update_descriptor_set(0, 1, targets->buffer());
     m_binary_cross_entropy_backward_pipeline->update_descriptor_set(0, 2, gradient->buffer());
     
-    // Bind pipeline
+
     m_binary_cross_entropy_backward_pipeline->bind(cmd);
     
-    // Push constants
+
     struct BinaryCrossEntropyBackwardPushConstants {
         uint32_t size;
         uint32_t batch_size;
@@ -455,7 +455,7 @@ bool LossOpsGPU::binary_cross_entropy_backward(const std::shared_ptr<Tensor>& pr
     
     m_binary_cross_entropy_backward_pipeline->push_constants(cmd, &push_constants, sizeof(push_constants));
     
-    // Dispatch compute shader
+
     uint32_t workgroup_size = 256;
     uint32_t num_workgroups = (push_constants.size + workgroup_size - 1) / workgroup_size;
     m_binary_cross_entropy_backward_pipeline->dispatch(cmd, num_workgroups);

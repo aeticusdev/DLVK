@@ -10,13 +10,13 @@ namespace data {
 MnistDataset::MnistDataset(const std::string& root, bool train, bool download)
     : m_train(train), m_root_dir(root) {
     
-    // Create directory if it doesn't exist
+
     if (!std::filesystem::exists(m_root_dir)) {
         std::filesystem::create_directories(m_root_dir);
     }
 
-    // For now, we'll assume the user provides the MNIST files
-    // TODO: Implement automatic download in a future update
+
+
     if (download) {
         std::cout << "Note: Automatic download not yet implemented." << std::endl;
         std::cout << "Please download MNIST data files to: " << m_root_dir << std::endl;
@@ -27,7 +27,7 @@ MnistDataset::MnistDataset(const std::string& root, bool train, bool download)
         std::cout << "  - t10k-labels-idx1-ubyte" << std::endl;
     }
 
-    // Load the appropriate files
+
     std::string image_file, label_file;
     if (m_train) {
         image_file = m_root_dir + "/train-images-idx3-ubyte";
@@ -37,7 +37,7 @@ MnistDataset::MnistDataset(const std::string& root, bool train, bool download)
         label_file = m_root_dir + "/t10k-labels-idx1-ubyte";
     }
 
-    // Check if files exist
+
     if (!std::filesystem::exists(image_file) || !std::filesystem::exists(label_file)) {
         std::cout << "MNIST files not found. Creating synthetic data for demo..." << std::endl;
         create_synthetic_data();
@@ -57,7 +57,7 @@ MnistDataset::MnistDataset(const std::string& root, bool train, bool download)
 }
 
 void MnistDataset::create_synthetic_data() {
-    // Create synthetic MNIST-like data for demonstration
+
     size_t num_samples = m_train ? 1000 : 200; // Smaller dataset for demo
     
     m_images.reserve(num_samples);
@@ -69,14 +69,14 @@ void MnistDataset::create_synthetic_data() {
     std::uniform_int_distribution<int> label_dis(0, 9);
     
     for (size_t i = 0; i < num_samples; ++i) {
-        // Create a random 28x28 image
+
         std::vector<float> image(IMAGE_SIZE * IMAGE_SIZE);
         for (float& pixel : image) {
             pixel = dis(gen);
         }
         m_images.push_back(std::move(image));
         
-        // Random label
+
         m_labels.push_back(label_dis(gen));
     }
     
@@ -87,7 +87,7 @@ void MnistDataset::create_synthetic_data() {
 uint32_t MnistDataset::read_uint32_be(std::ifstream& file) {
     uint32_t value;
     file.read(reinterpret_cast<char*>(&value), sizeof(value));
-    // Convert from big-endian to host byte order
+
     return ((value & 0xFF000000) >> 24) |
            ((value & 0x00FF0000) >> 8) |
            ((value & 0x0000FF00) << 8) |
@@ -100,7 +100,7 @@ void MnistDataset::load_images(const std::string& image_file) {
         throw std::runtime_error("Cannot open MNIST image file: " + image_file);
     }
 
-    // Read header
+
     uint32_t magic = read_uint32_be(file);
     if (magic != 0x00000803) {
         throw std::runtime_error("Invalid MNIST image file magic number");
@@ -114,7 +114,7 @@ void MnistDataset::load_images(const std::string& image_file) {
         throw std::runtime_error("Unexpected MNIST image dimensions");
     }
 
-    // Read images
+
     m_images.reserve(num_images);
     for (uint32_t i = 0; i < num_images; ++i) {
         std::vector<float> image(IMAGE_SIZE * IMAGE_SIZE);
@@ -133,7 +133,7 @@ void MnistDataset::load_labels(const std::string& label_file) {
         throw std::runtime_error("Cannot open MNIST label file: " + label_file);
     }
 
-    // Read header
+
     uint32_t magic = read_uint32_be(file);
     if (magic != 0x00000801) {
         throw std::runtime_error("Invalid MNIST label file magic number");
@@ -141,7 +141,7 @@ void MnistDataset::load_labels(const std::string& label_file) {
 
     uint32_t num_labels = read_uint32_be(file);
 
-    // Read labels
+
     m_labels.reserve(num_labels);
     for (uint32_t i = 0; i < num_labels; ++i) {
         uint8_t label;
@@ -159,9 +159,9 @@ std::pair<Tensor, Tensor> MnistDataset::get_item(size_t index) const {
         throw std::out_of_range("Index out of range");
     }
 
-    // Note: This method returns tensors without a device
-    // The caller will need to transfer them to the appropriate device
-    // For now, we'll throw an error indicating this needs device context
+
+
+
     throw std::runtime_error("get_item() requires device context - use with DataLoader instead");
 }
 

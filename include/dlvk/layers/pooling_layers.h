@@ -30,10 +30,10 @@ public:
     void update_weights(float learning_rate) override {} // No weights to update
     std::unique_ptr<Layer> clone() const override;
     
-    // Utility functions
+
     std::vector<size_t> compute_output_shape(const std::vector<size_t>& input_shape) const;
     
-    // Getters
+
     size_t get_pool_height() const { return pool_height_; }
     size_t get_pool_width() const { return pool_width_; }
 };
@@ -61,10 +61,10 @@ public:
     void update_weights(float learning_rate) override {} // No weights to update
     std::unique_ptr<Layer> clone() const override;
     
-    // Utility functions
+
     std::vector<size_t> compute_output_shape(const std::vector<size_t>& input_shape) const;
     
-    // Getters
+
     size_t get_pool_height() const { return pool_height_; }
     size_t get_pool_width() const { return pool_width_; }
 };

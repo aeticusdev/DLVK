@@ -16,7 +16,7 @@ layout(push_constant) uniform PushConstants {
     uint reduction_size;  // Size of each reduction dimension
 } pc;
 
-// Shared memory for reduction within workgroup
+
 shared float shared_data[256];
 
 void main() {
@@ -24,17 +24,17 @@ void main() {
     uint gid = gl_GlobalInvocationID.x;
     uint wid = gl_WorkGroupID.x;
     
-    // Initialize shared memory
+
     shared_data[tid] = 0.0;
     
-    // Load data into shared memory with reduction
+
     if (gid < pc.input_size) {
         shared_data[tid] = data_in[gid];
     }
     
     barrier();
     
-    // Perform reduction within workgroup
+
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
         if (tid < stride && (gid + stride) < pc.input_size) {
             shared_data[tid] += shared_data[tid + stride];
@@ -42,7 +42,7 @@ void main() {
         barrier();
     }
     
-    // Write result
+
     if (tid == 0 && wid < pc.output_size) {
         data_out[wid] = shared_data[0];
     }

@@ -1,0 +1,72 @@
+#version 450
+
+
+
+
+layout(local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer QueryBuffer { float query_data[]; };
+layout(binding = 1) readonly buffer KeyBuffer { float key_data[]; };
+layout(binding = 2) readonly buffer ValueBuffer { float value_data[]; };
+layout(binding = 3) writeonly buffer OutputBuffer { float output_data[]; };
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint seq_len;
+    uint num_heads;
+    uint head_dim;
+    float scale;
+};
+
+
+shared float shared_scores[1024];
+shared float shared_values[1024];
+
+void main() {
+    uint global_id = gl_GlobalInvocationID.x;
+    uint local_id = gl_LocalInvocationID.x;
+    
+    uint total_elements = batch_size * seq_len * num_heads * head_dim;
+    if (global_id >= total_elements) return;
+    
+
+    uint temp = global_id;
+    uint d = temp % head_dim; temp /= head_dim;
+    uint h = temp % num_heads; temp /= num_heads;
+    uint s = temp % seq_len; temp /= seq_len;
+    uint b = temp;
+    
+
+    uint q_base = ((b * seq_len + s) * num_heads + h) * head_dim;
+    uint k_base = ((b * seq_len) * num_heads + h) * head_dim;
+    uint v_base = k_base;
+    uint out_idx = global_id;
+    
+    float result = 0.0;
+    
+
+    for (uint i = 0; i < seq_len; i++) {
+
+        float score = 0.0;
+        for (uint j = 0; j < head_dim; j++) {
+            uint q_idx = q_base + j;
+            uint k_idx = k_base + i * head_dim + j;
+            score += query_data[q_idx] * key_data[k_idx];
+        }
+        score *= scale;
+        
+
+        score = exp(score);
+        
+
+        for (uint j = 0; j < head_dim; j++) {
+            uint v_idx = v_base + i * head_dim + j;
+            if (j == d) {
+                result += score * value_data[v_idx];
+            }
+        }
+    }
+    
+
+    output_data[out_idx] = result;
+}

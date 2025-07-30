@@ -1,0 +1,92 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) readonly buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) readonly buffer WeightBuffer {
+    float weight[];
+};
+
+layout(binding = 2) readonly buffer BiasBuffer {
+    float bias[];
+};
+
+layout(binding = 3) writeonly buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint seq_length;
+    uint feature_dim;
+    float eps;
+} pc;
+
+
+shared float sdata[256];
+
+void main() {
+    uint batch_idx = gl_WorkGroupID.x;
+    uint seq_idx = gl_WorkGroupID.y;
+    uint tid = gl_LocalInvocationID.x;
+    uint feature_start = tid;
+    
+
+    if (batch_idx >= pc.batch_size || seq_idx >= pc.seq_length) {
+        return;
+    }
+    
+    uint base_idx = batch_idx * pc.seq_length * pc.feature_dim + seq_idx * pc.feature_dim;
+    
+
+    float sum = 0.0;
+    for (uint i = feature_start; i < pc.feature_dim; i += 256) {
+        sum += input_data[base_idx + i];
+    }
+    
+    sdata[tid] = sum;
+    barrier();
+    
+
+    for (uint s = 128; s > 0; s >>= 1) {
+        if (tid < s) {
+            sdata[tid] += sdata[tid + s];
+        }
+        barrier();
+    }
+    
+    float mean = sdata[0] / float(pc.feature_dim);
+    barrier();
+    
+
+    float var_sum = 0.0;
+    for (uint i = feature_start; i < pc.feature_dim; i += 256) {
+        float diff = input_data[base_idx + i] - mean;
+        var_sum += diff * diff;
+    }
+    
+    sdata[tid] = var_sum;
+    barrier();
+    
+
+    for (uint s = 128; s > 0; s >>= 1) {
+        if (tid < s) {
+            sdata[tid] += sdata[tid + s];
+        }
+        barrier();
+    }
+    
+    float variance = sdata[0] / float(pc.feature_dim);
+    float std_dev = sqrt(variance + pc.eps);
+    barrier();
+    
+
+    for (uint i = feature_start; i < pc.feature_dim; i += 256) {
+        uint output_idx = base_idx + i;
+        float normalized = (input_data[output_idx] - mean) / std_dev;
+        output_data[output_idx] = normalized * weight[i] + bias[i];
+    }
+}

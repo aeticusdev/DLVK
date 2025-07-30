@@ -45,13 +45,13 @@ void main() {
     float max_val = -3.40282347e+38; // -FLT_MAX
     uint max_idx = 0;
     
-    // Pool operation
+
     for (uint py = 0; py < pc.pool_height; py++) {
         for (uint px = 0; px < pc.pool_width; px++) {
             int input_y = int(output_y * pc.stride_h + py) - int(pc.padding_h);
             int input_x = int(output_x * pc.stride_w + px) - int(pc.padding_w);
             
-            // Check bounds
+
             if (input_y >= 0 && input_y < int(pc.input_height) && 
                 input_x >= 0 && input_x < int(pc.input_width)) {
                 
@@ -68,7 +68,7 @@ void main() {
         }
     }
     
-    // Store results
+
     uint output_idx = batch_idx * (pc.channels * pc.output_height * pc.output_width) +
                      ch_idx * (pc.output_height * pc.output_width) +
                      output_y * pc.output_width + output_x;

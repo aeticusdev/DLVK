@@ -16,7 +16,7 @@ public:
 
     bool initialize();
     
-    // MSE Loss Operations
+
     bool mse_forward(const std::shared_ptr<Tensor>& predictions, 
                      const std::shared_ptr<Tensor>& targets,
                      std::shared_ptr<Tensor>& result);
@@ -25,7 +25,7 @@ public:
                       const std::shared_ptr<Tensor>& targets,
                       std::shared_ptr<Tensor>& gradient);
     
-    // Cross Entropy Loss Operations
+
     bool cross_entropy_forward(const std::shared_ptr<Tensor>& predictions,
                                const std::shared_ptr<Tensor>& targets,
                                std::shared_ptr<Tensor>& result);
@@ -34,7 +34,7 @@ public:
                                 const std::shared_ptr<Tensor>& targets,
                                 std::shared_ptr<Tensor>& gradient);
     
-    // Binary Cross Entropy Loss Operations
+
     bool binary_cross_entropy_forward(const std::shared_ptr<Tensor>& predictions,
                                        const std::shared_ptr<Tensor>& targets,
                                        std::shared_ptr<Tensor>& result,
@@ -48,11 +48,11 @@ public:
 private:
     std::shared_ptr<VulkanDevice> m_device;
     
-    // Command buffer management
+
     VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
     VkFence m_fence = VK_NULL_HANDLE;
     
-    // GPU Pipelines
+
     std::unique_ptr<ComputePipeline> m_mse_forward_pipeline;
     std::unique_ptr<ComputePipeline> m_mse_backward_pipeline;
     std::unique_ptr<ComputePipeline> m_cross_entropy_forward_pipeline;

@@ -8,7 +8,7 @@
 
 namespace dlvk {
 
-// Static member definition
+
 std::shared_ptr<TensorOps> Tensor::s_tensor_ops = nullptr;
 
 Tensor::Tensor(const std::vector<size_t>& shape, DataType dtype, std::shared_ptr<VulkanDevice> device)
@@ -21,7 +21,7 @@ Tensor::~Tensor() {
     deallocate_memory();
 }
 
-// Copy constructor - creates deep copy of tensor data
+
 Tensor::Tensor(const Tensor& other)
     : m_shape(other.m_shape)
     , m_dtype(other.m_dtype) 
@@ -29,23 +29,23 @@ Tensor::Tensor(const Tensor& other)
     , m_size(other.m_size)
     , m_buffer(VK_NULL_HANDLE)
     , m_memory(VK_NULL_HANDLE) {
-    // Allocate new buffer
+
     allocate_memory();
     
-    // Copy data from other tensor
+
     if (other.m_buffer != VK_NULL_HANDLE && m_buffer != VK_NULL_HANDLE) {
-        // Proper buffer copying via Vulkan memory mapping
+
         void* src_data;
         void* dst_data;
         VkDevice device = m_device->get_device();
         
-        // Map source memory
+
         VkResult src_result = vkMapMemory(device, other.m_memory, 0, VK_WHOLE_SIZE, 0, &src_data);
         if (src_result == VK_SUCCESS) {
-            // Map destination memory  
+
             VkResult dst_result = vkMapMemory(device, m_memory, 0, VK_WHOLE_SIZE, 0, &dst_data);
             if (dst_result == VK_SUCCESS) {
-                // Copy data
+
                 std::memcpy(dst_data, src_data, m_size * element_size());
                 vkUnmapMemory(device, m_memory);
             }
@@ -54,13 +54,13 @@ Tensor::Tensor(const Tensor& other)
     }
 }
 
-// Copy assignment operator  
+
 Tensor& Tensor::operator=(const Tensor& other) {
     if (this != &other) {
-        // Deallocate current resources
+
         deallocate_memory();
         
-        // Copy properties
+
         m_shape = other.m_shape;
         m_dtype = other.m_dtype;
         m_device = other.m_device;
@@ -68,7 +68,7 @@ Tensor& Tensor::operator=(const Tensor& other) {
         m_buffer = VK_NULL_HANDLE;
         m_memory = VK_NULL_HANDLE;
         
-        // Allocate new buffer and copy data (same as copy constructor)
+
         allocate_memory();
         if (other.m_buffer != VK_NULL_HANDLE && m_buffer != VK_NULL_HANDLE) {
             void* src_data;
@@ -89,7 +89,7 @@ Tensor& Tensor::operator=(const Tensor& other) {
     return *this;
 }
 
-// Move constructor
+
 Tensor::Tensor(Tensor&& other) noexcept
     : m_shape(std::move(other.m_shape))
     , m_dtype(other.m_dtype)
@@ -97,19 +97,19 @@ Tensor::Tensor(Tensor&& other) noexcept
     , m_size(other.m_size)
     , m_buffer(other.m_buffer)
     , m_memory(other.m_memory) {
-    // Clear the moved-from object
+
     other.m_buffer = VK_NULL_HANDLE;
     other.m_memory = VK_NULL_HANDLE;
     other.m_size = 0;
 }
 
-// Move assignment operator
+
 Tensor& Tensor::operator=(Tensor&& other) noexcept {
     if (this != &other) {
-        // Deallocate current resources
+
         deallocate_memory();
         
-        // Move from other
+
         m_shape = std::move(other.m_shape);
         m_dtype = other.m_dtype;
         m_device = std::move(other.m_device);
@@ -117,7 +117,7 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
         m_buffer = other.m_buffer;
         m_memory = other.m_memory;
         
-        // Clear the moved-from object
+
         other.m_buffer = VK_NULL_HANDLE;
         other.m_memory = VK_NULL_HANDLE;
         other.m_size = 0;
@@ -160,7 +160,7 @@ std::shared_ptr<Tensor> Tensor::reshape(const std::vector<size_t>& new_shape) co
     if (s_tensor_ops) {
         s_tensor_ops->copy(*this, *result);
     } else {
-        // Fallback to manual copy
+
         VkCommandBuffer cmd = VK_NULL_HANDLE;
         VkCommandBufferAllocateInfo alloc_info{};
         alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -197,7 +197,7 @@ std::shared_ptr<Tensor> Tensor::reshape(const std::vector<size_t>& new_shape) co
 }
 
 std::shared_ptr<Tensor> Tensor::transpose(const std::vector<size_t>& axes) const {
-    // Simple 2D transpose for now
+
     if (m_shape.size() != 2) {
         throw std::runtime_error("Transpose currently only supports 2D tensors");
     }
@@ -372,12 +372,12 @@ std::shared_ptr<Tensor> Tensor::subtract(const Tensor& other) const {
 std::shared_ptr<Tensor> Tensor::multiply_scalar(float scalar) const {
     auto result = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
     
-    // Use GPU implementation if available
+
     if (s_tensor_ops && s_tensor_ops->scalar_multiply(*this, scalar, *result)) {
         return result;
     }
     
-    // Fallback to CPU implementation
+
     std::vector<float> data(m_size);
     std::vector<float> result_data(m_size);
     
@@ -480,7 +480,7 @@ std::shared_ptr<Tensor> Tensor::softmax() const {
     return result;
 }
 
-// Backward pass implementations
+
 std::shared_ptr<Tensor> Tensor::relu_backward(const Tensor& grad_output) const {
     auto grad_input = std::make_shared<Tensor>(m_shape, m_dtype, m_device);
     

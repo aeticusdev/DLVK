@@ -29,7 +29,7 @@ void main() {
         return;
     }
     
-    // ReLU backward: gradient is 1 if input > 0, else 0
+
     float input_val = input_data[index];
     float grad_output = grad_output_data[index];
     

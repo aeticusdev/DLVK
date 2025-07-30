@@ -17,7 +17,7 @@ private:
     bool m_train;
     std::string m_root_dir;
 
-    // Helper methods for loading MNIST files
+
     void load_images(const std::string& image_file);
     void load_labels(const std::string& label_file);
     uint32_t read_uint32_be(std::ifstream& file);
@@ -32,18 +32,18 @@ public:
      */
     MnistDataset(const std::string& root, bool train = true, bool download = true);
 
-    // Dataset interface implementation
+
     size_t size() const override;
     std::pair<Tensor, Tensor> get_item(size_t index) const override;
     std::vector<size_t> input_shape() const override;
     std::vector<size_t> target_shape() const override;
     size_t num_classes() const override;
 
-    // Raw data access for DataLoader
+
     const std::vector<float>& get_image_data(size_t index) const;
     int get_label(size_t index) const;
 
-    // MNIST specific properties
+
     static constexpr size_t IMAGE_SIZE = 28;
     static constexpr size_t NUM_CLASSES = 10;
 };

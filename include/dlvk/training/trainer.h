@@ -25,7 +25,7 @@ struct TrainingMetrics {
     int batch = 0;
     std::chrono::milliseconds epoch_time{0};
     
-    // Additional fields used by model persistence
+
     float training_loss = 0.0f;      // alias for train_loss
     float training_accuracy = 0.0f;  // alias for train_accuracy  
     float validation_loss = 0.0f;    // alias for val_loss
@@ -95,14 +95,14 @@ private:
     std::shared_ptr<LossFunction> m_loss_fn;
     std::vector<std::unique_ptr<TrainingCallback>> m_callbacks;
     
-    // Training state
+
     TrainingMetrics m_current_metrics;
     bool m_should_stop = false;
     
-    // Compute accuracy for classification tasks
+
     float compute_accuracy(const Tensor& predictions, const Tensor& targets);
     
-    // Process single batch
+
     TrainingMetrics process_batch(const Tensor& inputs, const Tensor& targets, bool training = true);
     
 public:
@@ -111,19 +111,19 @@ public:
             std::shared_ptr<LossFunction> loss_fn)
         : m_model(model), m_optimizer(optimizer), m_loss_fn(loss_fn) {}
     
-    // Add callback
+
     void add_callback(std::unique_ptr<TrainingCallback> callback);
     
-    // Train for specified epochs
+
     void fit(data::DataLoader& train_loader,
              data::DataLoader& val_loader,
              int epochs,
              bool verbose = true);
     
-    // Evaluate on dataset
+
     TrainingMetrics evaluate(data::DataLoader& data_loader, bool verbose = true);
     
-    // Get current metrics
+
     const TrainingMetrics& get_metrics() const { return m_current_metrics; }
 };
 

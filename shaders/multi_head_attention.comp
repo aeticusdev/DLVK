@@ -1,0 +1,114 @@
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(binding = 0) buffer QueryBuffer {
+    float query_data[];
+};
+
+layout(binding = 1) buffer KeyBuffer {
+    float key_data[];
+};
+
+layout(binding = 2) buffer ValueBuffer {
+    float value_data[];
+};
+
+layout(binding = 3) buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint seq_length;
+    uint head_dim;
+    uint num_heads;
+    float scale;
+} pc;
+
+
+shared float shared_scores[16][16];
+shared float shared_values[16][16];
+
+void main() {
+    uint batch_idx = gl_GlobalInvocationID.z;
+    uint seq_i = gl_GlobalInvocationID.y;
+    uint head_idx = gl_GlobalInvocationID.x / pc.head_dim;
+    uint dim_idx = gl_GlobalInvocationID.x % pc.head_dim;
+    
+
+    if (batch_idx >= pc.batch_size || seq_i >= pc.seq_length || 
+        head_idx >= pc.num_heads || dim_idx >= pc.head_dim) {
+        return;
+    }
+    
+    uint local_x = gl_LocalInvocationID.x;
+    uint local_y = gl_LocalInvocationID.y;
+    
+
+    uint head_offset = head_idx * pc.head_dim;
+    uint query_base = batch_idx * pc.seq_length * pc.num_heads * pc.head_dim + 
+                      seq_i * pc.num_heads * pc.head_dim + head_offset;
+    uint key_base = batch_idx * pc.seq_length * pc.num_heads * pc.head_dim + head_offset;
+    uint value_base = key_base;
+    uint output_base = query_base;
+    
+
+    float output_val = 0.0;
+    
+
+    for (uint seq_j = 0; seq_j < pc.seq_length; seq_j += 16) {
+
+        if (local_y < 16 && seq_j + local_y < pc.seq_length) {
+            uint key_idx = key_base + (seq_j + local_y) * pc.num_heads * pc.head_dim + dim_idx;
+            shared_scores[local_y][local_x] = (dim_idx < pc.head_dim) ? key_data[key_idx] : 0.0;
+        } else {
+            shared_scores[local_y][local_x] = 0.0;
+        }
+        
+        barrier();
+        
+
+        float attention_score = 0.0;
+        if (dim_idx < pc.head_dim) {
+            float query_val = query_data[query_base + dim_idx];
+            
+            for (uint k = 0; k < min(16u, pc.seq_length - seq_j); k++) {
+                if (k < pc.head_dim) {
+                    attention_score += query_val * shared_scores[k][dim_idx];
+                }
+            }
+        }
+        
+
+        attention_score *= pc.scale;
+        
+
+        float exp_score = exp(attention_score);
+        
+
+        barrier();
+        if (local_y < 16 && seq_j + local_y < pc.seq_length) {
+            uint value_idx = value_base + (seq_j + local_y) * pc.num_heads * pc.head_dim + dim_idx;
+            shared_values[local_y][local_x] = (dim_idx < pc.head_dim) ? value_data[value_idx] : 0.0;
+        } else {
+            shared_values[local_y][local_x] = 0.0;
+        }
+        
+        barrier();
+        
+
+        if (dim_idx < pc.head_dim) {
+            for (uint k = 0; k < min(16u, pc.seq_length - seq_j); k++) {
+                output_val += exp_score * shared_values[k][dim_idx];
+            }
+        }
+        
+        barrier();
+    }
+    
+
+    if (dim_idx < pc.head_dim) {
+        output_data[output_base + dim_idx] = output_val;
+    }
+}

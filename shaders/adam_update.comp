@@ -39,23 +39,23 @@ void main() {
     float m = momentum[index];
     float v = velocity[index];
     
-    // Update biased first moment estimate
+
     m = pc.beta1 * m + (1.0 - pc.beta1) * grad;
     
-    // Update biased second raw moment estimate  
+
     v = pc.beta2 * v + (1.0 - pc.beta2) * grad * grad;
     
-    // Bias-corrected first moment estimate
+
     float m_corrected = m * pc.bias_correction1;
     
-    // Bias-corrected second raw moment estimate
+
     float v_corrected = v * pc.bias_correction2;
     
-    // Update parameter
+
     float param_update = pc.lr * m_corrected / (sqrt(v_corrected) + pc.epsilon);
     params[index] -= param_update;
     
-    // Store updated moments
+
     momentum[index] = m;
     velocity[index] = v;
 }

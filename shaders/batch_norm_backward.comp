@@ -61,7 +61,7 @@ void main() {
     float var = saved_var[feature_idx];
     float inv_std = 1.0 / sqrt(var + pc.epsilon);
     
-    // Compute gradient w.r.t. gamma and beta
+
     float grad_gamma_sum = 0.0;
     float grad_beta_sum = 0.0;
     
@@ -76,7 +76,7 @@ void main() {
     
     barrier();
     
-    // Reduction for gradients
+
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride /= 2) {
         if (local_idx < stride) {
             shared_grad_gamma[local_idx] += shared_grad_gamma[local_idx + stride];
@@ -92,7 +92,7 @@ void main() {
     
     barrier();
     
-    // Compute intermediate sums for input gradient
+
     float sum1 = 0.0;
     float sum2 = 0.0;
     
@@ -107,7 +107,7 @@ void main() {
     
     barrier();
     
-    // Reduction for sums
+
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride /= 2) {
         if (local_idx < stride) {
             shared_sum1[local_idx] += shared_sum1[local_idx + stride];
@@ -119,7 +119,7 @@ void main() {
     float total_sum1 = shared_sum1[0];
     float total_sum2 = shared_sum2[0];
     
-    // Compute gradient w.r.t. input
+
     float N = float(elements_per_feature);
     float gamma_val = gamma[feature_idx];
     

@@ -38,10 +38,10 @@ public:
     void update_weights(float learning_rate) override;
     std::unique_ptr<Layer> clone() const override;
     
-    // Utility functions
+
     std::vector<size_t> compute_output_shape(const std::vector<size_t>& input_shape) const;
     
-    // Getters
+
     std::shared_ptr<Tensor> get_weights() const { return weights_; }
     std::shared_ptr<Tensor> get_bias() const { return bias_; }
     

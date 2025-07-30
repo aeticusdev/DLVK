@@ -29,17 +29,17 @@ public:
     std::unique_ptr<ModernLayer> clone() const override {
         auto cloned = std::make_unique<DenseLayerAdapter>(*m_device, m_input_size, m_output_size, m_use_bias);
         cloned->m_is_training = m_is_training;
-        // Copy weights and biases from the original layer
+
         if (m_layer->get_weights()) {
             auto weights_copy = std::make_shared<Tensor>(*m_layer->get_weights());
-            // Create temporary buffer to copy data
+
             std::vector<float> temp_data(weights_copy->size());
             weights_copy->download_data(temp_data.data());
             cloned->m_layer->get_weights()->upload_data(temp_data.data());
         }
         if (m_layer->get_bias()) {
             auto bias_copy = std::make_shared<Tensor>(*m_layer->get_bias());
-            // Create temporary buffer to copy data
+
             std::vector<float> temp_data(bias_copy->size());
             bias_copy->download_data(temp_data.data());
             cloned->m_layer->get_bias()->upload_data(temp_data.data());
@@ -105,17 +105,17 @@ public:
         auto cloned = std::make_unique<Conv2DLayerAdapter>(*m_device, m_in_channels, m_out_channels, 
                                                           m_kernel_size, m_stride, m_padding);
         cloned->m_is_training = m_is_training;
-        // Copy weights and biases from the original layer
+
         if (m_layer->get_weights()) {
             auto weights_copy = std::make_shared<Tensor>(*m_layer->get_weights());
-            // Create temporary buffer to copy data
+
             std::vector<float> temp_data(weights_copy->size());
             weights_copy->download_data(temp_data.data());
             cloned->m_layer->get_weights()->upload_data(temp_data.data());
         }
         if (m_layer->get_bias()) {
             auto bias_copy = std::make_shared<Tensor>(*m_layer->get_bias());
-            // Create temporary buffer to copy data
+
             std::vector<float> temp_data(bias_copy->size());
             bias_copy->download_data(temp_data.data());
             cloned->m_layer->get_bias()->upload_data(temp_data.data());
@@ -146,9 +146,9 @@ public:
     LayerInfo get_layer_info() const override {
         LayerInfo info;
         info.type = "Conv2D";
-        // Conv2D parameters: (kernel_height * kernel_width * in_channels + 1) * out_channels
-        // Weights: kernel_size * kernel_size * in_channels * out_channels
-        // Biases: out_channels (if used)
+
+
+
         info.parameter_count = (m_kernel_size * m_kernel_size * m_in_channels + 1) * m_out_channels;
         info.trainable = true;
         info.output_shape_str = "Unknown";
@@ -272,7 +272,7 @@ public:
     std::unique_ptr<ModernLayer> clone() const override {
         auto cloned = std::make_unique<BatchNorm1DLayerAdapter>(*m_device, m_num_features);
         cloned->m_is_training = m_is_training;
-        // Copy trainable parameters using getters and setters
+
         if (m_layer->get_gamma()) {
             cloned->m_layer->set_gamma(std::make_shared<Tensor>(*m_layer->get_gamma()));
         }
@@ -312,7 +312,7 @@ public:
     LayerInfo get_layer_info() const override {
         LayerInfo info;
         info.type = "BatchNorm1D";
-        // BatchNorm parameters: gamma (scale) + beta (shift) = 2 * num_features
+
         info.parameter_count = 2 * m_num_features;
         info.trainable = true;
         info.output_shape_str = "Unknown";
@@ -340,7 +340,7 @@ public:
     std::unique_ptr<ModernLayer> clone() const override {
         auto cloned = std::make_unique<BatchNorm2DLayerAdapter>(*m_device, m_num_features);
         cloned->m_is_training = m_is_training;
-        // Copy trainable parameters using getters and setters
+
         if (m_layer->get_gamma()) {
             cloned->m_layer->set_gamma(std::make_shared<Tensor>(*m_layer->get_gamma()));
         }
@@ -380,7 +380,7 @@ public:
     LayerInfo get_layer_info() const override {
         LayerInfo info;
         info.type = "BatchNorm2D";
-        // BatchNorm2D parameters: gamma (scale) + beta (shift) = 2 * num_features
+
         info.parameter_count = 2 * m_num_features;
         info.trainable = true;
         info.output_shape_str = "Unknown";

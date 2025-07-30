@@ -61,21 +61,21 @@ DLVK/
 #include "dlvk/model/model.h"
 #include "dlvk/core/vulkan_device.h"
 
-// Initialize device
+
 auto device = std::make_shared<dlvk::VulkanDevice>();
 device->initialize();
 
-// Build model with modern APIs
+
 dlvk::Sequential model(device);
 model.add_dense(784, 128);     // Input layer
 model.add_relu();              // Activation
 model.add_dense(128, 10);      // Hidden layer 
 model.add_softmax();           // Output activation
 
-// Display architecture
+
 model.summary();
 
-// Forward pass (GPU-accelerated)
+
 auto input = dlvk::Tensor::zeros(device, {1, 784});
 auto output = model.forward(input);  // Executes on GPU in ~3.7ms
 ```
@@ -84,7 +84,7 @@ auto output = model.forward(input);  // Executes on GPU in ~3.7ms
 ```cpp
 #include "dlvk/tensor/tensor_ops_static.h"
 
-// Global GPU operations access
+
 auto result = dlvk::TensorOpsStatic::relu(input_tensor);
 auto sigmoid_out = dlvk::TensorOpsStatic::sigmoid(input_tensor);
 auto matmul_result = dlvk::TensorOpsStatic::matrix_multiply(a, b);
@@ -95,27 +95,27 @@ auto matmul_result = dlvk::TensorOpsStatic::matrix_multiply(a, b);
 #include "dlvk/tensor/tensor.h"
 #include "dlvk/core/vulkan_device.h"
 
-// Initialize Vulkan device
+
 auto device = std::make_shared<dlvk::VulkanDevice>();
 device->initialize();
 
-// Create tensors
+
 auto a = std::make_shared<dlvk::Tensor>(device, std::vector<size_t>{4});
 auto b = std::make_shared<dlvk::Tensor>(device, std::vector<size_t>{4});
 
-// Upload data
+
 std::vector<float> data_a = {1.0f, 2.0f, 3.0f, 4.0f};
 std::vector<float> data_b = {2.0f, 1.0f, 2.0f, 1.0f};
 a->upload_data(data_a.data());
 b->upload_data(data_b.data());
 
-// GPU operations
+
 auto result_add = a->add(*b);        // [3, 3, 5, 5] 
 auto result_mul = a->multiply(*b);   // [2, 2, 6, 4]
 auto result_relu = a->relu();        // ReLU activation
 auto result_sum = a->sum();          // 10.0
 
-// All operations run on GPU with Vulkan compute shaders!
+
 ```
 
 ### CNN Architecture (New in Phase 4!)
@@ -124,10 +124,10 @@ auto result_sum = a->sum();          // 10.0
 #include "dlvk/layers/pooling_layers.h"
 #include "dlvk/optimizers/optimizers.h"
 
-// Input: 28×28 grayscale images (MNIST-style)
+
 auto input = std::make_shared<Tensor>(device, std::vector<size_t>{1, 1, 28, 28});
 
-// Convolutional layers
+
 Conv2DLayer conv1(device, 1, 8, 3, 3, 1, 1, 1, 1);  // 1→8 channels, 3×3 kernel
 auto conv1_out = conv1.forward(input);
 auto relu1_out = relu_activation(conv1_out);
@@ -135,7 +135,7 @@ auto relu1_out = relu_activation(conv1_out);
 MaxPool2DLayer pool1(device, 2, 2, 2, 2, 0, 0);     // 2×2 pooling
 auto pool1_out = pool1.forward(relu1_out);           // 28×28 → 14×14
 
-// Second convolutional block
+
 Conv2DLayer conv2(device, 8, 16, 3, 3, 1, 1, 1, 1); // 8→16 channels
 auto conv2_out = conv2.forward(pool1_out);
 auto relu2_out = relu_activation(conv2_out);
@@ -143,9 +143,9 @@ auto relu2_out = relu_activation(conv2_out);
 MaxPool2DLayer pool2(device, 2, 2, 2, 2, 0, 0);     
 auto final_out = pool2.forward(relu2_out);          // 14×14 → 7×7
 
-// Advanced optimizers
+
 AdamOptimizer adam(0.001f, 0.9f, 0.999f, 1e-8f);
-// Ready for image classification training!
+
 ```
 
 ## Dependencies
@@ -287,23 +287,23 @@ Input -> Target | Prediction
 All operations run on GPU with Vulkan compute shaders:
 
 ```cpp
-// Element-wise operations
+
 auto c = a->add(*b);                    // [1,2,3,4] + [2,1,2,1] = [3,3,5,5]
 auto d = a->multiply(*b);               // [1,2,3,4] * [2,1,2,1] = [2,2,6,4]
 auto e = a->subtract(*b);               // [1,2,3,4] - [2,1,2,1] = [-1,1,1,3]
 auto f = a->divide(*b);                 // [1,2,3,4] / [2,1,2,1] = [0.5,2,1.5,4]
 
-// Matrix operations  
+
 auto g = a->matrix_multiply(*b);        // GPU matrix multiplication
 auto h = a->transpose();                // Matrix transpose
 
-// Activation functions
+
 auto i = a->relu();                     // ReLU activation
 auto j = a->sigmoid();                  // Sigmoid activation  
 auto k = a->tanh();                     // Tanh activation
 auto l = a->softmax();                  // Softmax activation
 
-// Reduction operations
+
 auto m = a->sum();                      // Sum all elements
 auto n = a->mean();                     // Mean of elements
 auto o = a->max();                      // Maximum element
@@ -323,7 +323,7 @@ auto p = a->min();                      // Minimum element
 DLVK uses GLSL compute shaders compiled to SPIR-V for GPU operations:
 
 ```glsl
-// Example: Element-wise addition shader
+
 #version 450
 layout(local_size_x = 256) in;
 

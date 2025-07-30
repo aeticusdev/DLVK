@@ -19,7 +19,7 @@ DataLoader::DataLoader(std::shared_ptr<Dataset> dataset,
     , m_drop_last(drop_last)
     , m_rng(std::random_device{}()) {
     
-    // Initialize indices
+
     m_indices.resize(m_dataset->size());
     std::iota(m_indices.begin(), m_indices.end(), 0);
     
@@ -49,21 +49,21 @@ std::pair<Tensor, Tensor> DataLoader::get_batch(size_t batch_idx) const {
     size_t end_idx = std::min(start_idx + m_batch_size, m_dataset->size());
     size_t actual_batch_size = end_idx - start_idx;
 
-    // Special handling for MNIST dataset
+
     auto mnist_dataset = std::dynamic_pointer_cast<MnistDataset>(m_dataset);
     if (mnist_dataset) {
-        // Get shapes from the dataset
+
         auto input_shape = mnist_dataset->input_shape();
         auto target_shape = mnist_dataset->target_shape();
 
-        // Create batch shapes (add batch dimension)
+
         std::vector<size_t> batch_input_shape = {actual_batch_size};
         batch_input_shape.insert(batch_input_shape.end(), input_shape.begin(), input_shape.end());
         
         std::vector<size_t> batch_target_shape = {actual_batch_size};
         batch_target_shape.insert(batch_target_shape.end(), target_shape.begin(), target_shape.end());
 
-        // Calculate total sizes
+
         size_t input_sample_size = 1;
         for (size_t dim : input_shape) {
             input_sample_size *= dim;
@@ -74,20 +74,20 @@ std::pair<Tensor, Tensor> DataLoader::get_batch(size_t batch_idx) const {
             target_sample_size *= dim;
         }
 
-        // Allocate batch data
+
         std::vector<float> batch_input_data(actual_batch_size * input_sample_size);
         std::vector<float> batch_target_data(actual_batch_size * target_sample_size);
 
-        // Fill batch data
+
         for (size_t i = 0; i < actual_batch_size; ++i) {
             size_t sample_idx = m_indices[start_idx + i];
             
-            // Copy input data (image)
+
             const auto& image_data = mnist_dataset->get_image_data(sample_idx);
             std::copy(image_data.begin(), image_data.end(),
                      batch_input_data.begin() + i * input_sample_size);
             
-            // Create one-hot encoded target
+
             int label = mnist_dataset->get_label(sample_idx);
             size_t target_offset = i * target_sample_size;
             std::fill(batch_target_data.begin() + target_offset,
@@ -95,18 +95,18 @@ std::pair<Tensor, Tensor> DataLoader::get_batch(size_t batch_idx) const {
             batch_target_data[target_offset + label] = 1.0f;
         }
 
-        // Create batch tensors
+
         Tensor batch_input(batch_input_shape, DataType::FLOAT32, m_device);
         Tensor batch_target(batch_target_shape, DataType::FLOAT32, m_device);
         
-        // Upload data to GPU
+
         batch_input.upload_data(batch_input_data.data());
         batch_target.upload_data(batch_target_data.data());
 
         return {std::move(batch_input), std::move(batch_target)};
     }
 
-    // Fallback for other dataset types (not implemented yet)
+
     throw std::runtime_error("DataLoader only supports MnistDataset currently");
 }
 
@@ -116,7 +116,7 @@ void DataLoader::new_epoch() {
     }
 }
 
-// Iterator implementation
+
 DataLoader::Iterator::Iterator(const DataLoader* loader, size_t batch_idx)
     : m_loader(loader), m_current_batch(batch_idx) {
 }

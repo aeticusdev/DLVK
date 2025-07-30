@@ -43,20 +43,20 @@ void main() {
         return;
     }
     
-    // Compute gradient w.r.t. input for all input channels at this location
+
     for (uint in_ch = 0; in_ch < pc.in_channels; in_ch++) {
         float grad_sum = 0.0;
         
-        // For each output channel
+
         for (uint out_ch = 0; out_ch < pc.out_channels; out_ch++) {
-            // For each kernel position that could have used this input pixel
+
             for (uint ky = 0; ky < pc.kernel_height; ky++) {
                 for (uint kx = 0; kx < pc.kernel_width; kx++) {
-                    // Calculate which output position this kernel tap corresponds to
+
                     int output_y = int(input_y + pc.padding_h - ky);
                     int output_x = int(input_x + pc.padding_w - kx);
                     
-                    // Check if this maps to a valid output position
+
                     if (output_y >= 0 && output_x >= 0 &&
                         output_y % int(pc.stride_h) == 0 && output_x % int(pc.stride_w) == 0) {
                         
@@ -79,7 +79,7 @@ void main() {
             }
         }
         
-        // Store gradient w.r.t. input
+
         uint grad_input_idx = batch_idx * (pc.in_channels * pc.input_height * pc.input_width) +
                              in_ch * (pc.input_height * pc.input_width) +
                              input_y * pc.input_width + input_x;

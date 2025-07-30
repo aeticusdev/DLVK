@@ -14,11 +14,11 @@ float compute_grad_norm(const std::vector<std::shared_ptr<Tensor>>& gradients) {
             continue;
         }
         
-        // Download gradient data
+
         std::vector<float> grad_data(grad->size());
         grad->download_data(grad_data.data());
         
-        // Compute squared norm
+
         for (float val : grad_data) {
             total_norm += val * val;
         }
@@ -36,13 +36,13 @@ void clip_grad_norm(std::vector<std::shared_ptr<Tensor>>& gradients, float max_n
     
     float clip_coef = max_norm / total_norm;
     
-    // Scale all gradients
+
     for (auto& grad : gradients) {
         if (!grad) {
             continue;
         }
         
-        // Download, scale, and upload gradient data
+
         std::vector<float> grad_data(grad->size());
         grad->download_data(grad_data.data());
         
@@ -60,16 +60,16 @@ void clip_grad_value(std::vector<std::shared_ptr<Tensor>>& gradients, float min_
             continue;
         }
         
-        // Download gradient data
+
         std::vector<float> grad_data(grad->size());
         grad->download_data(grad_data.data());
         
-        // Clip values
+
         for (float& val : grad_data) {
             val = std::max(min_value, std::min(max_value, val));
         }
         
-        // Upload clipped data
+
         grad->upload_data(grad_data.data());
     }
 }

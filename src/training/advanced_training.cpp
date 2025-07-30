@@ -9,14 +9,14 @@
 namespace dlvk {
 namespace training {
 
-// CosineAnnealingScheduler implementation
+
 float CosineAnnealingScheduler::get_lr(int step, float current_lr, float validation_metric) {
     float cosine_decay = 0.5f * (1 + std::cos(3.14159265358979323846f * m_current_step / m_max_steps));
     float decayed = (1 - m_min_lr) * cosine_decay + m_min_lr;
     return m_initial_lr * decayed;
 }
 
-// OneCycleScheduler implementation
+
 float OneCycleScheduler::get_lr(int step, float current_lr, float validation_metric) {
     int steps_up = static_cast<int>(m_total_steps * (m_pct_start / 100.0f));
     int steps_down = m_total_steps - steps_up;
@@ -28,7 +28,7 @@ float OneCycleScheduler::get_lr(int step, float current_lr, float validation_met
     }
 }
 
-// ReduceOnPlateauScheduler implementation
+
 float ReduceOnPlateauScheduler::get_lr(int step, float current_lr, float validation_metric) {
     if (m_cooldown_count > 0) {
         --m_cooldown_count;
@@ -66,7 +66,7 @@ void ReduceOnPlateauScheduler::reset() {
     m_cooldown_count = 0;
 }
 
-// AdvancedTrainer implementation
+
 void AdvancedTrainer::setup_mixed_precision() {
     if (m_config.use_mixed_precision) {
         m_mp_trainer = std::make_unique<MixedPrecisionTrainer>(m_config.precision_mode);
@@ -81,8 +81,8 @@ void AdvancedTrainer::setup_regularization() {
 }
 
 void AdvancedTrainer::setup_lr_scheduling() {
-    // Currently only implementing CosineAnnealingScheduler for illustration
-    // Other schedulers would be similar
+
+
     if (m_config.lr_schedule == LRScheduleType::COSINE_ANNEALING) {
         m_lr_scheduler = std::make_unique<CosineAnnealingScheduler>(m_optimizer->get_lr(),
                                                                     1e-6f, // Minimum LR
@@ -91,21 +91,21 @@ void AdvancedTrainer::setup_lr_scheduling() {
 }
 
 void AdvancedTrainer::setup_callbacks() {
-    // Add callbacks based on configuration
+
 }
 
 TrainingMetrics AdvancedTrainer::process_epoch(data::DataLoader &train_loader, data::DataLoader &val_loader, int epoch) {
     TrainingMetrics train_metrics;
-    // Loop through batches
-    // Update metrics
+
+
     return train_metrics;
 }
 
 TrainingMetrics AdvancedTrainer::process_batch(const Tensor &inputs, const Tensor &targets, bool training) {
     TrainingMetrics batch_metrics;
-    // Forward pass
-    // Compute loss
-    // Backward pass and parameter update
+
+
+
     return batch_metrics;
 }
 
@@ -117,11 +117,11 @@ void AdvancedTrainer::update_learning_rate(float validation_metric) {
 }
 
 void AdvancedTrainer::save_checkpoint(int epoch, bool is_best) {
-    // Save model checkpoint
+
 }
 
 void AdvancedTrainer::log_metrics(const TrainingMetrics &metrics, bool is_validation) {
-    // Log metrics
+
 }
 
 std::vector<TrainingMetrics> AdvancedTrainer::fit(data::DataLoader &train_loader, data::DataLoader &val_loader, int epochs) {
@@ -135,13 +135,13 @@ std::vector<TrainingMetrics> AdvancedTrainer::fit(data::DataLoader &train_loader
 
 TrainingMetrics AdvancedTrainer::evaluate(data::DataLoader &data_loader) {
     TrainingMetrics eval_metrics;
-    // Evaluate model on data loader
+
     return eval_metrics;
 }
 
 AdvancedTrainer::TrainingStatistics AdvancedTrainer::get_statistics() const {
     TrainingStatistics stats;
-    // Compute statistics
+
     return stats;
 }
 
@@ -157,7 +157,7 @@ HyperparameterResult random_search(
 
     for (int trial = 0; trial < config.n_trials; ++trial) {
         std::unordered_map<std::string, float> trial_params;
-        // Sample parameters
+
         float score = objective_fn(trial_params);
         if (trial == 0 || (config.maximize_metric ? (score > result.best_score) : (score < result.best_score))) {
             result.best_score = score;

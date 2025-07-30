@@ -57,7 +57,7 @@ void main() {
     float sum = 0.0;
     float sum_sq = 0.0;
     
-    // Each thread processes multiple elements for this feature
+
     uint elements_per_feature = pc.total_elements / pc.num_features;
     uint start_idx = feature_idx * elements_per_feature;
     
@@ -72,7 +72,7 @@ void main() {
     
     barrier();
     
-    // Reduction to compute mean and variance
+
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride /= 2) {
         if (local_idx < stride) {
             shared_sum[local_idx] += shared_sum[local_idx + stride];
@@ -89,7 +89,7 @@ void main() {
         saved_var[feature_idx] = variance;
         
         if (pc.training == 1) {
-            // Update running statistics
+
             running_mean[feature_idx] = pc.momentum * running_mean[feature_idx] + (1.0 - pc.momentum) * mean;
             running_var[feature_idx] = pc.momentum * running_var[feature_idx] + (1.0 - pc.momentum) * variance;
         }
@@ -97,7 +97,7 @@ void main() {
     
     barrier();
     
-    // Normalize and scale
+
     float mean = saved_mean[feature_idx];
     float var = saved_var[feature_idx];
     float inv_std = 1.0 / sqrt(var + pc.epsilon);

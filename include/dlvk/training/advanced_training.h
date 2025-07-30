@@ -133,39 +133,39 @@ public:
  * @brief Advanced training configuration
  */
 struct AdvancedTrainingConfig {
-    // Mixed precision
+
     bool use_mixed_precision = false;
     PrecisionMode precision_mode = PrecisionMode::MIXED;
     bool enable_gradient_scaling = true;
     
-    // Regularization
+
     bool use_regularization = false;
     float l2_lambda = 0.01f;
     float weight_decay = 0.0001f;
     bool use_dropout_scheduling = false;
     
-    // Learning rate scheduling
+
     LRScheduleType lr_schedule = LRScheduleType::CONSTANT;
     float lr_decay_factor = 0.1f;
     int lr_decay_patience = 10;
     float lr_min = 1e-7f;
     
-    // Gradient management
+
     bool use_gradient_clipping = false;
     float gradient_clip_value = 1.0f;
     bool gradient_clip_by_norm = true;
     
-    // Training enhancements
+
     bool use_early_stopping = true;
     int early_stopping_patience = 15;
     bool save_best_model = true;
     std::string checkpoint_dir = "./checkpoints";
     
-    // Validation
+
     float validation_split = 0.2f;
     int validation_frequency = 1;  // Every N epochs
     
-    // Logging and monitoring
+
     bool verbose_training = true;
     int log_frequency = 10;  // Every N batches
     bool save_training_curves = true;
@@ -181,20 +181,20 @@ private:
     std::shared_ptr<LossFunction> m_loss_fn;
     AdvancedTrainingConfig m_config;
     
-    // Advanced components
+
     std::unique_ptr<MixedPrecisionTrainer> m_mp_trainer;
     std::unique_ptr<RegularizationManager> m_regularization;
     std::unique_ptr<LearningRateScheduler> m_lr_scheduler;
     std::vector<std::unique_ptr<TrainingCallback>> m_callbacks;
     
-    // Training state
+
     TrainingMetrics m_current_metrics;
     std::vector<TrainingMetrics> m_training_history;
     float m_best_validation_loss;
     int m_epochs_without_improvement;
     bool m_should_stop;
     
-    // Internal methods
+
     void setup_mixed_precision();
     void setup_regularization();
     void setup_lr_scheduling();
@@ -271,11 +271,11 @@ public:
         int total_epochs_trained = 0;
         bool converged = false;
         
-        // Mixed precision stats
+
         float memory_savings_ratio = 0.0f;
         float training_speedup = 0.0f;
         
-        // Regularization stats
+
         float final_l1_loss = 0.0f;
         float final_l2_loss = 0.0f;
         float final_weight_decay = 0.0f;
