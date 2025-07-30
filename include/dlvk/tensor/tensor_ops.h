@@ -16,40 +16,52 @@ public:
 
     bool initialize();
     
-    // Element-wise operations
+
     bool add(const Tensor& a, const Tensor& b, Tensor& result);
     bool add_broadcast(const Tensor& a, const Tensor& b, Tensor& result); // For broadcasting bias addition
     bool multiply(const Tensor& a, const Tensor& b, Tensor& result);
     bool subtract(const Tensor& a, const Tensor& b, Tensor& result);
     bool divide(const Tensor& a, const Tensor& b, Tensor& result);
     
-    // Matrix operations
+
     bool matrix_multiply(const Tensor& a, const Tensor& b, Tensor& result);
+    bool batch_matrix_multiply(const Tensor& a, const Tensor& b, Tensor& result);
     bool transpose(const Tensor& input, Tensor& result);
     
-    // Activation functions
+
     bool relu(const Tensor& input, Tensor& result);
     bool sigmoid(const Tensor& input, Tensor& result);
     bool tanh_activation(const Tensor& input, Tensor& result);
     bool softmax(const Tensor& input, Tensor& result);
     
-    // Backward pass for activation functions
+
     bool relu_backward(const Tensor& input, const Tensor& grad_output, Tensor& grad_input);
     bool sigmoid_backward(const Tensor& output, const Tensor& grad_output, Tensor& grad_input);
     bool tanh_backward(const Tensor& output, const Tensor& grad_output, Tensor& grad_input);
     
-    // Reduction operations
+
     bool sum(const Tensor& input, Tensor& result, int axis = -1);
     bool sum_axis0(const Tensor& input, Tensor& result); // Sum along batch dimension
     bool mean(const Tensor& input, Tensor& result, int axis = -1);
     bool max(const Tensor& input, Tensor& result, int axis = -1);
     bool min(const Tensor& input, Tensor& result, int axis = -1);
     
-    // Utility operations
+
     bool fill(Tensor& tensor, float value);
     bool copy(const Tensor& source, Tensor& destination);
     
-    // Scalar operations for optimizers
+
+    bool embedding_lookup(Tensor& output, const Tensor& indices, const Tensor& embeddings);
+    bool layer_norm(Tensor& output, const Tensor& input, const Tensor& weight, const Tensor& bias, float eps = 1e-5f);
+    bool attention(Tensor& output, const Tensor& query, const Tensor& key, const Tensor& value, float scale = 1.0f);
+    
+
+    bool reshape_for_attention(Tensor& output, const Tensor& input, 
+                              size_t batch_size, size_t seq_len, size_t num_heads, size_t head_dim);
+    bool reshape_from_attention(Tensor& output, const Tensor& input,
+                               size_t batch_size, size_t seq_len, size_t num_heads, size_t head_dim);
+    
+
     bool scale(const Tensor& input, float scalar, Tensor& result);
     bool scalar_add(const Tensor& input, float scalar, Tensor& result);
     bool scalar_multiply(const Tensor& input, float scalar, Tensor& result);  // GPU version
@@ -61,16 +73,16 @@ public:
                      Tensor& param, Tensor& new_m, Tensor& new_v,
                      float lr, float beta1, float beta2, float epsilon);
     
-    // GPU-based gradient clipping operations
+
     bool gradient_clip_by_norm(const Tensor& gradient, float max_norm, Tensor& clipped_gradient);
     bool gradient_clip_by_value(const Tensor& gradient, float min_val, float max_val, Tensor& clipped_gradient);
     
-    // Static interface for global instance
+
     static bool initialize(VulkanDevice* device);
     static void shutdown();
     static TensorOps* instance() { return s_instance; }
     
-    // CNN operations
+
     bool conv2d(const Tensor& input, const Tensor& weights, const Tensor& bias, Tensor& output,
                 size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w);
     bool conv2d_backward_input(const Tensor& grad_output, const Tensor& weights, Tensor& grad_input,
@@ -79,7 +91,7 @@ public:
                                 Tensor& grad_weights, Tensor& grad_bias,
                                 size_t stride_h, size_t stride_w, size_t padding_h, size_t padding_w);
     
-    // Pooling operations
+
     bool maxpool2d(const Tensor& input, Tensor& output, Tensor& indices,
                    size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
                    size_t padding_h, size_t padding_w);
@@ -91,7 +103,7 @@ public:
                             size_t pool_h, size_t pool_w, size_t stride_h, size_t stride_w,
                             size_t padding_h, size_t padding_w);
     
-    // Batch normalization operations
+
     bool batch_norm(const Tensor& input, const Tensor& gamma, const Tensor& beta,
                     Tensor& running_mean, Tensor& running_var,
                     Tensor& output, Tensor& saved_mean, Tensor& saved_var,
@@ -101,7 +113,7 @@ public:
                              Tensor& grad_input, Tensor& grad_gamma, Tensor& grad_beta,
                              float epsilon);
     
-    // Dropout operations
+
     bool dropout(const Tensor& input, Tensor& output, Tensor& mask,
                  float dropout_rate, bool training, uint32_t seed);
     bool dropout_backward(const Tensor& grad_output, const Tensor& mask, Tensor& grad_input,
@@ -110,15 +122,16 @@ public:
 private:
     std::shared_ptr<VulkanDevice> m_device;
     
-    // Static instance for global access
+
     static TensorOps* s_instance;
     
-    // Compute pipelines for different operations
+
     std::unique_ptr<ComputePipeline> m_add_pipeline;
     std::unique_ptr<ComputePipeline> m_multiply_pipeline;
     std::unique_ptr<ComputePipeline> m_subtract_pipeline;
     std::unique_ptr<ComputePipeline> m_divide_pipeline;
     std::unique_ptr<ComputePipeline> m_matmul_pipeline;
+    std::unique_ptr<ComputePipeline> m_batch_matmul_pipeline;
     std::unique_ptr<ComputePipeline> m_relu_pipeline;
     std::unique_ptr<ComputePipeline> m_sigmoid_pipeline;
     std::unique_ptr<ComputePipeline> m_tanh_pipeline;
@@ -127,53 +140,60 @@ private:
     std::unique_ptr<ComputePipeline> m_reduce_sum_pipeline;
     std::unique_ptr<ComputePipeline> m_fill_pipeline;
     
-    // Backward pass pipelines
+
     std::unique_ptr<ComputePipeline> m_relu_backward_pipeline;
     std::unique_ptr<ComputePipeline> m_sigmoid_backward_pipeline;
     std::unique_ptr<ComputePipeline> m_tanh_backward_pipeline;
     
-    // Specialized reduction pipelines
+
     std::unique_ptr<ComputePipeline> m_reduce_sum_axis0_pipeline;
     
-    // Missing GPU pipelines that were falling back to CPU
+
     std::unique_ptr<ComputePipeline> m_scalar_multiply_pipeline;
     std::unique_ptr<ComputePipeline> m_broadcast_add_pipeline;
     std::unique_ptr<ComputePipeline> m_sqrt_pipeline;
     std::unique_ptr<ComputePipeline> m_clamp_pipeline;
     
-    // Optimizer pipelines
+
     std::unique_ptr<ComputePipeline> m_adam_update_pipeline;
     
-    // CNN pipelines
+
     std::unique_ptr<ComputePipeline> m_conv2d_pipeline;
     std::unique_ptr<ComputePipeline> m_conv2d_backward_input_pipeline;
     std::unique_ptr<ComputePipeline> m_conv2d_backward_weight_pipeline;
     
-    // Pooling pipelines
+
     std::unique_ptr<ComputePipeline> m_maxpool2d_pipeline;
     std::unique_ptr<ComputePipeline> m_maxpool2d_backward_pipeline;
     std::unique_ptr<ComputePipeline> m_avgpool2d_pipeline;
     std::unique_ptr<ComputePipeline> m_avgpool2d_backward_pipeline;
     
-    // Batch normalization pipelines
+
     std::unique_ptr<ComputePipeline> m_batch_norm_pipeline;
     std::unique_ptr<ComputePipeline> m_batch_norm_backward_pipeline;
     
-    // Dropout pipelines
+
     std::unique_ptr<ComputePipeline> m_dropout_pipeline;
     std::unique_ptr<ComputePipeline> m_dropout_backward_pipeline;
     
-    // Command buffer for operations
+
+    std::unique_ptr<ComputePipeline> m_embedding_lookup_pipeline;
+    std::unique_ptr<ComputePipeline> m_layer_norm_pipeline;
+    std::unique_ptr<ComputePipeline> m_multi_head_attention_pipeline;
+    std::unique_ptr<ComputePipeline> m_attention_pipeline;
+    std::unique_ptr<ComputePipeline> m_tensor_reshape_pipeline;
+    
+
     VkCommandBuffer m_command_buffer = VK_NULL_HANDLE;
     VkFence m_fence = VK_NULL_HANDLE;
     
-    // Helper methods
+
     bool create_pipelines();
     bool allocate_command_buffer();
     VkCommandBuffer begin_single_time_commands();
     void end_single_time_commands(VkCommandBuffer cmd_buffer);
     
-    // Validation helpers
+
     bool validate_element_wise_operation(const Tensor& a, const Tensor& b, const Tensor& result);
     bool validate_matrix_multiply(const Tensor& a, const Tensor& b, const Tensor& result);
 };

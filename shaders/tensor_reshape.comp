@@ -1,0 +1,91 @@
+#version 450
+
+
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) buffer InputBuffer {
+    float input_data[];
+};
+
+layout(binding = 1) buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint total_elements;
+    uint input_dim0, input_dim1, input_dim2, input_dim3;    // Input dimensions (up to 4D)
+    uint output_dim0, output_dim1, output_dim2, output_dim3; // Output dimensions
+    uint num_dims;  // Number of dimensions (2, 3, or 4)
+} pc;
+
+
+void index_to_coords_4d(uint linear_idx, out uint coords[4]) {
+    coords[3] = linear_idx % pc.input_dim3;
+    linear_idx /= pc.input_dim3;
+    coords[2] = linear_idx % pc.input_dim2;
+    linear_idx /= pc.input_dim2;
+    coords[1] = linear_idx % pc.input_dim1;
+    coords[0] = linear_idx / pc.input_dim1;
+}
+
+
+uint coords_to_index_4d(uint coords[4]) {
+    return coords[0] * (pc.output_dim1 * pc.output_dim2 * pc.output_dim3) +
+           coords[1] * (pc.output_dim2 * pc.output_dim3) +
+           coords[2] * pc.output_dim3 +
+           coords[3];
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    
+    if (idx >= pc.total_elements) {
+        return;
+    }
+    
+
+
+
+    
+    uint input_coords[4];
+    uint output_coords[4];
+    
+    if (pc.num_dims == 3) {
+
+        uint batch = idx / (pc.input_dim1 * pc.input_dim2);
+        uint remaining = idx % (pc.input_dim1 * pc.input_dim2);
+        uint seq = remaining / pc.input_dim2;
+        uint embed_idx = remaining % pc.input_dim2;
+        
+
+        uint head = embed_idx / pc.output_dim3;
+        uint head_dim_idx = embed_idx % pc.output_dim3;
+        
+
+        uint output_idx = batch * (pc.output_dim1 * pc.output_dim2 * pc.output_dim3) +
+                         head * (pc.output_dim2 * pc.output_dim3) +
+                         seq * pc.output_dim3 +
+                         head_dim_idx;
+        
+        output_data[output_idx] = input_data[idx];
+    } else if (pc.num_dims == 4) {
+
+        uint batch = idx / (pc.input_dim1 * pc.input_dim2 * pc.input_dim3);
+        uint remaining = idx % (pc.input_dim1 * pc.input_dim2 * pc.input_dim3);
+        uint head = remaining / (pc.input_dim2 * pc.input_dim3);
+        remaining = remaining % (pc.input_dim2 * pc.input_dim3);
+        uint seq = remaining / pc.input_dim3;
+        uint head_dim_idx = remaining % pc.input_dim3;
+        
+
+        uint embed_idx = head * pc.input_dim3 + head_dim_idx;
+        
+
+        uint output_idx = batch * (pc.output_dim1 * pc.output_dim2) +
+                         seq * pc.output_dim2 +
+                         embed_idx;
+        
+        output_data[output_idx] = input_data[idx];
+    }
+}

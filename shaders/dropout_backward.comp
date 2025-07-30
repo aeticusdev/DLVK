@@ -27,10 +27,10 @@ void main() {
     }
     
     if (mask_data[idx] == 0) {
-        // This element was dropped
+
         grad_input[idx] = 0.0;
     } else {
-        // This element was kept and scaled
+
         grad_input[idx] = grad_output[idx] * pc.scale_factor;
     }
 }

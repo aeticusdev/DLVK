@@ -25,7 +25,7 @@ void main() {
         return;
     }
     
-    // Avoid division by zero
+
     float b_val = data_b[index];
     if (abs(b_val) < 1e-8) {
         data_out[index] = sign(data_a[index]) * 1e8; // Large value with correct sign

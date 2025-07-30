@@ -185,7 +185,7 @@ public:
     );
 
 private:
-    // Quantization implementation
+
     static void quantize_weights(std::shared_ptr<Tensor> weights, const QuantizationConfig& config);
     static void calibrate_quantization_scales(
         const Sequential& model,
@@ -193,7 +193,7 @@ private:
         std::map<std::string, float>& scales
     );
 
-    // Pruning implementation
+
     static void apply_magnitude_pruning(std::shared_ptr<Tensor> weights, float threshold);
     static void apply_structured_pruning(Sequential& model, const PruningConfig& config);
     static std::vector<int> select_neurons_to_prune(
@@ -201,12 +201,12 @@ private:
         float sparsity_ratio
     );
 
-    // ONNX implementation
+
     static void build_onnx_graph(const Sequential& model, const ONNXConfig& config);
     static void convert_layer_to_onnx_node(const ModernLayer& layer);
     static Sequential parse_onnx_graph(const std::string& file_path, std::shared_ptr<VulkanDevice> device);
 
-    // Optimization utilities
+
     static OptimizationStats calculate_optimization_stats(
         const Sequential& original_model,
         const Sequential& optimized_model

@@ -9,6 +9,13 @@ find_package(Vulkan REQUIRED)
 # Optional packages for examples and advanced features
 find_package(glfw3 3.3 QUIET)
 find_package(glm QUIET)
+# Export format dependencies (all optional)
+find_package(HDF5 COMPONENTS C QUIET)
+# find_package(Torch QUIET)  # Disable for now due to API compatibility issues
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(JSONCPP jsoncpp)
+endif()
 
 # Add executable targets
 add_executable(dlvk_demo
@@ -434,6 +441,8 @@ add_library(dlvk STATIC
     src/layers/batch_norm_layers.cpp
     src/layers/dropout_layer.cpp
     src/layers/activation.cpp
+    src/layers/recurrent_layers.cpp
+    src/layers/modern_layers.cpp
     src/optimizers/sgd.cpp
     src/optimizers/adam.cpp
     src/optimizers/optimizers.cpp
@@ -454,7 +463,11 @@ add_library(dlvk STATIC
     src/optimization/model_optimizer.cpp
     # Phase 6 Deployment
     src/deployment/multi_gpu_trainer.cpp
+    src/deployment/ring_all_reduce.cpp
     src/deployment/inference_deployment.cpp
+    # Model Export Support
+    src/export/model_export.cpp
+    src/export/format_specific.cpp
 )
 
 # Include directories
@@ -462,6 +475,25 @@ target_include_directories(dlvk PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${Vulkan_INCLUDE_DIRS}
 )
+
+# Link libraries with optional export format support
+target_link_libraries(dlvk PUBLIC
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+# Optional dependencies for export formats
+if(HDF5_FOUND)
+    target_include_directories(dlvk PRIVATE ${HDF5_INCLUDE_DIRS})
+    target_link_libraries(dlvk PRIVATE ${HDF5_LIBRARIES})
+    target_compile_definitions(dlvk PRIVATE DLVK_HDF5_SUPPORT)
+endif()
+
+if(JSONCPP_FOUND)
+    target_include_directories(dlvk PRIVATE ${JSONCPP_INCLUDE_DIRS})
+    target_link_libraries(dlvk PRIVATE ${JSONCPP_LIBRARIES})
+    target_compile_definitions(dlvk PRIVATE DLVK_JSON_SUPPORT)
+endif()
 
 target_include_directories(dlvk_demo PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -744,6 +776,24 @@ target_link_libraries(optimization_demo PRIVATE
 
 target_compile_features(optimization_demo PRIVATE cxx_std_17)
 
+# Modern Layers Test
+add_executable(test_modern_layers
+    test_modern_layers.cpp
+)
+
+target_include_directories(test_modern_layers PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(test_modern_layers PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+target_compile_features(test_modern_layers PRIVATE cxx_std_17)
+
 # Phase 6 Complete Demo
 add_executable(phase6_demo
     examples/phase6_demo.cpp
@@ -761,6 +811,24 @@ target_link_libraries(phase6_demo PRIVATE
 )
 
 target_compile_features(phase6_demo PRIVATE cxx_std_17)
+
+# Real Export Integration Demo - Uses actual DLVK export system
+add_executable(real_export_integration_demo
+    examples/real_export_integration_demo.cpp
+)
+
+target_include_directories(real_export_integration_demo PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Vulkan_INCLUDE_DIRS}
+)
+
+target_link_libraries(real_export_integration_demo PRIVATE
+    dlvk
+    ${Vulkan_LIBRARIES}
+    ${CMAKE_DL_LIBS}
+)
+
+target_compile_features(real_export_integration_demo PRIVATE cxx_std_17)
 
 # Testing
 enable_testing()

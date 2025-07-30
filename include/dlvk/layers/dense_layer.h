@@ -27,7 +27,7 @@ public:
     void update_weights(float learning_rate) override;
     std::unique_ptr<Layer> clone() const override;
     
-    // Getters for weights and bias (useful for training)
+
     std::shared_ptr<Tensor> get_weights() const { return weights_; }
     std::shared_ptr<Tensor> get_bias() const { return bias_; }
 };

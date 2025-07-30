@@ -1,0 +1,28 @@
+#version 450
+
+layout(local_size_x = 256) in;
+
+layout(set = 0, binding = 0, std430) restrict readonly buffer SrcBuffer {
+    float src_data[];
+};
+
+layout(set = 0, binding = 1, std430) restrict buffer DstBuffer {
+    float dst_data[];
+};
+
+layout(push_constant) uniform PushConstants {
+    uint num_elements;
+    uint src_offset;
+    uint dst_offset;
+} push_constants;
+
+void main() {
+    uint index = gl_GlobalInvocationID.x;
+    if (index >= push_constants.num_elements) return;
+    
+    uint src_idx = push_constants.src_offset + index;
+    uint dst_idx = push_constants.dst_offset + index;
+    
+
+    dst_data[dst_idx] += src_data[src_idx];
+}

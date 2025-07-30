@@ -8,7 +8,7 @@
 namespace dlvk {
 namespace training {
 
-// ModelSerializer implementation
+
 
 bool ModelSerializer::save_binary(const std::shared_ptr<dlvk::Model>& model, 
                                  const std::string& filepath,
@@ -19,22 +19,22 @@ bool ModelSerializer::save_binary(const std::shared_ptr<dlvk::Model>& model,
     }
     
     try {
-        // Write magic header
+
         const char* magic = "DLVK";
         file.write(magic, 4);
         
-        // Write version
+
         uint32_t version = 1;
         file.write(reinterpret_cast<const char*>(&version), sizeof(version));
         
-        // Write metadata length and data
+
         std::string meta_json = serialize_metadata(metadata);
         uint32_t meta_size = meta_json.size();
         file.write(reinterpret_cast<const char*>(&meta_size), sizeof(meta_size));
         file.write(meta_json.c_str(), meta_size);
         
-        // Write model parameters (simplified - would need model introspection)
-        // For now, just write placeholder data
+
+
         uint32_t param_count = 0;
         file.write(reinterpret_cast<const char*>(&param_count), sizeof(param_count));
         
@@ -58,7 +58,7 @@ bool ModelSerializer::save_json(const std::shared_ptr<Model>& model,
         file << "    \"version\": \"1.0\",\n";
         file << "    \"framework\": \"DLVK\",\n";
         
-        // Write metadata
+
         auto now = std::time(nullptr);
         auto tm = *std::localtime(&now);
         std::ostringstream timestamp;
@@ -97,25 +97,25 @@ std::shared_ptr<Model> ModelSerializer::load_binary(const std::string& filepath)
     }
     
     try {
-        // Read magic header
+
         char magic[4];
         file.read(magic, 4);
         if (std::string(magic, 4) != "DLVK") {
             return nullptr;
         }
         
-        // Read version
+
         uint32_t version;
         file.read(reinterpret_cast<char*>(&version), sizeof(version));
         
-        // Read metadata
+
         uint32_t meta_size;
         file.read(reinterpret_cast<char*>(&meta_size), sizeof(meta_size));
         
         std::string meta_json(meta_size, '\0');
         file.read(&meta_json[0], meta_size);
         
-        // TODO: Create actual model from parameters
+
         return nullptr; // Placeholder
         
     } catch (const std::exception& e) {
@@ -124,7 +124,7 @@ std::shared_ptr<Model> ModelSerializer::load_binary(const std::string& filepath)
 }
 
 std::shared_ptr<Model> ModelSerializer::load_json(const std::string& filepath) {
-    // Simplified JSON loading - would need proper JSON parser
+
     return nullptr;
 }
 
@@ -139,7 +139,7 @@ std::string ModelSerializer::serialize_metadata(const dlvk::ModelMetadata& metad
     return json.str();
 }
 
-// ModelCheckpoint implementation
+
 ModelCheckpoint::ModelCheckpoint(const std::string& directory, 
                                 const std::string& prefix,
                                 int save_frequency)
@@ -170,7 +170,7 @@ bool ModelCheckpoint::save_checkpoint(const std::shared_ptr<Model>& model,
         if (success) {
             m_checkpoint_count++;
             
-            // Also save metrics
+
             std::ostringstream metrics_file;
             metrics_file << m_checkpoint_dir << "/" << m_filename_prefix 
                         << "_metrics_" << std::setfill('0') << std::setw(4) << epoch << ".json";
@@ -190,7 +190,7 @@ bool ModelCheckpoint::load_checkpoint(const std::string& filepath,
     ModelSerializer serializer;
     model = serializer.load_binary(filepath);
     
-    // TODO: Load corresponding metrics file
+
     
     return model != nullptr;
 }
@@ -220,7 +220,7 @@ bool ModelCheckpoint::save_metrics(const TrainingMetrics& metrics,
     }
 }
 
-// ModelVersioning implementation
+
 std::string ModelVersioning::create_version(const std::shared_ptr<Model>& model,
                                           const std::string& version_name,
                                           const std::string& description) {
@@ -228,11 +228,11 @@ std::string ModelVersioning::create_version(const std::shared_ptr<Model>& model,
         std::ostringstream version_path;
         version_path << m_base_path << "/v" << std::setfill('0') << std::setw(3) << m_current_version;
         
-        // Create version directory (simplified)
+
         std::string mkdir_cmd = "mkdir -p " + version_path.str();
         std::system(mkdir_cmd.c_str());
         
-        // Save model
+
         ::dlvk::ModelMetadata metadata;
         metadata.model_name = version_name;
         metadata.description = description;
@@ -243,7 +243,7 @@ std::string ModelVersioning::create_version(const std::shared_ptr<Model>& model,
         ModelSerializer serializer;
         
         if (serializer.save_binary(model, model_file, metadata)) {
-            // Save version info
+
             std::string info_file = version_path.str() + "/version_info.json";
             save_version_info(version_name, description, info_file);
             
@@ -281,7 +281,7 @@ bool ModelVersioning::save_version_info(const std::string& name,
     return true;
 }
 
-// ExportManager implementation
+
 /*
 ExportManager::ExportManager() = default;
 
@@ -299,15 +299,15 @@ bool ExportManager::export_model(const std::shared_ptr<Model>& model,
             return serializer.save_json(model, filepath, metadata);
             
         case SerializationFormat::HDF5:
-            // TODO: Implement HDF5 export
+
             return false;
             
         case SerializationFormat::ONNX:
-            // TODO: Implement ONNX export
+
             return false;
             
         case SerializationFormat::NUMPY_NPZ:
-            // TODO: Implement NumPy export
+
             return false;
             
         default:
@@ -333,18 +333,18 @@ std::shared_ptr<Model> ExportManager::import_model(const std::string& filepath,
 
 bool ExportManager::export_to_onnx(const std::shared_ptr<Model>& model,
                                   const std::string& filepath) {
-    // TODO: Implement ONNX export
+
     return false;
 }
 
 bool ExportManager::export_to_tensorrt(const std::shared_ptr<Model>& model,
                                       const std::string& filepath) {
-    // TODO: Implement TensorRT export
+
     return false;
 }
 */
 
-// ModelCheckpointCallback implementation
+
 void ModelCheckpointCallback::on_epoch_end(int epoch, const dlvk::training::TrainingMetrics& metrics) {
     if (m_optimizer) {
         m_checkpoint_manager->save_checkpoint(m_model, metrics, epoch, m_optimizer);

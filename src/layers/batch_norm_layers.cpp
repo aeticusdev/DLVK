@@ -6,13 +6,13 @@
 
 namespace dlvk {
 
-// BatchNorm1D Implementation
+
 BatchNorm1DLayer::BatchNorm1DLayer(VulkanDevice& device, size_t num_features,
                                    float momentum, float epsilon)
     : device_(device), num_features_(num_features), momentum_(momentum), 
       epsilon_(epsilon), training_(true) {
     
-    // Create parameters
+
     std::vector<size_t> param_shape = {num_features};
     auto device_ptr = std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){});
     
@@ -25,15 +25,15 @@ BatchNorm1DLayer::BatchNorm1DLayer(VulkanDevice& device, size_t num_features,
 }
 
 void BatchNorm1DLayer::initialize_parameters() {
-    // Initialize gamma to 1.0
+
     std::vector<float> gamma_data(num_features_, 1.0f);
     gamma_->upload_data(gamma_data.data());
     
-    // Initialize beta to 0.0
+
     std::vector<float> beta_data(num_features_, 0.0f);
     beta_->upload_data(beta_data.data());
     
-    // Initialize running statistics
+
     std::vector<float> mean_data(num_features_, 0.0f);
     std::vector<float> var_data(num_features_, 1.0f);
     running_mean_->upload_data(mean_data.data());
@@ -43,7 +43,7 @@ void BatchNorm1DLayer::initialize_parameters() {
 std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>& input) {
     last_input_ = input;
     
-    // Input shape: [batch_size, features]
+
     const auto& shape = input->shape();
     if (shape.size() != 2 || shape[1] != num_features_) {
         throw std::runtime_error("BatchNorm1D expects input shape [batch_size, features]");
@@ -52,7 +52,7 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
     size_t batch_size = shape[0];
     size_t features = shape[1];
     
-    // Download input data
+
     std::vector<float> input_data(input->size());
     input->download_data(input_data.data());
     
@@ -61,16 +61,16 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
     std::vector<float> batch_var(features, 0.0f);
     
     if (training_) {
-        // Compute batch statistics
+
         for (size_t f = 0; f < features; ++f) {
-            // Compute mean
+
             float sum = 0.0f;
             for (size_t b = 0; b < batch_size; ++b) {
                 sum += input_data[b * features + f];
             }
             batch_mean[f] = sum / batch_size;
             
-            // Compute variance
+
             float var_sum = 0.0f;
             for (size_t b = 0; b < batch_size; ++b) {
                 float diff = input_data[b * features + f] - batch_mean[f];
@@ -79,7 +79,7 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
             batch_var[f] = var_sum / batch_size;
         }
         
-        // Update running statistics
+
         std::vector<float> running_mean_data(features);
         std::vector<float> running_var_data(features);
         running_mean_->download_data(running_mean_data.data());
@@ -93,18 +93,18 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
         running_mean_->upload_data(running_mean_data.data());
         running_var_->upload_data(running_var_data.data());
     } else {
-        // Use running statistics
+
         running_mean_->download_data(batch_mean.data());
         running_var_->download_data(batch_var.data());
     }
     
-    // Download gamma and beta
+
     std::vector<float> gamma_data(features);
     std::vector<float> beta_data(features);
     gamma_->download_data(gamma_data.data());
     beta_->download_data(beta_data.data());
     
-    // Normalize and apply affine transformation
+
     std::vector<float> normalized_data(input->size());
     for (size_t b = 0; b < batch_size; ++b) {
         for (size_t f = 0; f < features; ++f) {
@@ -115,14 +115,14 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
         }
     }
     
-    // Store normalized values for backward pass
+
     if (training_) {
         last_normalized_ = std::make_shared<Tensor>(input->shape(), DataType::FLOAT32, 
                                                    std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
         last_normalized_->upload_data(normalized_data.data());
     }
     
-    // Create output tensor
+
     auto output = std::make_shared<Tensor>(input->shape(), DataType::FLOAT32,
                                           std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     output->upload_data(output_data.data());
@@ -131,21 +131,21 @@ std::shared_ptr<Tensor> BatchNorm1DLayer::forward(const std::shared_ptr<Tensor>&
 }
 
 std::shared_ptr<Tensor> BatchNorm1DLayer::backward(const std::shared_ptr<Tensor>& grad_output) {
-    // For now, return the gradient as-is (simplified backward pass)
-    // Full BatchNorm backward pass would compute parameter gradients for gamma/beta
+
+
     return grad_output;
 }
 
 void BatchNorm1DLayer::update_weights(float learning_rate) {
-    // Parameter updates for gamma and beta would be handled by the optimizer
-    // This is typically done via gradient descent on accumulated gradients
+
+
 }
 
 std::unique_ptr<Layer> BatchNorm1DLayer::clone() const {
     auto cloned = std::make_unique<BatchNorm1DLayer>(device_, num_features_, momentum_, epsilon_);
     cloned->training_ = training_;
     
-    // Copy parameters
+
     if (gamma_ && cloned->gamma_) {
         std::vector<float> gamma_data(num_features_);
         gamma_->download_data(gamma_data.data());
@@ -173,13 +173,13 @@ std::unique_ptr<Layer> BatchNorm1DLayer::clone() const {
     return cloned;
 }
 
-// BatchNorm2D Implementation
+
 BatchNorm2DLayer::BatchNorm2DLayer(VulkanDevice& device, size_t num_channels,
                                    float momentum, float epsilon)
     : device_(device), num_channels_(num_channels), momentum_(momentum), 
       epsilon_(epsilon), training_(true) {
     
-    // Create parameters
+
     std::vector<size_t> param_shape = {num_channels};
     auto device_ptr = std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){});
     
@@ -192,15 +192,15 @@ BatchNorm2DLayer::BatchNorm2DLayer(VulkanDevice& device, size_t num_channels,
 }
 
 void BatchNorm2DLayer::initialize_parameters() {
-    // Initialize gamma to 1.0
+
     std::vector<float> gamma_data(num_channels_, 1.0f);
     gamma_->upload_data(gamma_data.data());
     
-    // Initialize beta to 0.0
+
     std::vector<float> beta_data(num_channels_, 0.0f);
     beta_->upload_data(beta_data.data());
     
-    // Initialize running statistics
+
     std::vector<float> mean_data(num_channels_, 0.0f);
     std::vector<float> var_data(num_channels_, 1.0f);
     running_mean_->upload_data(mean_data.data());
@@ -210,7 +210,7 @@ void BatchNorm2DLayer::initialize_parameters() {
 std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>& input) {
     last_input_ = input;
     
-    // Input shape: [batch_size, channels, height, width]
+
     const auto& shape = input->shape();
     if (shape.size() != 4 || shape[1] != num_channels_) {
         throw std::runtime_error("BatchNorm2D expects input shape [batch_size, channels, height, width]");
@@ -222,7 +222,7 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
     size_t width = shape[3];
     size_t spatial_size = height * width;
     
-    // Download input data
+
     std::vector<float> input_data(input->size());
     input->download_data(input_data.data());
     
@@ -231,9 +231,9 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
     std::vector<float> batch_var(channels, 0.0f);
     
     if (training_) {
-        // Compute batch statistics per channel
+
         for (size_t c = 0; c < channels; ++c) {
-            // Compute mean
+
             float sum = 0.0f;
             for (size_t b = 0; b < batch_size; ++b) {
                 for (size_t h = 0; h < height; ++h) {
@@ -245,7 +245,7 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
             }
             batch_mean[c] = sum / (batch_size * spatial_size);
             
-            // Compute variance
+
             float var_sum = 0.0f;
             for (size_t b = 0; b < batch_size; ++b) {
                 for (size_t h = 0; h < height; ++h) {
@@ -259,7 +259,7 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
             batch_var[c] = var_sum / (batch_size * spatial_size);
         }
         
-        // Update running statistics
+
         std::vector<float> running_mean_data(channels);
         std::vector<float> running_var_data(channels);
         running_mean_->download_data(running_mean_data.data());
@@ -273,18 +273,18 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
         running_mean_->upload_data(running_mean_data.data());
         running_var_->upload_data(running_var_data.data());
     } else {
-        // Use running statistics
+
         running_mean_->download_data(batch_mean.data());
         running_var_->download_data(batch_var.data());
     }
     
-    // Download gamma and beta
+
     std::vector<float> gamma_data(channels);
     std::vector<float> beta_data(channels);
     gamma_->download_data(gamma_data.data());
     beta_->download_data(beta_data.data());
     
-    // Normalize and apply affine transformation
+
     std::vector<float> normalized_data(input->size());
     for (size_t b = 0; b < batch_size; ++b) {
         for (size_t c = 0; c < channels; ++c) {
@@ -299,14 +299,14 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
         }
     }
     
-    // Store normalized values for backward pass
+
     if (training_) {
         last_normalized_ = std::make_shared<Tensor>(input->shape(), DataType::FLOAT32, 
                                                    std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
         last_normalized_->upload_data(normalized_data.data());
     }
     
-    // Create output tensor
+
     auto output = std::make_shared<Tensor>(input->shape(), DataType::FLOAT32,
                                           std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     output->upload_data(output_data.data());
@@ -315,21 +315,21 @@ std::shared_ptr<Tensor> BatchNorm2DLayer::forward(const std::shared_ptr<Tensor>&
 }
 
 std::shared_ptr<Tensor> BatchNorm2DLayer::backward(const std::shared_ptr<Tensor>& grad_output) {
-    // For now, return the gradient as-is (simplified backward pass)
-    // Full BatchNorm backward pass would compute parameter gradients for gamma/beta
+
+
     return grad_output;
 }
 
 void BatchNorm2DLayer::update_weights(float learning_rate) {
-    // Parameter updates for gamma and beta would be handled by the optimizer
-    // This is typically done via gradient descent on accumulated gradients
+
+
 }
 
 std::unique_ptr<Layer> BatchNorm2DLayer::clone() const {
     auto cloned = std::make_unique<BatchNorm2DLayer>(device_, num_channels_, momentum_, epsilon_);
     cloned->training_ = training_;
     
-    // Copy parameters
+
     if (gamma_ && cloned->gamma_) {
         std::vector<float> gamma_data(num_channels_);
         gamma_->download_data(gamma_data.data());

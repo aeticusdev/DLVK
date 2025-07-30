@@ -32,7 +32,7 @@ struct ModelMetadata {
     std::string framework_version;
     std::unordered_map<std::string, std::string> custom_fields;
     
-    // Additional fields for compatibility
+
     std::string model_name;  // alias for name
 };
 
@@ -44,18 +44,18 @@ struct CheckpointData {
     std::vector<std::vector<float>> weights;
     std::vector<std::vector<float>> biases;
     
-    // Optimizer state
+
     std::vector<std::vector<float>> optimizer_state;
     std::unordered_map<std::string, float> optimizer_params;
     
-    // Training state
+
     int current_epoch = 0;
     int current_step = 0;
     float current_lr = 0.0f;
     dlvk::TrainingMetrics current_metrics;
     std::vector<dlvk::TrainingMetrics> training_history;
     
-    // Random state for reproducibility
+
     uint32_t random_seed = 0;
     std::vector<uint32_t> rng_state;
 };
@@ -103,7 +103,7 @@ public:
             std::numeric_limits<float>::infinity();
     }
 
-    // Additional constructor to match implementation
+
     ModelCheckpoint(const std::string& directory, 
                    const std::string& prefix,
                    int save_frequency);
@@ -127,7 +127,7 @@ public:
                         const std::string& checkpoint_path,
                         std::shared_ptr<Optimizer> optimizer = nullptr);
 
-    // Additional overload to match implementation
+
     bool load_checkpoint(const std::string& filepath,
                         std::shared_ptr<Model>& model,
                         TrainingMetrics& metrics);
@@ -239,14 +239,14 @@ public:
                                 const std::string& filepath);
 
 private:
-    // Format-specific implementations
+
     static bool save_binary_format(const CheckpointData& data, const std::string& filepath);
     static bool load_binary_format(CheckpointData& data, const std::string& filepath);
     
     static bool save_json_format(const CheckpointData& data, const std::string& filepath);
     static bool load_json_format(CheckpointData& data, const std::string& filepath);
     
-    // Helper functions
+
     static CheckpointData model_to_checkpoint_data(const std::shared_ptr<Model>& model,
                                                   const ModelMetadata& metadata);
     static std::shared_ptr<Model> checkpoint_data_to_model(const CheckpointData& data);
@@ -263,7 +263,7 @@ private:
     std::string m_current_experiment;
     std::unordered_map<std::string, std::string> m_experiment_metadata;
     
-    // Additional member variables needed by implementation
+
     std::string m_base_path;
     int m_current_version;
     

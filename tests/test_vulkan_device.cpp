@@ -14,7 +14,7 @@ int main() {
             std::cout << "✓ Physical device: " << (device.get_physical_device() ? "Valid" : "Invalid") << std::endl;
             std::cout << "✓ Compute queue: " << (device.get_compute_queue() ? "Valid" : "Invalid") << std::endl;
             
-            // Test buffer creation
+
             VkBuffer buffer;
             VkDeviceMemory memory;
             

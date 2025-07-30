@@ -27,10 +27,10 @@ void main() {
         return;
     }
     
-    // Calculate matrix position (i, j)
+
     uint i = index / pc.features;  // batch index
     uint j = index % pc.features;  // feature index
     
-    // Matrix[i][j] + Vector[j] = Result[i][j]
+
     result[index] = a[index] + b[j];
 }

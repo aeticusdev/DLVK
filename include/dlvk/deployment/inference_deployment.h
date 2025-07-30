@@ -14,7 +14,7 @@
 namespace dlvk::deployment {
 
 struct DeviceConstraints {
-    // Placeholder: Define actual constraints (e.g., memory, compute capabilities)
+
     size_t max_memory_bytes{0};
     int max_compute_units{0};
 };
@@ -22,7 +22,7 @@ struct DeviceConstraints {
 struct Config {
     struct Serving {
         int timeout_ms{1000};
-        // Add other serving config fields
+
     } serving;
     
     Config() = default; // Explicit default constructor

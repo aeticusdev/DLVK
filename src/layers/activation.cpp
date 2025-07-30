@@ -11,7 +11,7 @@ ActivationLayer::ActivationLayer(std::shared_ptr<VulkanDevice> device, Activatio
     : m_device(device), m_activation_type(activation_type), m_is_training(true) {}
 
 Tensor ActivationLayer::forward(const Tensor& input) {
-    // Create output tensor with same shape and properties as input
+
     Tensor output(input.shape(), input.dtype(), m_device);
     
     switch (m_activation_type) {
@@ -43,34 +43,34 @@ Tensor ActivationLayer::forward(const Tensor& input) {
 }
 
 Tensor ActivationLayer::backward(const Tensor& grad_output) {
-    // Create gradient input tensor with same shape as grad_output
+
     Tensor grad_input(grad_output.shape(), grad_output.dtype(), m_device);
     
     bool success = false;
     switch (m_activation_type) {
         case ActivationType::ReLU: {
-            // For ReLU backward, we need the input (which we don't store)
-            // This is a simplified version - in practice, you'd store the forward input
+
+
             Tensor dummy_input(grad_output.shape(), grad_output.dtype(), m_device);
             success = TensorOpsStatic::relu_backward(dummy_input, grad_output, grad_input);
             break;
         }
         case ActivationType::Sigmoid: {
-            // For sigmoid backward, we need the forward result
-            // This is a simplified version - in practice, you'd store the forward result
+
+
             Tensor sigmoid_output(grad_output.shape(), grad_output.dtype(), m_device);
             success = TensorOpsStatic::sigmoid_backward(sigmoid_output, grad_output, grad_input);
             break;
         }
         case ActivationType::Tanh: {
-            // For tanh backward, we need the forward result
+
             Tensor tanh_output(grad_output.shape(), grad_output.dtype(), m_device);
             success = TensorOpsStatic::tanh_backward(tanh_output, grad_output, grad_input);
             break;
         }
         case ActivationType::Softmax:
-            // Softmax backward is typically handled with the loss function
-            // For simplicity, just pass through the gradient
+
+
             success = TensorOpsStatic::copy(grad_output, grad_input);
             break;
         default:
@@ -85,7 +85,7 @@ Tensor ActivationLayer::backward(const Tensor& grad_output) {
 }
 
 void ActivationLayer::update_parameters(Optimizer& optimizer) {
-    // Activation layers have no parameters to update
+
 }
 
 void ActivationLayer::set_training(bool training) {
@@ -118,19 +118,19 @@ LayerInfo ActivationLayer::get_layer_info() const {
 }
 
 void ActivationLayer::save_weights(std::ofstream& file) const {
-    // No weights to save for activation layers
-    // Write activation type for compatibility
+
+
     int activation_type = static_cast<int>(m_activation_type);
     file.write(reinterpret_cast<const char*>(&activation_type), sizeof(activation_type));
 }
 
 void ActivationLayer::load_weights(std::ifstream& file) {
-    // No weights to load for activation layers
-    // Read activation type for compatibility
+
+
     int activation_type;
     file.read(reinterpret_cast<char*>(&activation_type), sizeof(activation_type));
     
-    // Verify it matches current activation type
+
     if (static_cast<ActivationType>(activation_type) != m_activation_type) {
         throw std::runtime_error("Activation type mismatch during weight loading");
     }

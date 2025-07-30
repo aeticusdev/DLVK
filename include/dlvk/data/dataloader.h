@@ -83,7 +83,7 @@ public:
      */
     void new_epoch();
 
-    // Getters
+
     size_t batch_size() const { return m_batch_size; }
     size_t dataset_size() const { return m_dataset->size(); }
 };

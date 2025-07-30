@@ -25,7 +25,7 @@ void main() {
         return;
     }
     
-    // Sigmoid backward: grad_input = grad_output * sigmoid(x) * (1 - sigmoid(x))
+
     float sigmoid_output = output_data[index];
     float grad_output = grad_output_data[index];
     

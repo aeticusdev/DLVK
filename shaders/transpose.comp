@@ -23,7 +23,7 @@ void main() {
         return;
     }
     
-    // Read from [row, col] and write to [col, row]
+
     uint input_index = row * pc.cols + col;
     uint output_index = col * pc.rows + row;
     

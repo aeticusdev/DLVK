@@ -35,7 +35,7 @@ public:
     
     void initialize_parameters();
 
-    // Getters and setters for private members
+
     std::shared_ptr<Tensor> get_gamma() const { return gamma_; }
     void set_gamma(std::shared_ptr<Tensor> gamma) { gamma_ = gamma; }
     std::shared_ptr<Tensor> get_beta() const { return beta_; }
@@ -75,7 +75,7 @@ public:
     
     void initialize_parameters();
 
-    // Getters and setters for private members
+
     std::shared_ptr<Tensor> get_gamma() const { return gamma_; }
     void set_gamma(std::shared_ptr<Tensor> gamma) { gamma_ = gamma; }
     std::shared_ptr<Tensor> get_beta() const { return beta_; }

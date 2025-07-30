@@ -14,10 +14,10 @@ Adam::Adam(float learning_rate, float beta1, float beta2, float epsilon)
 void Adam::update(ModernLayer* layer) {
     if (!layer) return;
     
-    // Increment step count for bias correction
+
     m_step_count++;
     
-    // Use the layer's own update_parameters method
+
     layer->update_parameters(*this);
 }
 
@@ -33,14 +33,14 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
         return;
     }
     
-    // Increment step count
+
     m_step_count++;
     
-    // Create clipped gradient tensor
+
     auto clipped_grad = std::make_shared<Tensor>(parameter->shape(), parameter->dtype(), parameter->device());
     ops->copy(*gradient, *clipped_grad);
     
-    // Apply gradient clipping if enabled - GPU-based
+
     if (m_use_grad_clip_norm) {
         if (!ops->gradient_clip_by_norm(*gradient, m_grad_clip_norm, *clipped_grad)) {
             std::cerr << "Failed to apply gradient norm clipping" << std::endl;
@@ -55,7 +55,7 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
         }
     }
     
-    // Get or create momentum buffer (first moment) for this parameter
+
     auto momentum_it = m_momentum_cache.find(parameter.get());
     std::shared_ptr<Tensor> momentum;
     
@@ -67,7 +67,7 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
         momentum = momentum_it->second;
     }
     
-    // Get or create velocity buffer (second moment) for this parameter
+
     auto velocity_it = m_velocity_cache.find(parameter.get());
     std::shared_ptr<Tensor> velocity;
     
@@ -79,11 +79,11 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
         velocity = velocity_it->second;
     }
     
-    // Create new momentum and velocity tensors for GPU Adam update
+
     auto new_momentum = std::make_shared<Tensor>(parameter->shape(), parameter->dtype(), parameter->device());
     auto new_velocity = std::make_shared<Tensor>(parameter->shape(), parameter->dtype(), parameter->device());
     
-    // Use GPU-based Adam update operation
+
     if (!ops->adam_update(*clipped_grad, *momentum, *velocity, 
                          *parameter, *new_momentum, *new_velocity,
                          m_learning_rate, m_beta1, m_beta2, m_epsilon)) {
@@ -91,7 +91,7 @@ void Adam::update_parameter(std::shared_ptr<Tensor>& parameter,
         return;
     }
     
-    // Update the cached momentum and velocity tensors
+
     ops->copy(*new_momentum, *momentum);
     ops->copy(*new_velocity, *velocity);
 }

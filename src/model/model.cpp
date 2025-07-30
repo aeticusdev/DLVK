@@ -16,7 +16,7 @@
 
 namespace dlvk {
 
-// Sequential Model Implementation
+
 Sequential::Sequential(std::shared_ptr<VulkanDevice> device)
     : m_device(device), m_is_training(false) {}
 
@@ -88,7 +88,7 @@ Tensor Sequential::forward(const Tensor& input) {
         throw std::runtime_error("No layers in the sequential model");
     }
     
-    // Clear previous layer outputs
+
     m_layer_outputs.clear();
     m_layer_outputs.reserve(m_layers.size());
     
@@ -110,7 +110,7 @@ void Sequential::backward(const Tensor& grad_output) {
     
     Tensor current_grad = grad_output;
     
-    // Backward pass through layers in reverse order
+
     for (int i = m_layers.size() - 1; i >= 0; --i) {
         current_grad = m_layers[i]->backward(current_grad);
     }
@@ -171,11 +171,11 @@ void Sequential::save_weights(const std::string& filepath) const {
         throw std::runtime_error("Could not open file for writing: " + filepath);
     }
     
-    // Write number of layers
+
     size_t num_layers = m_layers.size();
     file.write(reinterpret_cast<const char*>(&num_layers), sizeof(num_layers));
     
-    // Save each layer's weights
+
     for (const auto& layer : m_layers) {
         layer->save_weights(file);
     }
@@ -189,7 +189,7 @@ void Sequential::load_weights(const std::string& filepath) {
         throw std::runtime_error("Could not open file for reading: " + filepath);
     }
     
-    // Read number of layers
+
     size_t num_layers;
     file.read(reinterpret_cast<char*>(&num_layers), sizeof(num_layers));
     
@@ -199,7 +199,7 @@ void Sequential::load_weights(const std::string& filepath) {
                                 std::to_string(num_layers));
     }
     
-    // Load each layer's weights
+
     for (auto& layer : m_layers) {
         layer->load_weights(file);
     }
@@ -207,7 +207,7 @@ void Sequential::load_weights(const std::string& filepath) {
     file.close();
 }
 
-// ModelTrainer Implementation
+
 ModelTrainer::ModelTrainer(Model* model) : m_model(model) {}
 
 void ModelTrainer::compile(std::unique_ptr<Optimizer> optimizer, 
@@ -226,7 +226,7 @@ void ModelTrainer::fit(const Tensor& x_train, const Tensor& y_train,
         throw std::runtime_error("Optimizer and loss function must be set before training");
     }
     
-    // Split data if validation split is provided
+
     std::vector<size_t> dummy_shape = {1, 1};
     Tensor x_val(dummy_shape, x_train.dtype(), x_train.device());
     Tensor y_val(dummy_shape, y_train.dtype(), y_train.device());
@@ -242,29 +242,29 @@ void ModelTrainer::fit(const Tensor& x_train, const Tensor& y_train,
         y_val = std::move(y_val_split);
     }
     
-    // Create batches
+
     auto batches = create_batches(x_actual_train, y_actual_train, batch_size);
     
-    // Training loop
+
     for (size_t epoch = 0; epoch < epochs; ++epoch) {
         float epoch_loss = 0.0f;
         size_t num_batches = batches.size();
         
-        // Call epoch begin callbacks
+
         for (auto& callback : m_callbacks) {
             callback->on_epoch_begin(epoch);
         }
         
         m_model->set_training(true);
         
-        // Process each batch
+
         for (size_t batch_idx = 0; batch_idx < num_batches; ++batch_idx) {
             const auto& [x_batch, y_batch] = batches[batch_idx];
             
-            // Forward pass
+
             Tensor predictions = m_model->forward(x_batch);
             
-            // Calculate loss
+
             auto pred_ptr = std::make_shared<Tensor>(predictions);
             auto target_ptr = std::make_shared<Tensor>(y_batch);
             auto loss_result = m_loss_function->forward(pred_ptr, target_ptr);
@@ -274,20 +274,20 @@ void ModelTrainer::fit(const Tensor& x_train, const Tensor& y_train,
             }
             epoch_loss += batch_loss;
             
-            // Backward pass through loss
+
             auto grad_result = m_loss_function->backward(pred_ptr, target_ptr);
             Tensor grad_output = grad_result ? *grad_result : Tensor({1}, DataType::FLOAT32, x_batch.device());
             
-            // Backward pass through model
+
             m_model->backward(grad_output);
             
-            // Update parameters
+
             m_model->update_parameters(*m_optimizer);
         }
         
         epoch_loss /= num_batches;
         
-        // Validation if available
+
         float val_loss = 0.0f;
         float val_accuracy = 0.0f;
         if (validation_split > 0.0f) {
@@ -296,7 +296,7 @@ void ModelTrainer::fit(const Tensor& x_train, const Tensor& y_train,
             val_accuracy = val_metrics.accuracy;
         }
         
-        // Call epoch end callbacks
+
         TrainingMetrics epoch_metrics;
         epoch_metrics.loss = epoch_loss;
         epoch_metrics.accuracy = val_accuracy;
@@ -304,7 +304,7 @@ void ModelTrainer::fit(const Tensor& x_train, const Tensor& y_train,
             callback->on_epoch_end(epoch, epoch_metrics);
         }
         
-        // Verbose output
+
         if (verbose) {
             std::cout << "Epoch " << (epoch + 1) << "/" << epochs 
                      << " - loss: " << std::fixed << std::setprecision(4) << epoch_loss;
@@ -332,10 +332,10 @@ TrainingMetrics ModelTrainer::evaluate(const Tensor& x_test, const Tensor& y_tes
     size_t num_samples = 0;
     
     for (const auto& [x_batch, y_batch] : batches) {
-        // Forward pass
+
         Tensor predictions = m_model->forward(x_batch);
         
-        // Calculate loss
+
         auto pred_ptr = std::make_shared<Tensor>(predictions);
         auto target_ptr = std::make_shared<Tensor>(y_batch);
         auto loss_result = m_loss_function->forward(pred_ptr, target_ptr);
@@ -345,7 +345,7 @@ TrainingMetrics ModelTrainer::evaluate(const Tensor& x_test, const Tensor& y_tes
         }
         total_loss += batch_loss * x_batch.shape()[0]; // Weight by batch size
         
-        // Calculate accuracy
+
         float batch_accuracy = calculate_accuracy(predictions, y_batch);
         total_accuracy += batch_accuracy * x_batch.shape()[0];
         
@@ -361,25 +361,25 @@ TrainingMetrics ModelTrainer::evaluate(const Tensor& x_test, const Tensor& y_tes
 Tensor ModelTrainer::predict(const Tensor& x, size_t batch_size) {
     m_model->set_training(false);
     
-    // For simplicity, if batch size is larger than input, just process all at once
+
     if (batch_size >= x.shape()[0]) {
         return m_model->forward(x);
     }
     
-    // Otherwise, process in batches and concatenate results
+
     std::vector<size_t> result_shape = x.shape();
-    // This is a simplified version - in practice we would need to adjust output shape
-    // based on the model's output dimensions
+
+
     
-    // For now, just return the forward pass of the entire input
-    // Proper batched prediction with result concatenation
-    // The forward pass handles batching internally
+
+
+
     return m_model->forward(x);
 }
 
 float ModelTrainer::calculate_accuracy(const Tensor& predictions, const Tensor& targets) {
-    // Simple accuracy calculation for classification
-    // This assumes predictions and targets are in the same format
+
+
     
     if (predictions.shape() != targets.shape()) {
         throw std::runtime_error("Predictions and targets must have the same shape for accuracy calculation");
@@ -388,7 +388,7 @@ float ModelTrainer::calculate_accuracy(const Tensor& predictions, const Tensor& 
     size_t num_samples = predictions.shape()[0];
     size_t num_classes = predictions.shape().size() > 1 ? predictions.shape()[1] : 1;
     
-    // Download data to CPU for accuracy calculation
+
     std::vector<float> pred_data(predictions.size());
     std::vector<float> target_data(targets.size());
     
@@ -398,7 +398,7 @@ float ModelTrainer::calculate_accuracy(const Tensor& predictions, const Tensor& 
     size_t correct_predictions = 0;
     
     if (num_classes == 1) {
-        // Binary classification
+
         for (size_t i = 0; i < num_samples; ++i) {
             bool pred_class = pred_data[i] > 0.5f;
             bool target_class = target_data[i] > 0.5f;
@@ -407,9 +407,9 @@ float ModelTrainer::calculate_accuracy(const Tensor& predictions, const Tensor& 
             }
         }
     } else {
-        // Multi-class classification
+
         for (size_t i = 0; i < num_samples; ++i) {
-            // Find predicted class (argmax)
+
             size_t pred_class = 0;
             float max_pred = pred_data[i * num_classes];
             for (size_t j = 1; j < num_classes; ++j) {
@@ -419,7 +419,7 @@ float ModelTrainer::calculate_accuracy(const Tensor& predictions, const Tensor& 
                 }
             }
             
-            // Find target class (argmax)
+
             size_t target_class = 0;
             float max_target = target_data[i * num_classes];
             for (size_t j = 1; j < num_classes; ++j) {
@@ -445,7 +445,7 @@ std::tuple<Tensor, Tensor, Tensor, Tensor> ModelTrainer::split_data(
     size_t val_samples = static_cast<size_t>(total_samples * validation_split);
     size_t train_samples = total_samples - val_samples;
     
-    // Create indices for shuffling
+
     std::vector<size_t> indices(total_samples);
     std::iota(indices.begin(), indices.end(), 0);
     
@@ -453,11 +453,11 @@ std::tuple<Tensor, Tensor, Tensor, Tensor> ModelTrainer::split_data(
     std::mt19937 gen(rd());
     std::shuffle(indices.begin(), indices.end(), gen);
     
-    // Split based on shuffled indices
-    // For simplicity, just take first/last portions
-    // Proper tensor slicing and shuffling would require dedicated Vulkan operations
+
+
+
     
-    // Create shape vectors for training and validation data
+
     std::vector<size_t> x_train_shape = x.shape();
     x_train_shape[0] = train_samples;
     
@@ -470,18 +470,18 @@ std::tuple<Tensor, Tensor, Tensor, Tensor> ModelTrainer::split_data(
     std::vector<size_t> y_val_shape = y.shape();
     y_val_shape[0] = val_samples;
     
-    // For now, just return the original tensors as train/val split
-    // Proper data copying with shuffling would use Vulkan compute operations
+
+
     
-    // Create simple sliced views (placeholder implementation)
-    // In a full implementation, we would use Vulkan compute shaders to slice tensors
+
+
     Tensor x_train(x_train_shape, x.dtype(), x.device());
     Tensor y_train(y_train_shape, y.dtype(), y.device());
     Tensor x_val(x_val_shape, x.dtype(), x.device());
     Tensor y_val(y_val_shape, y.dtype(), y.device());
     
-    // For simplified implementation, copy entire datasets for now
-    // Proper slicing and data copying would require tensor indexing operations
+
+
     std::vector<float> temp_data(x.size());
     x.download_data(temp_data.data());
     x_train.upload_data(temp_data.data());
@@ -510,7 +510,7 @@ std::vector<std::pair<Tensor, Tensor>> ModelTrainer::create_batches(
         size_t end_idx = std::min(start_idx + batch_size, total_samples);
         size_t actual_batch_size = end_idx - start_idx;
         
-        // Create batch shapes
+
         std::vector<size_t> x_batch_shape = x.shape();
         x_batch_shape[0] = actual_batch_size;
         
@@ -520,8 +520,8 @@ std::vector<std::pair<Tensor, Tensor>> ModelTrainer::create_batches(
         Tensor x_batch(x_batch_shape, x.dtype(), x.device());
         Tensor y_batch(y_batch_shape, y.dtype(), y.device());
         
-        // For simplified implementation, copy entire data for now
-        // Proper batching would use Vulkan compute shaders for efficient data slicing
+
+
         std::vector<float> temp_x_data(x.size());
         std::vector<float> temp_y_data(y.size());
         x.download_data(temp_x_data.data());

@@ -5,7 +5,7 @@
 
 namespace dlvk {
 
-// ProgressCallback Implementation
+
 ProgressCallback::ProgressCallback(bool verbose) 
     : m_total_epochs(0), m_total_batches_per_epoch(0), m_verbose(verbose) {}
 
@@ -42,7 +42,7 @@ void ProgressCallback::on_epoch_end([[maybe_unused]] size_t epoch, const Trainin
 
 void ProgressCallback::on_batch_end(size_t batch, [[maybe_unused]] const TrainingMetrics& metrics) {
     if (m_verbose && m_total_batches_per_epoch > 10) {
-        // Show progress for long epochs
+
         if (batch % (m_total_batches_per_epoch / 10) == 0) {
             float progress = static_cast<float>(batch + 1) / m_total_batches_per_epoch;
             int bar_width = 30;
@@ -60,7 +60,7 @@ void ProgressCallback::on_batch_end(size_t batch, [[maybe_unused]] const Trainin
     }
 }
 
-// ModelCheckpoint Implementation
+
 ModelCheckpoint::ModelCheckpoint(const std::string& filepath, Model* model,
                                const std::string& monitor,
                                bool save_best_only,
@@ -68,7 +68,7 @@ ModelCheckpoint::ModelCheckpoint(const std::string& filepath, Model* model,
     : m_filepath(filepath), m_monitor(monitor), m_save_best_only(save_best_only),
       m_save_weights_only(save_weights_only), m_model(model) {
     
-    // Initialize best score based on monitor type
+
     m_higher_is_better = (monitor == "accuracy" || monitor == "val_accuracy");
     m_best_score = m_higher_is_better ? -std::numeric_limits<float>::infinity() 
                                       : std::numeric_limits<float>::infinity();
@@ -88,7 +88,7 @@ void ModelCheckpoint::on_epoch_end(size_t epoch, const TrainingMetrics& metrics)
             if (m_save_weights_only) {
                 m_model->save_weights(m_filepath);
             } else {
-                // Full model saving would include architecture + weights
+
                 m_model->save_weights(m_filepath); // Save weights for now
             }
             
@@ -118,7 +118,7 @@ bool ModelCheckpoint::is_improvement(float current_value) const {
     }
 }
 
-// EarlyStopping Implementation
+
 EarlyStopping::EarlyStopping(const std::string& monitor, size_t patience, float min_delta)
     : m_monitor(monitor), m_patience(patience), m_min_delta(min_delta),
       m_wait_count(0), m_should_stop(false) {
@@ -170,7 +170,7 @@ bool EarlyStopping::is_improvement(float current_value) const {
     }
 }
 
-// ReduceLROnPlateau Implementation
+
 ReduceLROnPlateau::ReduceLROnPlateau(Optimizer* optimizer,
                                    const std::string& monitor,
                                    float factor,
@@ -232,7 +232,7 @@ bool ReduceLROnPlateau::is_improvement(float current_value) const {
     }
 }
 
-// CSVLogger Implementation
+
 CSVLogger::CSVLogger(const std::string& filename, bool append)
     : m_filename(filename), m_append(append) {}
 
@@ -250,7 +250,7 @@ void CSVLogger::on_train_begin() {
     }
     
     if (!m_append || m_file.tellp() == 0) {
-        // Write header
+
         m_file << "epoch,loss,accuracy,val_loss,val_accuracy\n";
     }
 }

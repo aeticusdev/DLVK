@@ -11,7 +11,7 @@ int main() {
     std::cout << "=============================================\n\n";
     
     try {
-        // Initialize Vulkan device
+
         auto device = std::make_shared<dlvk::VulkanDevice>();
         if (!device->initialize()) {
             std::cerr << "Failed to initialize Vulkan device" << std::endl;
@@ -20,25 +20,25 @@ int main() {
         
         std::cout << "✓ Vulkan device initialized successfully\n";
         
-        // Initialize tensor operations
+
         auto tensor_ops = std::make_shared<dlvk::TensorOps>(device);
         if (!tensor_ops->initialize()) {
             std::cerr << "Failed to initialize tensor operations" << std::endl;
             return -1;
         }
         
-        // Set global tensor operations
+
         dlvk::Tensor::set_tensor_ops(tensor_ops);
         std::cout << "✓ Tensor operations initialized\n";
         
-        // Create test tensors
+
         std::vector<size_t> shape = {4, 4};
         auto tensor_a = std::make_shared<dlvk::Tensor>(shape, dlvk::DataType::FLOAT32, device);
         auto tensor_b = std::make_shared<dlvk::Tensor>(shape, dlvk::DataType::FLOAT32, device);
         
         std::cout << "✓ Created test tensors with shape [4, 4]\n";
         
-        // Upload test data
+
         std::vector<float> data_a = {
             1.0f, 2.0f, 3.0f, 4.0f,
             5.0f, 6.0f, 7.0f, 8.0f,
@@ -58,10 +58,10 @@ int main() {
         
         std::cout << "✓ Uploaded test data to tensors\n";
         
-        // Storage for result tensors to ensure proper cleanup
+
         std::vector<std::shared_ptr<dlvk::Tensor>> result_tensors;
         
-        // Test tensor addition
+
         std::cout << "\nTesting tensor operations:\n";
         std::cout << "1. Tensor addition...\n";
         
@@ -69,7 +69,7 @@ int main() {
             auto result_add = tensor_a->add(*tensor_b);
             result_tensors.push_back(result_add);  // Store for cleanup
             
-            // Download and verify results
+
             std::vector<float> result_data(16);
             result_add->download_data(result_data.data());
             
@@ -83,7 +83,7 @@ int main() {
             std::cerr << "   ✗ Addition failed: " << e.what() << std::endl;
         }
         
-        // Test matrix multiplication
+
         std::cout << "2. Matrix multiplication...\n";
         
         try {
@@ -103,11 +103,11 @@ int main() {
             std::cerr << "   ✗ Matrix multiplication failed: " << e.what() << std::endl;
         }
         
-        // Test ReLU activation
+
         std::cout << "3. ReLU activation...\n";
         
         try {
-            // Create tensor with some negative values
+
             std::vector<float> relu_data = {-2.0f, -1.0f, 0.0f, 1.0f, 2.0f, 3.0f, -0.5f, 1.5f};
             auto relu_input = std::make_shared<dlvk::Tensor>(
                 std::vector<size_t>{2, 4}, dlvk::DataType::FLOAT32, device
@@ -135,7 +135,7 @@ int main() {
             std::cerr << "   ✗ ReLU activation failed: " << e.what() << std::endl;
         }
         
-        // Test neural network layer
+
         std::cout << "\n4. Neural network layer forward pass...\n";
         
         try {
@@ -148,8 +148,8 @@ int main() {
             std::vector<float> input_data = {1.0f, 0.5f, -0.2f, 0.8f};
             input->upload_data(input_data.data());
             
-            // Note: The forward pass might not work completely yet as it depends
-            // on matrix multiplication and bias addition
+
+
             std::cout << "   ✓ Dense layer created and input prepared\n";
             
         } catch (const std::exception& e) {
@@ -179,27 +179,27 @@ int main() {
         std::cout << "✅ Enhanced loss functions (Binary Cross-Entropy)\n";
         std::cout << "✅ Memory management and cleanup optimization\n";
         
-        // Explicitly clean up all tensors and resources before device cleanup
-        // Clear result tensors first
+
+
         result_tensors.clear();
         
-        // Clear global tensor operations first
+
         dlvk::Tensor::set_tensor_ops(nullptr);
         
-        // Reset main tensors
+
         tensor_a.reset();
         tensor_b.reset();
         
-        // Reset tensor operations
+
         tensor_ops.reset();
         
-        // Force cleanup of device last
+
         device.reset();
         
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         
-        // Cleanup on error too
+
         dlvk::Tensor::set_tensor_ops(nullptr);
         
         return -1;

@@ -52,17 +52,17 @@ private:
     std::vector<std::unique_ptr<DeviceReplica>> replicas_;
     std::shared_ptr<VulkanDevice> master_device_;
     
-    // Synchronization primitives
+
     std::mutex sync_mutex_;
     std::condition_variable sync_cv_;
     std::atomic<int> devices_ready_{0};
     std::atomic<bool> training_active_{false};
     
-    // Communication buffers
+
     std::vector<std::shared_ptr<Tensor>> master_gradients_;
     std::vector<std::future<void>> communication_futures_;
     
-    // Statistics
+
     struct Stats {
         std::atomic<size_t> total_batches{0};
         std::atomic<size_t> sync_operations{0};
@@ -146,11 +146,11 @@ private:
     void broadcast_parameters();
     void aggregate_metrics(std::vector<training::TrainingMetrics>& device_metrics);
 
-    // Communication optimization
+
     void optimize_communication_schedule();
     void overlap_computation_communication();
     
-    // Load balancing
+
     void balance_data_distribution(data::DataLoader& train_loader);
     std::vector<size_t> calculate_device_batch_sizes(size_t total_batch_size);
 };
@@ -240,6 +240,14 @@ class VulkanCommunicationBackend : public CommunicationBackend {
 private:
     std::vector<std::shared_ptr<VulkanDevice>> devices_;
     std::vector<std::unique_ptr<ComputePipeline>> communication_pipelines_;
+    std::unique_ptr<class RingAllReduce> ring_all_reduce_;
+    
+    struct CommunicationStats {
+        size_t total_operations = 0;
+        double total_time_ms = 0.0;
+        size_t total_bytes = 0;
+        double avg_bandwidth_gbps = 0.0;
+    } communication_stats_;
 
 public:
     bool initialize(const std::vector<int>& device_ids) override;

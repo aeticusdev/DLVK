@@ -22,7 +22,7 @@ layout(push_constant) uniform PushConstants {
     uint seed;
 } pc;
 
-// Simple xorshift random number generator
+
 uint xorshift32(uint state) {
     state ^= state << 13;
     state ^= state >> 17;
@@ -30,7 +30,7 @@ uint xorshift32(uint state) {
     return state;
 }
 
-// Convert uint to float in [0, 1)
+
 float uint_to_float(uint x) {
     return float(x) / 4294967296.0; // 2^32
 }
@@ -43,22 +43,22 @@ void main() {
     }
     
     if (pc.training == 0) {
-        // Inference mode - pass through
+
         output_data[idx] = input_data[idx];
         mask_data[idx] = 1;
     } else {
-        // Training mode - apply dropout
+
         uint rng_state = pc.seed + idx * 1103515245 + 12345;
         rng_state = xorshift32(rng_state);
         
         float rand_val = uint_to_float(rng_state);
         
         if (rand_val < pc.dropout_rate) {
-            // Drop this element
+
             output_data[idx] = 0.0;
             mask_data[idx] = 0;
         } else {
-            // Keep and scale
+
             output_data[idx] = input_data[idx] * pc.scale_factor;
             mask_data[idx] = 1;
         }

@@ -166,7 +166,7 @@ public:
     
 private:
     VulkanDevice& device_;
-    // Layer-specific members
+
 };
 ```
 

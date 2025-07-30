@@ -1,0 +1,55 @@
+#version 450
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(set = 0, binding = 0) buffer OutputBuffer {
+    float output_data[];
+};
+
+layout(set = 0, binding = 1) buffer IndicesBuffer {
+    float indices_data[];  // Token indices as floats (will be cast to int)
+};
+
+layout(set = 0, binding = 2) buffer EmbeddingsBuffer {
+    float embeddings_data[];  // Embedding table [num_embeddings, embedding_dim]
+};
+
+layout(push_constant) uniform PushConstants {
+    uint batch_size;
+    uint sequence_length;
+    uint embedding_dim;
+    uint num_embeddings;
+} pc;
+
+void main() {
+    uint batch_idx = gl_GlobalInvocationID.x / (pc.sequence_length * pc.embedding_dim);
+    uint seq_idx = (gl_GlobalInvocationID.x / pc.embedding_dim) % pc.sequence_length;
+    uint embed_idx = gl_GlobalInvocationID.x % pc.embedding_dim;
+    
+
+    if (batch_idx >= pc.batch_size || seq_idx >= pc.sequence_length || embed_idx >= pc.embedding_dim) {
+        return;
+    }
+    
+
+    uint indices_offset = batch_idx * pc.sequence_length + seq_idx;
+    uint token_idx = uint(indices_data[indices_offset]);
+    
+
+    if (token_idx >= pc.num_embeddings) {
+
+        uint output_offset = batch_idx * pc.sequence_length * pc.embedding_dim + 
+                           seq_idx * pc.embedding_dim + embed_idx;
+        output_data[output_offset] = 0.0;
+        return;
+    }
+    
+
+    uint embedding_offset = token_idx * pc.embedding_dim + embed_idx;
+    float embedding_value = embeddings_data[embedding_offset];
+    
+
+    uint output_offset = batch_idx * pc.sequence_length * pc.embedding_dim + 
+                        seq_idx * pc.embedding_dim + embed_idx;
+    output_data[output_offset] = embedding_value;
+}

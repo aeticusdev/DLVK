@@ -59,9 +59,9 @@ bool ComputePipeline::allocate_descriptor_sets(uint32_t count) {
         return false;
     }
     
-    // Create descriptor pool first
+
     std::vector<VkDescriptorSetLayoutBinding> bindings;
-    // This is a simplified approach - in a real implementation, we'd track bindings
+
     VkDescriptorPoolSize pool_size{};
     pool_size.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
     pool_size.descriptorCount = count * 4; // Assume max 4 buffers per set
@@ -79,7 +79,7 @@ bool ComputePipeline::allocate_descriptor_sets(uint32_t count) {
         return false;
     }
     
-    // Allocate descriptor sets
+
     std::vector<VkDescriptorSetLayout> layouts(count, m_descriptor_set_layout);
     VkDescriptorSetAllocateInfo alloc_info{};
     alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;

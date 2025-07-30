@@ -26,25 +26,25 @@ void main() {
     uint tid = gl_LocalInvocationID.x;
     uint gid = gl_GlobalInvocationID.x;
     
-    // Initialize shared memory
+
     partial_sums[tid] = 0.0;
     
-    // Process 4 elements per thread for better vectorization
+
     uint start_idx = gid * 4;
     
     if (start_idx < push_constants.size) {
-        // Vectorized processing - up to 4 elements at once
+
         for (uint i = 0; i < 4 && (start_idx + i) < push_constants.size; ++i) {
             uint idx = start_idx + i;
             
-            // Optimized cross-entropy computation with fused operations
+
             float pred = predictions[idx];
             float target = targets[idx];
             
-            // Fast clamping for numerical stability
+
             pred = max(push_constants.epsilon, pred);
             
-            // Fused computation: -target * log(pred)
+
             float loss = -target * log(pred);
             partial_sums[tid] += loss;
         }
@@ -52,7 +52,7 @@ void main() {
     
     barrier();
     
-    // Optimized reduction within workgroup
+
     for (uint stride = gl_WorkGroupSize.x / 2; stride > 0; stride >>= 1) {
         if (tid < stride) {
             partial_sums[tid] += partial_sums[tid + stride];
@@ -60,13 +60,13 @@ void main() {
         barrier();
     }
     
-    // Write result from first thread of first workgroup
+
     if (gl_WorkGroupID.x == 0 && tid == 0) {
-        // Average loss over batch
+
         result[0] = partial_sums[0] / float(push_constants.batch_size);
     }
     
-    // Store partial results for multiple workgroups
+
     if (tid == 0 && gl_WorkGroupID.x > 0) {
         result[gl_WorkGroupID.x] = partial_sums[0];
     }

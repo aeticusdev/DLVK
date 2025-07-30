@@ -5,7 +5,7 @@
 
 namespace dlvk {
 
-// MaxPool2D Implementation
+
 MaxPool2DLayer::MaxPool2DLayer(VulkanDevice& device,
                                size_t pool_height, size_t pool_width,
                                size_t stride_h, size_t stride_w,
@@ -16,8 +16,8 @@ MaxPool2DLayer::MaxPool2DLayer(VulkanDevice& device,
 }
 
 std::vector<size_t> MaxPool2DLayer::compute_output_shape(const std::vector<size_t>& input_shape) const {
-    // Input shape: [batch_size, channels, height, width]
-    // Output shape: [batch_size, channels, out_height, out_width]
+
+
     
     if (input_shape.size() != 4) {
         throw std::runtime_error("MaxPool2D input must be 4D: [batch, channels, height, width]");
@@ -41,11 +41,11 @@ std::shared_ptr<Tensor> MaxPool2DLayer::forward(const std::shared_ptr<Tensor>& i
     auto output = std::make_shared<Tensor>(output_shape, DataType::FLOAT32,
                                           std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Store indices for backward pass
+
     max_indices_ = std::make_shared<Tensor>(output_shape, DataType::FLOAT32,
                                            std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Download input for CPU computation
+
     std::vector<float> input_data(input->size());
     input->download_data(input_data.data());
     
@@ -113,17 +113,17 @@ std::shared_ptr<Tensor> MaxPool2DLayer::backward(const std::shared_ptr<Tensor>& 
     auto grad_input = std::make_shared<Tensor>(input_shape, DataType::FLOAT32,
                                               std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Initialize gradient input to zero
+
     std::vector<float> grad_input_data(grad_input->size(), 0.0f);
     
-    // Download gradients and indices
+
     std::vector<float> grad_output_data(grad_output->size());
     std::vector<float> indices_data(max_indices_->size());
     
     grad_output->download_data(grad_output_data.data());
     max_indices_->download_data(indices_data.data());
     
-    // Propagate gradients back to the max positions
+
     for (size_t i = 0; i < grad_output_data.size(); ++i) {
         size_t max_idx = static_cast<size_t>(indices_data[i]);
         grad_input_data[max_idx] += grad_output_data[i];
@@ -139,7 +139,7 @@ std::unique_ptr<Layer> MaxPool2DLayer::clone() const {
                                            padding_h_, padding_w_);
 }
 
-// AvgPool2D Implementation
+
 AvgPool2DLayer::AvgPool2DLayer(VulkanDevice& device,
                                size_t pool_height, size_t pool_width,
                                size_t stride_h, size_t stride_w,
@@ -172,7 +172,7 @@ std::shared_ptr<Tensor> AvgPool2DLayer::forward(const std::shared_ptr<Tensor>& i
     auto output = std::make_shared<Tensor>(output_shape, DataType::FLOAT32,
                                           std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Download input for CPU computation
+
     std::vector<float> input_data(input->size());
     input->download_data(input_data.data());
     
@@ -234,10 +234,10 @@ std::shared_ptr<Tensor> AvgPool2DLayer::backward(const std::shared_ptr<Tensor>& 
     auto grad_input = std::make_shared<Tensor>(input_shape, DataType::FLOAT32,
                                               std::shared_ptr<VulkanDevice>(&device_, [](VulkanDevice*){}));
     
-    // Initialize gradient input to zero
+
     std::vector<float> grad_input_data(grad_input->size(), 0.0f);
     
-    // Download gradients
+
     std::vector<float> grad_output_data(grad_output->size());
     grad_output->download_data(grad_output_data.data());
     
@@ -249,7 +249,7 @@ std::shared_ptr<Tensor> AvgPool2DLayer::backward(const std::shared_ptr<Tensor>& 
     size_t input_height = input_shape[2];
     size_t input_width = input_shape[3];
     
-    // Distribute gradients evenly across the pooling window
+
     for (size_t b = 0; b < batch_size; ++b) {
         for (size_t c = 0; c < channels; ++c) {
             for (size_t oh = 0; oh < output_height; ++oh) {

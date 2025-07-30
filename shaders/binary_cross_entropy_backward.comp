@@ -27,20 +27,20 @@ void main() {
         return;
     }
     
-    // Vectorized processing - handle multiple elements per thread
-    // Process 4 elements at once if possible
+
+
     uint end_idx = min(idx + 4, push_constants.size);
     
     for (uint i = idx; i < end_idx && i < push_constants.size; i += gl_WorkGroupSize.x * gl_NumWorkGroups.x) {
-        // Optimized binary cross-entropy gradient
+
         float pred = predictions[i];
         float target = targets[i];
         
-        // Fast clamping without branches
+
         pred = max(push_constants.epsilon, min(1.0 - push_constants.epsilon, pred));
         
-        // Simplified and optimized gradient computation
-        // (pred - target) / (pred * (1 - pred)) * scale_factor
+
+
         float one_minus_pred = 1.0 - pred;
         float denominator = pred * one_minus_pred + push_constants.epsilon;
         

@@ -27,7 +27,7 @@ void main() {
         return;
     }
     
-    // Cross-entropy gradient: d/dpred = -targets / (predictions + epsilon) / batch_size
+
     float pred = predictions[idx] + push_constants.epsilon;
     gradients[idx] = -targets[idx] / pred / float(push_constants.batch_size);
 }

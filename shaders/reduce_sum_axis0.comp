@@ -23,8 +23,8 @@ void main() {
         return;
     }
     
-    // Sum along batch dimension (axis=0)
-    // Input: [batch_size, features], Output: [features]
+
+
     float sum = 0.0;
     for (uint batch_idx = 0; batch_idx < pc.batch_size; ++batch_idx) {
         uint input_idx = batch_idx * pc.features + feature_idx;
